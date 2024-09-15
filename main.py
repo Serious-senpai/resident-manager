@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from aiohttp import web
 
+from src import PORT
+
 
 routes = web.RouteTableDef()
 
@@ -15,6 +17,8 @@ async def hello(request: web.Request) -> web.Response:
     return web.Response(text=user_agent)
 
 
-app = web.Application()
-app.add_routes(routes)
-web.run_app(app)
+if __name__ == "__main__":
+    app = web.Application()
+    app.add_routes(routes)
+
+    web.run_app(app, port=PORT)
