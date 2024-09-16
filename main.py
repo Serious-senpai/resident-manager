@@ -10,8 +10,9 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+import server.routes  # noqa: F401  # Import route handlers
 from server import PORT, api_router, root_router
-from server.routes import *
+
 
 if __name__ == "__main__":
     app = web.Application()
