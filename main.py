@@ -4,7 +4,7 @@ import asyncio
 
 from aiohttp import web
 try:
-    import uvloop
+    import uvloop  # type: ignore
 except ImportError:
     pass
 else:

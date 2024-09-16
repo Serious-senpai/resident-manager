@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import ClassVar, Optional, TYPE_CHECKING
 
-import aioodbc
+import aioodbc  # type: ignore
 
 from .config import ODBC_CONNECTION_STRING
 
