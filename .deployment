@@ -1,0 +1,2 @@
+[config]
+command = $DEPLOYMENT_SOURCE/scripts/startup.sh
