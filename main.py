@@ -10,23 +10,15 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from src import PORT
-
-
-routes = web.RouteTableDef()
-
-
-@routes.get("/")
-async def hello(request: web.Request) -> web.Response:
-    user_agent = request.headers.get("User-Agent")
-    if user_agent is None:
-        raise web.HTTPForbidden
-
-    return web.Response(text=user_agent)
-
+from server import PORT, api_router, root_router
+from server.routes import *
 
 if __name__ == "__main__":
     app = web.Application()
-    app.add_routes(routes)
+    app.add_routes(root_router)
+
+    api = web.Application()
+    api.add_routes(api_router)
+    app.add_subapp("/api", api)
 
     web.run_app(app, port=PORT)
