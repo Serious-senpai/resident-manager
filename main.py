@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+
 from aiohttp import web
+try:
+    import uvloop
+except ImportError:
+    pass
+else:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 from src import PORT
 
