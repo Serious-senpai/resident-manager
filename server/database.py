@@ -15,6 +15,7 @@ __all__ = ("Database",)
 
 
 class Database:
+    """A database singleton that manages the connection pool."""
 
     __instance__: ClassVar[Optional[Database]] = None
     __slots__ = (
@@ -38,12 +39,20 @@ class Database:
 
     @property
     def pool(self) -> aioodbc.Pool:
+        """The underlying connection pool.
+
+        In order to use this property, `.prepare()` must be called first.
+        """
         if self.__pool is None:
             raise RuntimeError("Database is not connected. Did you call `.prepare()`?")
 
         return self.__pool
 
     async def prepare(self) -> None:
+        """This function is a coroutine.
+
+        Prepare the underlying connection pool. If the pool is already created, this function does nothing.
+        """
         if self.__prepared:
             return
 

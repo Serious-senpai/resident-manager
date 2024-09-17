@@ -16,6 +16,8 @@ __all__ = (
 
 
 class JSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for serializable class in this API"""
+
     def default(self, o: Any) -> Any:
         try:
             return super().default(o)

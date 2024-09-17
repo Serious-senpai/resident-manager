@@ -7,5 +7,5 @@ from ...router import api_router
 
 @api_router.get("")
 @api_router.get("/")
-async def login(request: web.Request) -> web.Response:
+async def root(request: web.Request) -> web.Response:
     raise web.HTTPFound("/")

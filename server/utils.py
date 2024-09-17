@@ -20,10 +20,23 @@ __all__ = (
 
 
 def secure_hex_string(length: int) -> str:
+    """Generate a secure random hexadecimal string."""
     return "".join(secrets.choice(string.hexdigits) for _ in range(length))
 
 
 def since_epoch(dt: Optional[datetime] = None) -> timedelta:
+    """Get the timedelta since the epoch.
+
+    Attributes
+    -----
+    dt: `Optional[datetime]`
+        The datetime to calculate the timedelta from. If not provided, the current time is used.
+
+    Returns
+    -----
+    `timedelta`
+        The timedelta since the epoch: `dt - EPOCH`.
+    """
     if dt is None:
         dt = datetime.now(timezone.utc)
 
@@ -31,10 +44,17 @@ def since_epoch(dt: Optional[datetime] = None) -> timedelta:
 
 
 def from_epoch(dt: timedelta) -> datetime:
+    """Calculate the datetime from the timedelta since the epoch."""
     return EPOCH + dt
 
 
+def snowflake_time(id: int) -> datetime:
+    """Get the creation date of a snowflake ID."""
+    return from_epoch(timedelta(milliseconds=id >> 14))
+
+
 def error_message(message: str, *, status: int) -> web.Response:
+    """Generate a JSON response with an error message."""
     return web.json_response({"error": message}, status=status)
 
 
