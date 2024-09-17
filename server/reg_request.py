@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
-import aioodbc
+import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
 
 from .database import Database
 from .personal import PersonalInfo
