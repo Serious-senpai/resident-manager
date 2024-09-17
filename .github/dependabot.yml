@@ -12,6 +12,13 @@ updates:
     commit-message:
       prefix: "[pip] "
 
+  - package-ecosystem: "pub" # See documentation for possible values
+    directory: "/app/resident_tracker" # Location of package manifests
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "[pub] "
+
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
     # default location of `.github/workflows`
