@@ -24,9 +24,9 @@ jobs:
           flutter-version: "3.24.3"
 
       - name: Install dependencies
-        working-directory: app/resident_tracker
+        working-directory: app/resident_manager
         run: flutter pub get
 
       - name: Run tests
-        working-directory: app/resident_tracker
+        working-directory: app/resident_manager
         run: flutter test

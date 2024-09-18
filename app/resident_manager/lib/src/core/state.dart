@@ -1,0 +1,97 @@
+import "dart:convert";
+import "dart:io";
+
+import "package:async_locks/async_locks.dart";
+import "package:path/path.dart";
+import "package:path_provider/path_provider.dart";
+
+import "errors.dart";
+import "http.dart";
+import "models/residents.dart";
+
+class Authorization {
+  final String username;
+  final String password;
+  final bool isAdmin;
+
+  Authorization({required this.username, required this.password, required this.isAdmin});
+  Authorization.fromJson(Map<String, dynamic> data)
+      : this(
+          username: data["username"],
+          password: data["password"],
+          isAdmin: data["isAdmin"],
+        );
+
+  Map<String, dynamic> toJson() {
+    return {
+      "username": username,
+      "password": password,
+      "isAdmin": isAdmin,
+    };
+  }
+
+  Future<Resident> validate({required HTTPClient client}) async {
+    final response = await client.apiPost(
+      "/api/login",
+      queryParameters: {"isAdmin": isAdmin ? "true" : "false"},
+      headers: {"Username": username, "Password": password},
+    );
+    final data = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      await withLoginFile(
+        (file) async {
+          await file.writeAsString(json.encode(toJson()));
+        },
+      );
+
+      return Resident.fromJson(data["resident"]);
+    } else {
+      throw AuthorizationError(data["error"]);
+    }
+  }
+
+  static final _withLoginFileLock = Lock();
+
+  static Future<T> withLoginFile<T>(Future<T> Function(File) callback) async {
+    final cacheDir = await getApplicationCacheDirectory();
+    final file = File(join(cacheDir.absolute.path, "login.json"));
+    return await _withLoginFileLock.run(() => callback(file));
+  }
+
+  static Future<Authorization?> construct({required HTTPClient client}) {
+    return withLoginFile(
+      (file) async {
+        if (await file.exists()) {
+          final data = json.decode(await file.readAsString());
+          final username = data["username"];
+          final password = data["password"];
+          final isAdmin = data["isAdmin"];
+
+          final auth = Authorization(username: username, password: password, isAdmin: isAdmin);
+          try {
+            await auth.validate(client: client);
+            return auth;
+          } on AuthorizationError {
+            await withLoginFile((file) => file.delete());
+
+            return null;
+          }
+        }
+
+        return null;
+      },
+    );
+  }
+}
+
+class ApplicationState {
+  final _http = HTTPClient();
+
+  Authorization? _authorization;
+  Authorization? get authorization => _authorization;
+
+  Future<void> prepare() async {
+    _authorization = await Authorization.construct(client: _http);
+  }
+}

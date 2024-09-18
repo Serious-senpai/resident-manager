@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
 
 from .database import Database
-from .personal import PersonalInfo
+from .info import PersonalInfo
 from .residents import Resident
 from .utils import generate_id, snowflake_time
 

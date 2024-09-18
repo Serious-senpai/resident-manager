@@ -6,6 +6,7 @@ from typing import Any
 
 from .residents import Resident
 from .snowflake import Snowflake
+from .utils import since_epoch
 
 
 __all__ = (
@@ -28,7 +29,7 @@ class JSONEncoder(json.JSONEncoder):
                     "id": o.id,
                     "name": o.name,
                     "room": o.room,
-                    "birthday": o.birthday,
+                    "birthday": None if o.birthday is None else since_epoch(o.birthday),
                     "phone": o.phone,
                     "email": o.email,
                     "username": o.username,

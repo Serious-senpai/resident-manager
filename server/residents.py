@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, ClassVar, Dict, Optional, TypeVar, TYPE_CHECKING
 
 from .database import Database
-from .personal import PersonalInfo
+from .info import PersonalInfo
 from .utils import snowflake_time
 
 
