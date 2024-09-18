@@ -1,28 +1,22 @@
 from __future__ import annotations
 
-from aiohttp import web
+from typing import Annotated
+
+import fastapi
 
 from ...auth import check_password
-from ...encoder import dumps
-from ...residents import Resident
-from ...router import api_router
-from ...utils import error_message
+from ...models import Authorization, Resident
+from ...routers import authorization_router
 
 
-# https://stackoverflow.com/a/7562744
-@api_router.post("/login")
-async def login(request: web.Request) -> web.Response:
-    try:
-        username = request.headers["Username"]
-        password = request.headers["Password"]
-    except KeyError:
-        return error_message("Missing required headers", status=400)
-
-    resident = await Resident.from_username(username)
+# Not much we can do: https://stackoverflow.com/a/7562744
+@authorization_router.post("/login")
+async def login(headers: Annotated[Authorization, fastapi.Header()]) -> Resident:
+    resident = await Resident.from_username(headers.username)
     if resident is None:
-        return error_message(f"No resident with username \"{username}\"", status=404)
+        raise fastapi.HTTPException(status_code=403, detail=f"No resident with username \"{headers.username}\"")
 
-    if not check_password(password, hashed=resident.hashed_password):
-        return error_message("Incorrect password", status=403)
+    if not check_password(headers.password, hashed=resident.hashed_password):
+        raise fastapi.HTTPException(status_code=403, detail="Incorrect password")
 
-    return web.json_response({"resident": resident}, dumps=dumps)
+    return resident

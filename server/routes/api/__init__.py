@@ -1,2 +1,2 @@
 from .login import *
-from .root import *
+from .register import *

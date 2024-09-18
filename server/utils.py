@@ -5,8 +5,6 @@ import string
 from datetime import datetime, timedelta, timezone
 from typing import ClassVar, Optional
 
-from aiohttp import web
-
 from .config import EPOCH
 
 
@@ -14,7 +12,6 @@ __all__ = (
     "secure_hex_string",
     "since_epoch",
     "from_epoch",
-    "error_message",
     "generate_id",
 )
 
@@ -51,11 +48,6 @@ def from_epoch(dt: timedelta) -> datetime:
 def snowflake_time(id: int) -> datetime:
     """Get the creation date of a snowflake ID."""
     return from_epoch(timedelta(milliseconds=id >> 14))
-
-
-def error_message(message: str, *, status: int) -> web.Response:
-    """Generate a JSON response with an error message."""
-    return web.json_response({"error": message}, status=status)
 
 
 class __IDGenerator:

@@ -2,49 +2,21 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Optional, TypeVar, TYPE_CHECKING
+from typing import Any, ClassVar, Dict, Optional, TypeVar
 
-from .database import Database
-from .info import PersonalInfo
-from .utils import snowflake_time
+from .info import HashedAccountInfo
+from ..database import Database
+from ..utils import snowflake_time
 
 
 __all__ = ("Resident",)
 T = TypeVar("T")
 
 
-class Resident(PersonalInfo):
+class Resident(HashedAccountInfo):
     """Represents a resident."""
 
-    __slots__ = (
-        "id",
-    )
-    if TYPE_CHECKING:
-        id: int
-
-    def __init__(
-        self,
-        *,
-        id: int,
-        name: str,
-        room: int,
-        birthday: Optional[datetime],
-        phone: Optional[str],
-        email: Optional[str],
-        username: str,
-        hashed_password: str,
-    ) -> None:
-        super().__init__(
-            name=name,
-            room=room,
-            birthday=birthday,
-            phone=phone,
-            email=email,
-            username=username,
-            hashed_password=hashed_password,
-        )
-
-        self.id = id
+    id: int
 
     @property
     def created_at(self) -> datetime:
