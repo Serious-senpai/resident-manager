@@ -4,12 +4,8 @@ import fastapi
 
 
 __all__ = (
-    "authorization_router",
+    "api_router",
 )
 
 
-authorization_router = fastapi.APIRouter(
-    prefix="/api",
-    tags=["authorization"],
-)
-redirect_router = fastapi.APIRouter
+api_router = fastapi.APIRouter(prefix="/api")

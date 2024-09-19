@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_localization/flutter_localization.dart";
+import "package:fluttertoast/fluttertoast.dart";
 import "package:meta/meta.dart";
 import "package:url_launcher/url_launcher.dart";
 
@@ -88,7 +90,18 @@ mixin CommonStateMixin<T extends StateAwareWidget> on State<T> {
                 IconButton(
                   icon: Image.asset("assets/github/github-mark.png", height: 20, width: 20),
                   iconSize: 20,
-                  onPressed: () => launchUrl(Uri.parse("https://github.com/Serious-senpai/resident-manager")),
+                  onPressed: () async {
+                    var launched = false;
+                    try {
+                      launched = await launchUrl(Uri.parse("https://github.com/Serious-senpai/resident-manager"));
+                    } on PlatformException {
+                      // pass
+                    }
+
+                    if (!launched) {
+                      await Fluttertoast.showToast(msg: "Unable to open URL");
+                    }
+                  },
                   padding: EdgeInsets.zero,
                 ),
                 const SizedBox.square(dimension: 20),

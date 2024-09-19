@@ -9,6 +9,7 @@ from .config import (
     DEFAULT_ADMIN_USERNAME,
     ODBC_CONNECTION_STRING,
 )
+from .utils import check_password
 
 
 __all__ = ("Database",)
@@ -109,6 +110,29 @@ class Database:
 
         self.__prepared = False
         self.__pool = None
+
+    async def verify_admin(self, username: str, password: str) -> bool:
+        if self.__pool is None:
+            return False
+
+        async with self.__pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT * FROM config WHERE name = 'admin_username' OR name = 'admin_password'")
+                rows = await cursor.fetchall()
+
+                if len(rows) != 2:
+                    raise RuntimeError("Invalid database format. Couldn't verify admin login.")
+
+                for name, value in rows:
+                    if name == "admin_username":
+                        if username != name:
+                            return False
+
+                    else:
+                        if not check_password(password, hashed=value):
+                            return False
+
+        return True
 
 
 Database.instance = Database()

@@ -13,7 +13,7 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from server import authorization_router, Database
+from server import api_router, Database
 
 
 class ApplicationLifespan(AbstractAsyncContextManager):
@@ -39,4 +39,4 @@ class ApplicationLifespan(AbstractAsyncContextManager):
 
 
 app = fastapi.FastAPI(docs_url="/", lifespan=ApplicationLifespan)
-app.include_router(authorization_router)
+app.include_router(api_router)

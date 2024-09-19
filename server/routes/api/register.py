@@ -5,10 +5,10 @@ from typing import Annotated
 import fastapi
 
 from ...models import Authorization, PersonalInfo, RegisterRequest
-from ...routers import authorization_router
+from ...routers import api_router
 
 
-@authorization_router.post("/register")
+@api_router.post("/register", name="Residents register", tags=["authorization", "resident"])
 async def register(
     data: PersonalInfo,
     headers: Annotated[Authorization, fastapi.Header()],

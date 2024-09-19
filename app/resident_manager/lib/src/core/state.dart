@@ -10,7 +10,6 @@ import "package:path_provider/path_provider.dart";
 import "errors.dart";
 import "http.dart";
 import "translations.dart";
-import "models/residents.dart";
 
 class Authorization {
   final String username;
@@ -22,36 +21,24 @@ class Authorization {
       : this(
           username: data["username"],
           password: data["password"],
-          isAdmin: data["isAdmin"],
+          isAdmin: data["is_admin"],
         );
 
   Map<String, dynamic> toJson() {
     return {
       "username": username,
       "password": password,
-      "isAdmin": isAdmin,
+      "is_admin": isAdmin,
     };
   }
 
-  Future<Resident> validate({required HTTPClient client}) async {
+  Future<bool> validate({required HTTPClient client}) async {
     final response = await client.apiPost(
-      "/api/login",
-      queryParameters: {"isAdmin": isAdmin ? "true" : "false"},
+      isAdmin ? "/api/admin/login" : "/api/login",
       headers: {"Username": username, "Password": password},
     );
-    final data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      await withLoginFile(
-        (file) async {
-          await file.writeAsString(json.encode(toJson()));
-        },
-      );
-
-      return Resident.fromJson(data["resident"]);
-    } else {
-      throw AuthorizationError(data["error"]);
-    }
+    return response.statusCode < 400;
   }
 
   static final _withLoginFileLock = Lock();
