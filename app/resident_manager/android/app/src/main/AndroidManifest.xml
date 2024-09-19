@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.se09.resident_manager">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="Resident manager"

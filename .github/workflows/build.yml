@@ -29,24 +29,32 @@ jobs:
           flutter-version: 3.24.3
           channel: stable
 
+      - name: Install extra apt dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get install -y ninja-build libgtk-3-dev
+
       - name: View Flutter status
         run: |
           flutter --version
           flutter doctor -v
 
-      - name: Install extra apt dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt-get install -y ninja-build libgtk-3-dev
-
       - name: Build desktop app
         working-directory: app/resident_manager
         run: flutter build ${{ matrix.build-name }}
 
-      - name: Upload build results
+      - name: Upload linux build
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-desktop
-          path: app/resident_manager/build/${{ matrix.build-name }}
+          name: ${{ matrix.os }}-build
+          path: app/resident_manager/build/linux/x64/release/bundle
+
+      - name: Upload windows build
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: app/resident_manager/build/windows/x64/runner/Release
 
   apk:
     name: Build APK
@@ -84,4 +92,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apk-build
-          path: app/resident_manager/build/app
+          path: app/resident_manager/build/app/outputs/flutter-apk
