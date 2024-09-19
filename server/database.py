@@ -125,7 +125,7 @@ class Database:
 
                 for name, value in rows:
                     if name == "admin_username":
-                        if username != name:
+                        if username != value:
                             return False
 
                     else:
