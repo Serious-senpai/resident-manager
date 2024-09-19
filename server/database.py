@@ -69,7 +69,7 @@ class Database:
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
                         phone VARCHAR(15),
-                        email VARCHAR(15),
+                        email VARCHAR(255),
                         username VARCHAR(255) UNIQUE NOT NULL,
                         hashed_password VARCHAR(255) NOT NULL,
                     )
@@ -82,7 +82,7 @@ class Database:
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
                         phone VARCHAR(15),
-                        email VARCHAR(15),
+                        email VARCHAR(255),
                         username VARCHAR(255) UNIQUE NOT NULL,
                         hashed_password VARCHAR(255) NOT NULL,
                     )
