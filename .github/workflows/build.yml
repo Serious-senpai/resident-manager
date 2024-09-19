@@ -15,9 +15,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            os-name: ubuntu
+            build-name: linux
           - os: windows-latest
-            os-name: windows
+            build-name: windows
 
     steps:
       - name: Checkout repository
@@ -34,15 +34,19 @@ jobs:
           flutter --version
           flutter doctor -v
 
+      - name: Install extra apt dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get install -y ninja-build libgtk-3-dev
+
       - name: Build desktop app
         working-directory: app/resident_manager
-        run: flutter build ${{ matrix.os-name }}
+        run: flutter build ${{ matrix.build-name }}
 
       - name: Upload build results
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-desktop
-          path: app/resident_manager/build/${{ matrix.os-name }}
+          path: app/resident_manager/build/${{ matrix.build-name }}
 
   apk:
     name: Build APK
