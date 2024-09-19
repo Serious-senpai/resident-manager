@@ -13,6 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            os-name: ubuntu
+          - os: windows-latest
+            os-name: windows
 
     steps:
       - name: Checkout repository
@@ -31,13 +36,13 @@ jobs:
 
       - name: Build desktop app
         working-directory: app/resident_manager
-        run: flutter build
+        run: flutter build ${{ matrix.os-name }}
 
       - name: Upload build results
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-desktop
-          path: app/resident_manager/build
+          path: app/resident_manager/build/${{ matrix.os-name }}
 
   apk:
     name: Build APK
@@ -75,4 +80,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apk-build
-          path: app/resident_manager/build
+          path: app/resident_manager/build/app
