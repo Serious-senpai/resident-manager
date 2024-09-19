@@ -21,11 +21,13 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.3"
+          flutter-version: 3.24.3
+          channel: stable
 
-      - name: Install dependencies
-        working-directory: app/resident_manager
-        run: flutter pub get
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
 
       - name: Run tests
         working-directory: app/resident_manager

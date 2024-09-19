@@ -1,0 +1,78 @@
+name: Flutter build
+
+on: [ push, pull_request ]
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: Build desktop app
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Build desktop app
+        working-directory: app/resident_manager
+        run: flutter build
+
+      - name: Upload build results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-desktop
+          path: app/resident_manager/build
+
+  apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: oracle-actions/setup-java@v1
+        with:
+          release: 19
+          version: 19.0.2
+
+      - name: View Java status
+        run: java --version
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Build APK
+        working-directory: app/resident_manager
+        run: flutter build apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-build
+          path: app/resident_manager/build
