@@ -9,7 +9,7 @@ void main() {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
     const MethodChannel("plugins.flutter.io/path_provider"),
     (MethodCall methodCall) async {
-      return ".";
+      return ".test";
     },
   );
 
@@ -22,15 +22,15 @@ void main() {
       // Build our app and trigger a frame.
       await tester.pumpWidget(MainApplication(state: state));
 
-      // Login page header
-      expect(find.text("Login"), findsOneWidget);
-
       // Open drawer
       await tester.tap(find.byIcon(Icons.lock_outlined));
       await tester.pump();
 
-      // Drawer header
-      expect(find.text("Resident manager"), findsOneWidget);
+      // Match drawer images
+      expect(find.widgetWithImage(DecorationImage, const AssetImage("assets/apartment.png")), findsOneWidget);
+      expect(find.widgetWithImage(Image, const AssetImage("assets/github/github-mark.png")), findsOneWidget);
+      expect(find.widgetWithImage(Image, const AssetImage("assets/flags/en.png")), findsOneWidget);
+      expect(find.widgetWithImage(Image, const AssetImage("assets/flags/vi.png")), findsOneWidget);
     },
   );
 }

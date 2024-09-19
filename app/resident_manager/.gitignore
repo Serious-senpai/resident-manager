@@ -1,3 +1,6 @@
+# Test directory
+.test
+
 # Miscellaneous
 *.class
 *.log

@@ -1,12 +1,15 @@
 import "dart:convert";
 import "dart:io";
+import "dart:ui";
 
 import "package:async_locks/async_locks.dart";
+import "package:flutter_localization/flutter_localization.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 
 import "errors.dart";
 import "http.dart";
+import "translations.dart";
 import "models/residents.dart";
 
 class Authorization {
@@ -94,10 +97,36 @@ class Authorization {
 class ApplicationState {
   final _http = HTTPClient();
 
+  final FlutterLocalization localization = FlutterLocalization.instance;
+  final List<void Function(Locale?)> _onTranslationCallbacks = <void Function(Locale?)>[];
+
   Authorization? _authorization;
   Authorization? get authorization => _authorization;
 
+  ApplicationState() {
+    localization.init(
+      mapLocales: [
+        const MapLocale("en", AppLocale.EN),
+        const MapLocale("vi", AppLocale.VI),
+      ],
+      initLanguageCode: "vi",
+    );
+    localization.onTranslatedLanguage = (Locale? locale) {
+      for (final callback in _onTranslationCallbacks) {
+        callback(locale);
+      }
+    };
+  }
+
   Future<void> prepare() async {
     _authorization = await Authorization.construct(client: _http);
+  }
+
+  void pushTranslationCallback(void Function(Locale?) callback) {
+    _onTranslationCallbacks.add(callback);
+  }
+
+  void popTranslationCallback() {
+    _onTranslationCallbacks.removeLast();
   }
 }

@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
 
   async_locks: ^4.0.1
+  flutter_localization: ^0.2.2
   http: ^1.2.2
   meta: ^1.15.0
   path: ^1.9.0
@@ -70,6 +71,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+    - assets/flags/
+    - assets/github/
+    - assets/icon/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
