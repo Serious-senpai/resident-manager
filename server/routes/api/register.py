@@ -13,6 +13,7 @@ async def register(
     data: PersonalInfo,
     headers: Annotated[Authorization, fastapi.Header()],
 ) -> RegisterRequest:
+    """Register an account to be created."""
     return await RegisterRequest.create(
         name=data.name,
         room=data.room,

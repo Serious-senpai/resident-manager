@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 
 class Resident(HashedAccountInfo):
-    """Represents a resident."""
+    """Data model for objects holding information about a resident."""
 
     id: int
 
@@ -46,10 +46,7 @@ class Resident(HashedAccountInfo):
                 return cache[key]
 
             except KeyError:
-                database = Database()
-                await database.prepare()
-
-                async with database.pool.acquire() as connection:
+                async with Database.instance.pool.acquire() as connection:
                     async with connection.cursor() as cursor:
                         await cursor.execute("SELECT * FROM residents WHERE ? = ?", db_column, key)
                         rows = await cursor.fetchall()

@@ -17,7 +17,7 @@ __all__ = ("Database",)
 class Database:
     """A database singleton that manages the connection pool."""
 
-    __instance__: ClassVar[Optional[Database]] = None
+    instance: ClassVar[Database]
     __slots__ = (
         "__pool",
         "__prepared",
@@ -26,16 +26,9 @@ class Database:
         __pool: Optional[aioodbc.Pool]
         __prepared: bool
 
-    def __new__(cls) -> Database:
-        if cls.__instance__ is None:
-            self = super().__new__(cls)
-
-            self.__pool = None
-            self.__prepared = False
-
-            cls.__instance__ = self
-
-        return cls.__instance__
+    def __init__(self) -> None:
+        self.__pool = None
+        self.__prepared = False
 
     @property
     def pool(self) -> aioodbc.Pool:
@@ -108,3 +101,14 @@ class Database:
                     DEFAULT_ADMIN_USERNAME,
                     DEFAULT_ADMIN_HASHED_PASSWORD,
                 )
+
+    async def close(self) -> None:
+        if self.__pool is not None:
+            self.__pool.close()
+            await self.__pool.wait_closed()
+
+        self.__prepared = False
+        self.__pool = None
+
+
+Database.instance = Database()

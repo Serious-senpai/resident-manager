@@ -3,17 +3,35 @@ from __future__ import annotations
 import secrets
 import string
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 from typing import ClassVar, Optional
 
-from .config import EPOCH
+from .config import EPOCH, SALT_LENGTH
 
 
 __all__ = (
+    "hash_password",
+    "check_password",
     "secure_hex_string",
     "since_epoch",
     "from_epoch",
+    "snowflake_time",
     "generate_id",
 )
+
+
+def hash_password(password: str, *, salt: Optional[str] = None) -> str:
+    """Hash a password using SHA-256 and a random salt."""
+    if salt is None:
+        salt = secure_hex_string(SALT_LENGTH)
+
+    return sha256((password + salt).encode("utf-8")).hexdigest() + salt
+
+
+def check_password(password: str, *, hashed: str) -> bool:
+    """Check if a password matches a hashed password."""
+    salt = hashed[-SALT_LENGTH:]
+    return hashed == hash_password(password, salt=salt)
 
 
 def secure_hex_string(length: int) -> str:

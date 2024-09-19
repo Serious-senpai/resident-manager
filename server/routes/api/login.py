@@ -4,14 +4,15 @@ from typing import Annotated
 
 import fastapi
 
-from ...auth import check_password
 from ...models import Authorization, Resident
 from ...routers import authorization_router
+from ...utils import check_password
 
 
 # Not much we can do: https://stackoverflow.com/a/7562744
 @authorization_router.post("/login")
 async def login(headers: Annotated[Authorization, fastapi.Header()]) -> Resident:
+    """Verify authorization data, return resident information on success."""
     resident = await Resident.from_username(headers.username)
     if resident is None:
         raise fastapi.HTTPException(status_code=403, detail=f"No resident with username \"{headers.username}\"")

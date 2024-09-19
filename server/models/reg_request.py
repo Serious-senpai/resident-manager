@@ -7,15 +7,15 @@ import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/p
 
 from .info import HashedAccountInfo
 from .residents import Resident
-from ..auth import hash_password
 from ..database import Database
-from ..utils import generate_id, snowflake_time
+from ..utils import generate_id, hash_password, snowflake_time
 
 
 __all__ = ("RegisterRequest",)
 
 
 class RegisterRequest(HashedAccountInfo):
+    """Data model for objects holding information about a registration request."""
 
     id: int
 
@@ -37,10 +37,7 @@ class RegisterRequest(HashedAccountInfo):
         `Resident`
             The newly registered resident.
         """
-        database = Database()
-        await database.prepare()
-
-        async with database.pool.acquire() as connection:
+        async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 resident_id = generate_id()
                 await cursor.execute(
@@ -61,10 +58,7 @@ class RegisterRequest(HashedAccountInfo):
         return resident
 
     async def decline(self) -> None:
-        database = Database()
-        await database.prepare()
-
-        async with database.pool.acquire() as connection:
+        async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await self.__remove_from_db(cursor=cursor)
 
@@ -79,12 +73,9 @@ class RegisterRequest(HashedAccountInfo):
         username: str,
         password: str,
     ) -> RegisterRequest:
-        database = Database()
-        await database.prepare()
-
         hashed_password = hash_password(password)
 
-        async with database.pool.acquire() as connection:
+        async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 request_id = generate_id()
                 await cursor.execute(

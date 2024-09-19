@@ -12,3 +12,4 @@ authorization_router = fastapi.APIRouter(
     prefix="/api",
     tags=["authorization"],
 )
+redirect_router = fastapi.APIRouter
