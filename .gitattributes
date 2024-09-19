@@ -1,1 +1,7 @@
 * text=auto eol=lf
+
+app/resident_manager/android linguist-vendored
+app/resident_manager/ios linguist-vendored
+app/resident_manager/linux linguist-vendored
+app/resident_manager/macos linguist-vendored
+app/resident_manager/windows linguist-vendored

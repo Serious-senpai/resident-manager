@@ -53,16 +53,22 @@ class Authorization {
 
   static final _withLoginFileLock = Lock();
 
-  static Future<T> withLoginFile<T>(Future<T> Function(File) callback) async {
-    final cacheDir = await getApplicationCacheDirectory();
-    final file = File(join(cacheDir.absolute.path, "login.json"));
-    return await _withLoginFileLock.run(() => callback(file));
+  static Future<T?> withLoginFile<T>(Future<T?> Function(File) callback) async {
+    try {
+      final cacheDir = await getApplicationCacheDirectory();
+      final file = File(join(cacheDir.absolute.path, "login.json"));
+
+      return await _withLoginFileLock.run(() => callback(file));
+    } on MissingPlatformDirectoryException {
+      return null;
+    }
   }
 
   static Future<Authorization?> construct({required HTTPClient client}) {
     return withLoginFile(
       (file) async {
-        if (await file.exists()) {
+        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
+        if (file.existsSync()) {
           final data = json.decode(await file.readAsString());
           final username = data["username"];
           final password = data["password"];

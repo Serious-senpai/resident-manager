@@ -22,7 +22,7 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    avoid_print: false
+    avoid_print: true
     constant_identifier_names: false
     prefer_double_quotes: true
 
