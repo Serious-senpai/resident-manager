@@ -117,7 +117,7 @@ class Database:
 
         async with self.__pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM config WHERE name = 'admin_username' OR name = 'admin_password'")
+                await cursor.execute("SELECT * FROM config WHERE name = 'admin_username' OR name = 'admin_hashed_password'")
                 rows = await cursor.fetchall()
 
                 if len(rows) != 2:
