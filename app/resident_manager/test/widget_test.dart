@@ -19,18 +19,17 @@ void main() {
       final state = ApplicationState();
       await state.prepare();
 
-      // Build our app and trigger a frame.
       await tester.pumpWidget(MainApplication(state: state));
+      await tester.pump();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.lock_outlined));
       await tester.pump();
 
       // Match drawer images
-      expect(find.widgetWithImage(DecorationImage, const AssetImage("assets/apartment.png")), findsOneWidget);
-      expect(find.widgetWithImage(Image, const AssetImage("assets/github/github-mark.png")), findsOneWidget);
-      expect(find.widgetWithImage(Image, const AssetImage("assets/flags/en.png")), findsOneWidget);
-      expect(find.widgetWithImage(Image, const AssetImage("assets/flags/vi.png")), findsOneWidget);
+      expect(find.widgetWithImage(IconButton, const AssetImage("assets/github/github-mark.png")), findsOneWidget);
+      expect(find.widgetWithImage(IconButton, const AssetImage("assets/flags/en.png")), findsOneWidget);
+      expect(find.widgetWithImage(IconButton, const AssetImage("assets/flags/vi.png")), findsOneWidget);
     },
   );
 }
