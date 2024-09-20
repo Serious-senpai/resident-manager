@@ -20,6 +20,15 @@ class PersonalInfo(pydantic.BaseModel):
     phone: Optional[str]
     email: Optional[str]
 
+    def to_personal_info(self) -> PersonalInfo:
+        return PersonalInfo(
+            name=self.name,
+            room=self.room,
+            birthday=self.birthday,
+            phone=self.phone,
+            email=self.email,
+        )
+
 
 class AccountInfo(PersonalInfo, Authorization):
     """Data model for objects holding resident account information"""

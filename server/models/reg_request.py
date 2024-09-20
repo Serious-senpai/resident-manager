@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
+import pyodbc  # type: ignore
 
 from .info import HashedAccountInfo
 from .residents import Resident
@@ -72,23 +73,26 @@ class RegisterRequest(HashedAccountInfo):
         email: Optional[str],
         username: str,
         password: str,
-    ) -> RegisterRequest:
+    ) -> Optional[RegisterRequest]:
         hashed_password = hash_password(password)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 request_id = generate_id()
-                await cursor.execute(
-                    "INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    request_id,
-                    name,
-                    room,
-                    birthday,
-                    phone,
-                    email,
-                    username,
-                    hashed_password,
-                )
+                try:
+                    await cursor.execute(
+                        "INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        request_id,
+                        name,
+                        room,
+                        birthday,
+                        phone,
+                        email,
+                        username,
+                        hashed_password,
+                    )
+                except pyodbc.DatabaseError:
+                    return None
 
         return cls(
             id=request_id,

@@ -2,19 +2,26 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Header
+from fastapi import HTTPException, Header, status
 
 from ...models import Authorization, PersonalInfo, RegisterRequest
 from ...routers import api_router
 
 
-@api_router.post("/register", name="Residents register", tags=["authorization", "resident"])
+@api_router.post(
+    "/register",
+    name="Residents register",
+    tags=["authorization", "resident"],
+    response_model=None,
+    responses={status.HTTP_400_BAD_REQUEST: {}},
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def register(
     data: PersonalInfo,
     headers: Annotated[Authorization, Header()],
-) -> RegisterRequest:
+) -> None:
     """Register a resident account to be created."""
-    return await RegisterRequest.create(
+    request = await RegisterRequest.create(
         name=data.name,
         room=data.room,
         birthday=data.birthday,
@@ -23,3 +30,12 @@ async def register(
         username=headers.username,
         password=headers.password,
     )
+
+    if request is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create registration request",
+        )
+
+    else:
+        return None

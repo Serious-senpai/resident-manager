@@ -13,12 +13,13 @@ from ....routers import api_router
     "/admin/login",
     name="Administrators login",
     tags=["authorization", "admin"],
+    response_model=None,
     responses={status.HTTP_403_FORBIDDEN: {}},
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:
-    """Verify administrator authorization data, return 200 on success, 403 on failure"""
+    """Verify administrator authorization data, return 204 on success, 403 on failure"""
     if await Database.instance.verify_admin(headers.username, headers.password):
-        return
+        return None
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
