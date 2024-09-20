@@ -10,17 +10,19 @@ import "../core/state.dart";
 import "../core/translations.dart";
 
 mixin SupportsTranslation<T extends StateAwareWidget> on State<T> {
+  ApplicationState get state => widget.state;
+
   @override
   @mustCallSuper
   void initState() {
-    widget.state.pushTranslationCallback((Locale? _) => setState(() {}));
+    state.pushTranslationCallback((Locale? _) => setState(() {}));
     super.initState();
   }
 
   @override
   @mustCallSuper
   void dispose() {
-    widget.state.popTranslationCallback();
+    state.popTranslationCallback();
     super.dispose();
   }
 }
@@ -34,10 +36,14 @@ mixin CommonStateMixin<T extends StateAwareWidget> on State<T> {
 
   ApplicationState get state => widget.state;
 
+  void refresh() {
+    setState(() {});
+  }
+
   @override
   @mustCallSuper
   void initState() {
-    state.pushTranslationCallback((Locale? _) => setState(() {}));
+    state.pushTranslationCallback((Locale? _) => refresh());
     super.initState();
   }
 

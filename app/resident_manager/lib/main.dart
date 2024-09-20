@@ -23,15 +23,15 @@ class MainApplicationState extends State<MainApplication> with SupportsTranslati
     return MaterialApp(
       title: AppLocale.ResidentManager.getString(context),
       routes: {
-        "/login": (context) => LoginPage(state: widget.state),
+        "/login": (context) => LoginPage(state: state),
       },
       initialRoute: "/login",
-      localizationsDelegates: widget.state.localization.localizationsDelegates,
+      localizationsDelegates: state.localization.localizationsDelegates,
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         scrollbars: false,
         overscroll: false,
       ),
-      supportedLocales: widget.state.localization.supportedLocales,
+      supportedLocales: state.localization.supportedLocales,
     );
   }
 }
