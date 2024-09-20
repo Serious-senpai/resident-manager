@@ -82,7 +82,7 @@ class RegisterRequest(HashedAccountInfo):
                 try:
                     await cursor.execute(
                         """
-                        IF EXISTS (SELECT username FROM residents WHERE username = ?)
+                        IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
                         INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         ELSE
                         RAISERROR(15600, -1, -1)
