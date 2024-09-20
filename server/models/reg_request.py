@@ -81,7 +81,13 @@ class RegisterRequest(HashedAccountInfo):
                 request_id = generate_id()
                 try:
                     await cursor.execute(
-                        "INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        """
+                        IF EXISTS (SELECT username FROM residents WHERE username = ?)
+                        INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ELSE
+                        RAISERROR(15600, -1, -1)
+                        """,
+                        username,
                         request_id,
                         name,
                         room,
