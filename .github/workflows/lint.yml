@@ -20,7 +20,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r dev-requirements.txt
 
       - name: Run autopep8
         run: autopep8 --exit-code --diff -aaar .
@@ -39,7 +39,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r dev-requirements.txt
 
       - name: Run mypy
         run: mypy .
@@ -58,7 +58,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r dev-requirements.txt
 
       - name: Run flake8
         run: flake8 .

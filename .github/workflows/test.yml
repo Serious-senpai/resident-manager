@@ -39,6 +39,12 @@ jobs:
     environment:
       name: test
 
+    env:
+      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+      VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+      PORT: 8000
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
