@@ -4,3 +4,4 @@
 .vscode/
 
 run.bat
+.coverage*

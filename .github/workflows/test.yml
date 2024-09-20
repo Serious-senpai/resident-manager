@@ -32,3 +32,39 @@ jobs:
       - name: Run tests
         working-directory: app/resident_manager
         run: flutter test
+
+  python:
+    name: Run Python tests
+    runs-on: ubuntu-latest
+    environment:
+      name: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Run tests
+        run: coverage run -m pytest -v .
+
+      - name: Combine coverage reports
+        run: coverage combine
+
+      - name: Report coverage
+        run: coverage report -m
+
+      - name: Generate HTML coverage report
+        run: coverage html -d htmlcov
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-html
+          path: htmlcov

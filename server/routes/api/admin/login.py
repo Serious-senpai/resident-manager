@@ -19,6 +19,7 @@ from ....routers import api_router
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:
     """Verify administrator authorization data, return 204 on success, 403 on failure"""
+    print("Got request")
     if await Database.instance.verify_admin(headers.username, headers.password):
         return None
 
