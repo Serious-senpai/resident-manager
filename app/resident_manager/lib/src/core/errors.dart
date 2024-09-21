@@ -6,10 +6,3 @@ abstract class ResidentManagerException implements Exception {
     return message;
   }
 }
-
-class AuthorizationError implements ResidentManagerException {
-  @override
-  final String message;
-
-  AuthorizationError(this.message);
-}

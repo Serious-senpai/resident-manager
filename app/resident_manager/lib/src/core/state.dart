@@ -7,22 +7,19 @@ import "package:flutter_localization/flutter_localization.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 
-import "errors.dart";
 import "http.dart";
 import "translations.dart";
 
-class Authorization {
+class PublicAuthorization {
   final String username;
   final String password;
   final bool isAdmin;
 
-  Authorization({required this.username, required this.password, required this.isAdmin});
-  Authorization.fromJson(Map<String, dynamic> data)
-      : this(
-          username: data["username"],
-          password: data["password"],
-          isAdmin: data["is_admin"],
-        );
+  PublicAuthorization({required this.username, required this.password, required this.isAdmin});
+}
+
+class _Authorization extends PublicAuthorization {
+  _Authorization({required super.username, required super.password, required super.isAdmin});
 
   Map<String, dynamic> toJson() {
     return {
@@ -41,9 +38,21 @@ class Authorization {
     final result = response.statusCode < 400;
     if (result) {
       await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
+    } else {
+      await removeAuthData();
     }
 
     return result;
+  }
+
+  Future<void> removeAuthData() async {
+    await _withLoginFile(
+      (file) async {
+        if (await file.exists()) {
+          await file.delete();
+        }
+      },
+    );
   }
 
   static final _withLoginFileLock = Lock();
@@ -53,14 +62,15 @@ class Authorization {
       final cacheDir = await getApplicationCacheDirectory();
       final file = File(join(cacheDir.absolute.path, "login.json"));
 
+      // Watch out for deadlocks! _withLoginFile<T> mustn't be invoked again in `callback`.
       return await _withLoginFileLock.run(() => callback(file));
     } on MissingPlatformDirectoryException {
       return null;
     }
   }
 
-  static Future<Authorization?> construct({required HTTPClient client}) {
-    return _withLoginFile(
+  static Future<_Authorization?> prepare({required HTTPClient client}) async {
+    final auth = await _withLoginFile(
       (file) async {
         // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
         if (file.existsSync()) {
@@ -69,20 +79,20 @@ class Authorization {
           final password = data["password"];
           final isAdmin = data["is_admin"];
 
-          final auth = Authorization(username: username, password: password, isAdmin: isAdmin);
           try {
-            await auth.validate(client: client);
-            return auth;
-          } on AuthorizationError {
-            await _withLoginFile((file) => file.delete());
-
+            return _Authorization(username: username, password: password, isAdmin: isAdmin);
+          } on Exception {
             return null;
           }
         }
-
-        return null;
       },
     );
+
+    if (auth != null && await auth.validate(client: client)) {
+      return auth;
+    }
+
+    return null;
   }
 }
 
@@ -92,8 +102,8 @@ class ApplicationState {
   final FlutterLocalization localization = FlutterLocalization.instance;
   final List<void Function(Locale?)> _onTranslationCallbacks = <void Function(Locale?)>[];
 
-  Authorization? _authorization;
-  Authorization? get authorization => _authorization;
+  _Authorization? _authorization;
+  PublicAuthorization? get authorization => _authorization;
 
   ApplicationState() {
     localization.init(
@@ -110,17 +120,21 @@ class ApplicationState {
     };
   }
 
-  Future<bool> authorize(Authorization auth) async {
+  Future<bool> authorize({required String username, required String password, required bool isAdmin}) async {
+    final auth = _Authorization(username: username, password: password, isAdmin: isAdmin);
     final result = await auth.validate(client: http);
-    if (result) {
-      _authorization = auth;
-    }
+    _authorization = result ? auth : null;
 
     return result;
   }
 
+  Future<void> deauthorize() async {
+    await _authorization?.removeAuthData();
+    _authorization = null;
+  }
+
   Future<void> prepare() async {
-    _authorization = await Authorization.construct(client: http);
+    _authorization = await _Authorization.prepare(client: http);
   }
 
   void pushTranslationCallback(void Function(Locale?) callback) {

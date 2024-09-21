@@ -3,7 +3,7 @@
     package="com.se09.resident_manager">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="Resident manager"
+        android:label="Resident Manager"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

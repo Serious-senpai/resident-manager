@@ -4,20 +4,17 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
-import "../core/state.dart";
+import "../utils.dart";
 import "../core/translations.dart";
 
 class LoginPage extends StateAwareWidget {
-  @override
-  final ApplicationState state;
-
-  const LoginPage({super.key, required this.state});
+  const LoginPage({super.key, required super.state});
 
   @override
   LoginPageState createState() => LoginPageState();
 }
 
-class LoginPageState extends State<LoginPage> with CommonStateMixin<LoginPage> {
+class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
   final _actionLock = Lock();
   Widget notification = const SizedBox.square(dimension: 0);
 
@@ -30,7 +27,6 @@ class LoginPageState extends State<LoginPage> with CommonStateMixin<LoginPage> {
         notification = Text(AppLocale.LoggingInEllipsis.getString(context), style: const TextStyle(color: Colors.blue));
         refresh();
 
-        final authorization = Authorization(username: _username.text, password: _password.text, isAdmin: isAdmin);
         if (!context.mounted) {
           return;
         }
@@ -42,17 +38,22 @@ class LoginPageState extends State<LoginPage> with CommonStateMixin<LoginPage> {
         final loggedInAs = AppLocale.LoggedInAs.getString(context);
         final invalidCredentials = AppLocale.InvalidCredentials.getString(context);
 
-        notification = await state.authorize(authorization)
-            ? Text(
-                "$loggedInAs \"${_username.text}\"",
-                style: const TextStyle(color: Colors.blue),
-              )
-            : Text(
-                invalidCredentials,
-                style: const TextStyle(color: Colors.red),
-              );
+        final username = _username.text;
 
-        refresh();
+        if (await state.authorize(username: username, password: _password.text, isAdmin: isAdmin)) {
+          await showToastSafe(msg: "$loggedInAs \"$username\"");
+
+          if (mounted) {
+            await Navigator.pushReplacementNamed(context, "/api/register-queue");
+          }
+        } else {
+          notification = Text(
+            invalidCredentials,
+            style: const TextStyle(color: Colors.red),
+          );
+
+          refresh();
+        }
       },
     );
   }

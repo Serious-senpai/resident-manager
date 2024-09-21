@@ -1,16 +1,20 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_localization/flutter_localization.dart";
-import "package:fluttertoast/fluttertoast.dart";
 import "package:meta/meta.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "state.dart";
+import "../utils.dart";
 import "../core/state.dart";
 import "../core/translations.dart";
 
-mixin SupportsTranslation<T extends StateAwareWidget> on State<T> {
+abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> {
   ApplicationState get state => widget.state;
+
+  void refresh() {
+    setState(() {});
+  }
 
   @override
   @mustCallSuper
@@ -27,32 +31,12 @@ mixin SupportsTranslation<T extends StateAwareWidget> on State<T> {
   }
 }
 
-mixin CommonStateMixin<T extends StateAwareWidget> on State<T> {
+mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
   /// The [GlobalKey] for the [Scaffold] returned by the [build] method
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   /// Whether this route can be popped when pressing the "Back" button
   bool get canPop => true;
-
-  ApplicationState get state => widget.state;
-
-  void refresh() {
-    setState(() {});
-  }
-
-  @override
-  @mustCallSuper
-  void initState() {
-    state.pushTranslationCallback((Locale? _) => refresh());
-    super.initState();
-  }
-
-  @override
-  @mustCallSuper
-  void dispose() {
-    state.popTranslationCallback();
-    super.dispose();
-  }
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -69,25 +53,85 @@ mixin CommonStateMixin<T extends StateAwareWidget> on State<T> {
   /// Create a default [Drawer] for all pages within this application
   Drawer createDrawer(BuildContext context) {
     var currentRoute = ModalRoute.of(context)?.settings.name;
+
+    final navigator = <Widget>[
+      const DrawerHeader(
+        decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/apartment.png"), fit: BoxFit.cover)),
+        child: null,
+      ),
+      ListTile(
+        leading: const Icon(Icons.lock_outlined),
+        title: Text(
+          AppLocale.Login.getString(context),
+          style: currentRoute == "/login" ? const TextStyle(color: Colors.blue) : null,
+        ),
+        onTap: () => currentRoute == "/login"
+            ? Navigator.pop(context)
+            : Navigator.pushReplacementNamed(
+                context,
+                "/login",
+              ),
+      ),
+    ];
+
+    final authorization = state.authorization;
+    if (authorization != null) {
+      if (authorization.isAdmin) {
+        navigator.addAll(
+          [
+            ListTile(
+              leading: const Icon(Icons.how_to_reg_outlined),
+              title: Text(
+                AppLocale.RegisterQueue.getString(context),
+                style: currentRoute == "/admin/register-queue" ? const TextStyle(color: Colors.blue) : null,
+              ),
+              onTap: () => currentRoute == "/admin/register-queue"
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(
+                      context,
+                      "/admin/register-queue",
+                    ),
+            ),
+          ],
+        );
+      } else {
+        navigator.addAll(
+          [
+            ListTile(
+              leading: const Icon(Icons.home_outlined),
+              title: Text(
+                AppLocale.Home.getString(context),
+                style: currentRoute == "/home" ? const TextStyle(color: Colors.blue) : null,
+              ),
+              onTap: () => currentRoute == "/home"
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(
+                      context,
+                      "/home",
+                    ),
+            ),
+          ],
+        );
+      }
+
+      navigator.add(
+        ListTile(
+          leading: const Icon(Icons.logout_outlined),
+          title: Text(AppLocale.Logout.getString(context)),
+          onTap: () async {
+            await state.deauthorize();
+            if (context.mounted) {
+              Navigator.pushReplacementNamed(context, "/login");
+            }
+          },
+        ),
+      );
+    }
+
     return Drawer(
       child: Stack(
         children: [
-          ListView(
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/apartment.png"), fit: BoxFit.cover)),
-                child: null,
-              ),
-              ListTile(
-                leading: const Icon(Icons.lock),
-                title: Text(
-                  AppLocale.Login.getString(context),
-                  style: currentRoute == "/login" ? const TextStyle(color: Colors.blue) : null,
-                ),
-                onTap: () => currentRoute == "/login" ? Navigator.pop(context) : Navigator.pushReplacementNamed(context, "/login"),
-              ),
-            ],
-          ),
+          ListView(children: navigator),
           Positioned(
             bottom: 5,
             left: 5,
@@ -105,7 +149,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on State<T> {
                     }
 
                     if (!launched) {
-                      await Fluttertoast.showToast(msg: "Unable to open URL");
+                      await showToastSafe(msg: "Unable to open URL");
                     }
                   },
                   padding: EdgeInsets.zero,
