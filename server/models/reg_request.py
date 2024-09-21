@@ -130,7 +130,8 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     """
                     SELECT * FROM register_queue
                     ORDER BY request_id DESC
-                    OFFSET ? FETCH ? ROWS ONLY
+                    OFFSET ? ROWS
+                    FETCH NEXT ? ROWS ONLY
                     """,
                     offset,
                     DB_PAGINATION_QUERY,
