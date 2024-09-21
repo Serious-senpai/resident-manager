@@ -12,8 +12,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         include:
+          - os: macos-latest
+            build-name: macos
           - os: ubuntu-latest
             build-name: linux
           - os: windows-latest
