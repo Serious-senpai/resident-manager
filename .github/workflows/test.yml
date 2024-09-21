@@ -36,8 +36,6 @@ jobs:
   python:
     name: Run Python tests
     runs-on: ubuntu-latest
-    environment:
-      name: test
 
     env:
       ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
