@@ -6,23 +6,22 @@ from typing import Optional
 import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
 import pyodbc  # type: ignore
 
-from .info import HashedAccountInfo
+from .auth import HashedAuthorization
+from .info import PublicInfo
 from .residents import Resident
 from ..database import Database
-from ..utils import generate_id, hash_password, snowflake_time
+from ..utils import generate_id, hash_password
 
 
 __all__ = ("RegisterRequest",)
 
 
-class RegisterRequest(HashedAccountInfo):
-    """Data model for objects holding information about a registration request."""
+class RegisterRequest(PublicInfo, HashedAuthorization):
+    """Data model for objects holding information about a registration request.
+
+    Each object of this class corresponds to a database row."""
 
     id: int
-
-    @property
-    def created_at(self) -> datetime:
-        return snowflake_time(self.id)
 
     async def __remove_from_db(self, *, cursor: aioodbc.Cursor) -> None:
         await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)

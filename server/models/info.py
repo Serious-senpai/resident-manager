@@ -5,10 +5,10 @@ from typing import Optional
 
 import pydantic
 
-from .auth import Authorization, HashedAuthorization
+from .snowflake import Snowflake
 
 
-__all__ = ("PersonalInfo", "AccountInfo", "HashedAccountInfo")
+__all__ = ("PersonalInfo", "PublicInfo")
 
 
 class PersonalInfo(pydantic.BaseModel):
@@ -30,11 +30,15 @@ class PersonalInfo(pydantic.BaseModel):
         )
 
 
-class AccountInfo(PersonalInfo, Authorization):
-    """Data model for objects holding resident account information"""
-    pass
+class PublicInfo(Snowflake, PersonalInfo):
+    """Data model for objects holding personal info along with a snowflake ID."""
 
-
-class HashedAccountInfo(PersonalInfo, HashedAuthorization):
-    """Data model for objects holding resident account information with hashed password."""
-    pass
+    def to_public_info(self) -> PublicInfo:
+        return PublicInfo(
+            id=self.id,
+            name=self.name,
+            room=self.room,
+            birthday=self.birthday,
+            phone=self.phone,
+            email=self.email,
+        )

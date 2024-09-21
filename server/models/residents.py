@@ -1,26 +1,21 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 from typing import Any, ClassVar, Dict, Optional, TypeVar
 
-from .info import HashedAccountInfo
+from .auth import HashedAuthorization
+from .info import PublicInfo
 from ..database import Database
-from ..utils import snowflake_time
 
 
 __all__ = ("Resident",)
 T = TypeVar("T")
 
 
-class Resident(HashedAccountInfo):
-    """Data model for objects holding information about a resident."""
+class Resident(PublicInfo, HashedAuthorization):
+    """Data model for objects holding information about a resident.
 
-    id: int
-
-    @property
-    def created_at(self) -> datetime:
-        return snowflake_time(self.id)
+    Each object of this class corresponds to a database row."""
 
     __cache_by_id: ClassVar[Dict[int, Resident]] = {}
     __cache_by_username: ClassVar[Dict[str, Resident]] = {}

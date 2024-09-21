@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import HTTPException, Header, status
 
-from ...models import Authorization, PersonalInfo, Resident
+from ...models import Authorization, PublicInfo, Resident
 from ...routers import api_router
 from ...utils import check_password
 
@@ -17,7 +17,7 @@ from ...utils import check_password
     responses={status.HTTP_403_FORBIDDEN: {}},
     status_code=status.HTTP_200_OK,
 )
-async def login(headers: Annotated[Authorization, Header()]) -> PersonalInfo:
+async def login(headers: Annotated[Authorization, Header()]) -> PublicInfo:
     """Verify authorization data, return resident information on success."""
     resident = await Resident.from_username(headers.username)
     if resident is None:
@@ -32,4 +32,4 @@ async def login(headers: Annotated[Authorization, Header()]) -> PersonalInfo:
             detail="Incorrect password",
         )
 
-    return resident.to_personal_info()
+    return resident.to_public_info()
