@@ -52,7 +52,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           await showToastSafe(msg: "$loggedInAs \"$username\"");
 
           if (mounted) {
-            await Navigator.pushReplacementNamed(context, "/api/register-queue");
+            await Navigator.pushReplacementNamed(context, "/admin/register-queue");
           }
         } else {
           notification = Text(
