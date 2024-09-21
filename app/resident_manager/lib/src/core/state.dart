@@ -16,6 +16,8 @@ class PublicAuthorization {
   final bool isAdmin;
 
   PublicAuthorization({required this.username, required this.password, required this.isAdmin});
+
+  Map<String, String> get headers => {"Username": username, "Password": password};
 }
 
 class _Authorization extends PublicAuthorization {
@@ -32,7 +34,7 @@ class _Authorization extends PublicAuthorization {
   Future<bool> validate({required HTTPClient client}) async {
     final response = await client.apiPost(
       isAdmin ? "/api/admin/login" : "/api/login",
-      headers: {"Username": username, "Password": password},
+      headers: headers,
     );
 
     final result = response.statusCode < 400;
@@ -81,7 +83,7 @@ class _Authorization extends PublicAuthorization {
 
           try {
             return _Authorization(username: username, password: password, isAdmin: isAdmin);
-          } on Exception {
+          } catch (_) {
             return null;
           }
         }

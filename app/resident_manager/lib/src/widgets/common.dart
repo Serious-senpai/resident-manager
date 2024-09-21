@@ -149,7 +149,9 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                     }
 
                     if (!launched) {
-                      await showToastSafe(msg: "Unable to open URL");
+                      await showToastSafe(
+                        msg: context.mounted ? AppLocale.UnableToOpenUrl.getString(context) : AppLocale.UnableToOpenUrl,
+                      );
                     }
                   },
                   padding: EdgeInsets.zero,

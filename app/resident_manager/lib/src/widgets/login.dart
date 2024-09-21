@@ -40,7 +40,15 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
         final username = _username.text;
 
-        if (await state.authorize(username: username, password: _password.text, isAdmin: isAdmin)) {
+        bool authorized = false;
+        try {
+          authorized = await state.authorize(username: username, password: _password.text, isAdmin: isAdmin);
+        } catch (_) {
+          await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          return;
+        }
+
+        if (authorized) {
           await showToastSafe(msg: "$loggedInAs \"$username\"");
 
           if (mounted) {

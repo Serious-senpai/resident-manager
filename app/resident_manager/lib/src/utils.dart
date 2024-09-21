@@ -1,6 +1,8 @@
 import "package:flutter/services.dart";
 import "package:fluttertoast/fluttertoast.dart";
 
+import "core/config.dart";
+
 Future<bool> showToastSafe({
   required String msg,
   Toast? toastLength,
@@ -32,4 +34,12 @@ Future<bool> showToastSafe({
   } on PlatformException {
     return false;
   }
+}
+
+DateTime fromEpoch(Duration dt) {
+  return epoch.add(dt);
+}
+
+DateTime snowflakeTime(int id) {
+  return fromEpoch(Duration(milliseconds: id >> 14));
 }

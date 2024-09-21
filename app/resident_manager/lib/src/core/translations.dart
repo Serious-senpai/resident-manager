@@ -12,6 +12,16 @@ class AppLocale {
   static const String InvalidCredentials = "Invalid credentials";
   static const String RegisterQueue = "Register queue";
   static const String Home = "Home";
+  static const String UnableToOpenUrl = "Unable to open URL";
+  static const String ConnectionError = "Connection error";
+  static const String Loading = "Loading";
+  static const String Name = "Name";
+  static const String Room = "Room";
+  static const String DateOfBirth = "Date of birth";
+  static const String Phone = "Phone";
+  static const String Email = "Email";
+  static const String CreationTime = "Creation time";
+  static const String Retry = "Retry";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -27,6 +37,16 @@ class AppLocale {
     InvalidCredentials: "Invalid credentials",
     RegisterQueue: "Register queue",
     Home: "Home",
+    UnableToOpenUrl: "Unable to open URL",
+    ConnectionError: "Connection error",
+    Loading: "Loading",
+    Name: "Name",
+    Room: "Room",
+    DateOfBirth: "Date of birth",
+    Phone: "Phone",
+    Email: "Email",
+    CreationTime: "Creation time",
+    Retry: "Retry",
   };
 
   static const Map<String, dynamic> VI = {
@@ -43,5 +63,15 @@ class AppLocale {
     InvalidCredentials: "Thông tin đăng nhập không hợp lệ",
     RegisterQueue: "Các yêu cầu đăng ký",
     Home: "Trang chủ",
+    UnableToOpenUrl: "Không thể mở URL",
+    ConnectionError: "Lỗi kết nối",
+    Loading: "Đang tải",
+    Name: "Tên",
+    Room: "Phòng",
+    DateOfBirth: "Ngày sinh",
+    Phone: "Số điện thoại",
+    Email: "Email",
+    CreationTime: "Thời gian tạo",
+    Retry: "Thử lại",
   };
 }
