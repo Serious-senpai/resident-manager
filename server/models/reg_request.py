@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, List, Optional
 
 import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
 import pyodbc  # type: ignore
@@ -9,6 +9,7 @@ import pyodbc  # type: ignore
 from .auth import HashedAuthorization
 from .info import PublicInfo
 from .residents import Resident
+from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..utils import generate_id, hash_password
 
@@ -20,8 +21,6 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
     """Data model for objects holding information about a registration request.
 
     Each object of this class corresponds to a database row."""
-
-    id: int
 
     async def __remove_from_db(self, *, cursor: aioodbc.Cursor) -> None:
         await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)
@@ -61,6 +60,19 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await self.__remove_from_db(cursor=cursor)
+
+    @classmethod
+    def from_row(cls, row: Any) -> RegisterRequest:
+        return cls(
+            id=row[0],
+            name=row[1],
+            room=row[2],
+            birthday=row[3],
+            phone=row[4],
+            email=row[5],
+            username=row[6],
+            hashed_password=row[7],
+        )
 
     @classmethod
     async def create(
@@ -109,3 +121,20 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             username=username,
             hashed_password=hashed_password,
         )
+
+    @classmethod
+    async def query(cls, *, offset: int) -> List[RegisterRequest]:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                    SELECT * FROM register_queue
+                    ORDER BY request_id DESC
+                    OFFSET ? FETCH ? ROWS ONLY
+                    """,
+                    offset,
+                    DB_PAGINATION_QUERY,
+                )
+
+                rows = await cursor.fetchall()
+                return [cls.from_row(row) for row in rows]
