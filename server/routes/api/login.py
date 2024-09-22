@@ -14,7 +14,7 @@ from ...utils import check_password
     "/login",
     name="Residents login",
     description="Verify authorization data, return resident information on success.",
-    tags=["authorization", "resident"],
+    tags=["resident"],
     responses={status.HTTP_403_FORBIDDEN: {}},
     status_code=status.HTTP_200_OK,
 )

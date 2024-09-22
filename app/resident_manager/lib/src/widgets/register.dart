@@ -197,7 +197,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 ),
                 validator: (value) {
                   if (value != null) {
-                    if (value.length > 15) {
+                    if (value.length > 15 || int.tryParse(value) == null) {
                       return AppLocale.InvalidPhoneNumber.getString(context);
                     }
                   }

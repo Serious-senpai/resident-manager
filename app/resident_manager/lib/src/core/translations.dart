@@ -29,10 +29,10 @@ class AppLocale {
   static const String MissingName = "Missing name";
   static const String InvalidNameLength = "Fullname must be 0-255 characters long";
   static const String MissingRoomNumber = "Missing room number";
-  static const String InvalidRoomNumber = "Room must be in range 0-32767";
+  static const String InvalidRoomNumber = "Invalid room number";
   static const String InvalidDateOfBirth = "Invalid date of birth";
-  static const String InvalidPhoneNumber = "Phone number must be 0-15 characters long";
-  static const String InvalidEmail = "Email must be 0-255 characters long";
+  static const String InvalidPhoneNumber = "Invalid phone number";
+  static const String InvalidEmail = "Invalid email";
   static const String MissingUsername = "Missing username";
   static const String InvalidUsernameLength = "Username must be 0-255 characters long";
   static const String MissingPassword = "Missing password";
@@ -70,8 +70,8 @@ class AppLocale {
     MissingRoomNumber: "Missing room number",
     InvalidRoomNumber: "Room number must be in range 0-32767",
     InvalidDateOfBirth: "Invalid date of birth",
-    InvalidPhoneNumber: "Phone number must be 0-15 characters long",
-    InvalidEmail: "Email must be 0-255 characters long",
+    InvalidPhoneNumber: "Invalid phone number",
+    InvalidEmail: "Invalid email",
     MissingUsername: "Missing username",
     InvalidUsernameLength: "Username must be 0-255 characters long",
     MissingPassword: "Missing password",
@@ -106,12 +106,12 @@ class AppLocale {
     SuccessfullyRegisteredWaitForAdmin: "Đã đăng ký thành công. Vui lòng chờ phê duyệt từ quản trị viên.",
     CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
     MissingName: "Thiếu họ và tên",
-    InvalidNameLength: "Tên phải có độ dài 0-255 ký tự",
+    InvalidNameLength: "Họ và tên không hợp lệ",
     MissingRoomNumber: "Thiếu số phòng",
-    InvalidRoomNumber: "Số phòng phải trong khoảng 0-32767",
+    InvalidRoomNumber: "Số phòng không hợp lệ",
     InvalidDateOfBirth: "Ngày sinh không hợp lệ",
-    InvalidPhoneNumber: "Số điện thoại phải có độ dài 0-15 ký tự",
-    InvalidEmail: "Email phải có độ dài 0-255 ký tự",
+    InvalidPhoneNumber: "Số điện thoại không hợp lệ",
+    InvalidEmail: "Email không hợp lệ",
     MissingUsername: "Thiếu tên đăng nhập",
     InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
     MissingPassword: "Thiếu mật khẩu",

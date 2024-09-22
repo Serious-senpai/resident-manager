@@ -17,7 +17,7 @@ __failure_status = status.HTTP_403_FORBIDDEN
     "/admin/login",
     name="Administrators login",
     description=f"Verify administrator authorization data, return {__success_status} on success, {__failure_status} on failure",
-    tags=["authorization", "admin"],
+    tags=["admin"],
     response_model=None,
     responses={__failure_status: {}},
     status_code=__success_status,

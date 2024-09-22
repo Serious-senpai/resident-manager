@@ -4,23 +4,22 @@ from typing import Annotated
 
 from fastapi import HTTPException, Header, status
 
-from ...models import Authorization, PersonalInfo, RegisterRequest
+from ...models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
 from ...routers import api_router
 
 
 @api_router.post(
     "/register",
-    name="Residents register",
+    name="Residents registration",
     description="Register a resident account to be created.",
-    tags=["authorization", "resident"],
-    response_model=None,
+    tags=["resident"],
     responses={status.HTTP_400_BAD_REQUEST: {}},
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
 )
 async def register(
     data: PersonalInfo,
     headers: Annotated[Authorization, Header()],
-) -> None:
+) -> PublicInfo:
     request = await RegisterRequest.create(
         name=data.name,
         room=data.room,
@@ -37,5 +36,4 @@ async def register(
             detail="Failed to create registration request",
         )
 
-    else:
-        return None
+    return request.to_public_info()

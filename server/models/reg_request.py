@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import itertools
 import re
 from datetime import datetime
 from typing import Any, List, Optional
 
-import aioodbc  # type: ignore  # dead PR: https://github.com/aio-libs/aioodbc/pull/429
 import pyodbc  # type: ignore
 
 from .auth import HashedAuthorization
@@ -23,9 +23,6 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
     Each object of this class corresponds to a database row."""
 
-    async def __remove_from_db(self, *, cursor: aioodbc.Cursor) -> None:
-        await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)
-
     async def accept(self) -> Resident:
         """This function is a coroutine.
 
@@ -39,28 +36,46 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         """
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                resident_id = generate_id()
                 await cursor.execute(
                     """
-                    INSERT INTO residents SELECT *, ? FROM register_queue WHERE request_id = ?;
-                    DECLARE @Id INT = SCOPE_IDENTITY();
-                    SELECT * FROM residents WHERE ID = @Id;
+                    DELETE FROM register_queue
+                    OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                    INTO residents
+                    WHERE request_id = ?
                     """,
-                    resident_id,
+                    generate_id(),
                     self.id,
                 )
 
                 row = await cursor.fetchone()
                 resident = Resident.from_row(row)
 
-                await self.__remove_from_db(cursor=cursor)
-
         return resident
 
     async def decline(self) -> None:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await self.__remove_from_db(cursor=cursor)
+                await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)
+
+    @classmethod
+    async def accept_many(cls, ids: List[int]) -> None:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                mapping = [(generate_id(), id) for id in ids]
+                temp_fmt = ", ".join("(?, ?)" for _ in mapping)
+                temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
+
+                await cursor.execute(
+                    f"""
+                    DELETE FROM register_queue
+                    OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                    INTO residents
+                    FROM register_queue
+                    INNER JOIN {temp_decl}
+                    ON register_queue.request_id = temp.request_id
+                    """,
+                    *itertools.chain(mapping),
+                )
 
     @classmethod
     def from_row(cls, row: Any) -> RegisterRequest:
@@ -92,7 +107,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             or len(name) > 255
             or room < 0
             or room > 32767
-            or (phone is not None and len(phone) > 15)
+            or (phone is not None and (len(phone) > 15 or not phone.isdigit()))
             or (email is not None and len(email) > 255)
             or len(username) == 0
             or len(username) > 255
