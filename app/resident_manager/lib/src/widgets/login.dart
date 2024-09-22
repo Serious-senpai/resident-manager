@@ -75,6 +75,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
+    final padding = mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20.0;
 
     return Scaffold(
       key: scaffoldKey,
@@ -86,10 +87,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
         title: Text(AppLocale.Login.getString(context)),
       ),
       body: Padding(
-        padding: EdgeInsets.only(
-          left: 0.25 * mediaQuery.size.width,
-          right: 0.25 * mediaQuery.size.width,
-        ),
+        padding: EdgeInsets.only(left: padding, right: padding),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

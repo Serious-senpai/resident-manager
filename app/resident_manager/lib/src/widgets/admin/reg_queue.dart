@@ -40,8 +40,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
   @override
   Scaffold buildScaffold(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
     _queryFuture ??= queryRegistrationRequests();
 
     return Scaffold(
@@ -60,23 +58,17 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
             case ConnectionState.none:
             case ConnectionState.waiting:
             case ConnectionState.active:
-              return Padding(
-                padding: EdgeInsets.only(
-                  left: 0.2 * mediaQuery.size.width,
-                  right: 0.2 * mediaQuery.size.width,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox.square(
-                        dimension: 50,
-                        child: CircularProgressIndicator(),
-                      ),
-                      const SizedBox.square(dimension: 20),
-                      Text(AppLocale.Loading.getString(context)),
-                    ],
-                  ),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox.square(
+                      dimension: 50,
+                      child: CircularProgressIndicator(),
+                    ),
+                    const SizedBox.square(dimension: 20),
+                    Text(AppLocale.Loading.getString(context)),
+                  ],
                 ),
               );
 
