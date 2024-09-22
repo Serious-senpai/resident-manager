@@ -17,21 +17,21 @@ Future<bool> showToastSafe({
   dynamic webPosition = "right",
 }) async {
   try {
-    await Fluttertoast.showToast(
-      msg: msg,
-      toastLength: toastLength,
-      timeInSecForIosWeb: timeInSecForIosWeb,
-      fontSize: fontSize,
-      fontAsset: fontAsset,
-      gravity: gravity,
-      backgroundColor: backgroundColor,
-      textColor: textColor,
-      webShowClose: webShowClose,
-      webBgColor: webBgColor,
-      webPosition: webPosition,
-    );
-    return true;
-  } on PlatformException {
+    return await Fluttertoast.showToast(
+          msg: msg,
+          toastLength: toastLength,
+          timeInSecForIosWeb: timeInSecForIosWeb,
+          fontSize: fontSize,
+          fontAsset: fontAsset,
+          gravity: gravity,
+          backgroundColor: backgroundColor,
+          textColor: textColor,
+          webShowClose: webShowClose,
+          webBgColor: webBgColor,
+          webPosition: webPosition,
+        ) ??
+        false;
+  } catch (_) {
     return false;
   }
 }

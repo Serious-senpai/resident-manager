@@ -1,4 +1,7 @@
+import "dart:async";
 import "dart:convert";
+
+import "package:resident_manager/src/core/models/auth.dart";
 
 import "info.dart";
 import "../state.dart";
@@ -36,5 +39,22 @@ class RegisterRequest extends PublicInfo {
     }
 
     return result;
+  }
+
+  static Future<int> create({
+    required ApplicationState state,
+    required PersonalInfo info,
+    required Authorization authorization,
+  }) async {
+    final headers = authorization.headers;
+    headers["content-type"] = "application/json";
+
+    final response = await state.http.apiPost(
+      "/api/register",
+      headers: headers,
+      body: json.encode(info.personalInfoJson()),
+    );
+
+    return response.statusCode;
   }
 }

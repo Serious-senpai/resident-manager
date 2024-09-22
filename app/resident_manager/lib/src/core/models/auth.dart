@@ -6,6 +6,8 @@ class Authorization {
     required this.username,
     required this.password,
   });
+
+  Map<String, String> get headers => {"Username": username, "Password": password};
 }
 
 class HashedAuthorization {

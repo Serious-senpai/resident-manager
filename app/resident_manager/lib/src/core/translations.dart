@@ -22,6 +22,19 @@ class AppLocale {
   static const String Email = "Email";
   static const String CreationTime = "Creation time";
   static const String Retry = "Retry";
+  static const String Register = "Register";
+  static const String MissingRequiredFields = "Missing required fields";
+  static const String SuccessfullyRegisteredWaitForAdmin = "Successfully created a registration request. Please wait for administrator's approval.";
+  static const String CheckInputAgain = "Please check your input again.";
+  static const String MissingName = "Missing name";
+  static const String InvalidNameLength = "Name must be 0-255 characters long";
+  static const String MissingRoomNumber = "Missing room number";
+  static const String InvalidRoomNumber = "Room must be in range 0-32767";
+  static const String InvalidPhoneNumber = "Phone number must be 0-15 characters long";
+  static const String InvalidEmail = "Email must be 0-255 characters long";
+  static const String MissingUsername = "Missing username";
+  static const String InvalidUsernameLength = "Username must be 0-255 characters long";
+  static const String MissingPassword = "Missing password";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -47,6 +60,19 @@ class AppLocale {
     Email: "Email",
     CreationTime: "Creation time",
     Retry: "Retry",
+    Register: "Register",
+    MissingRequiredFields: "Missing required fields",
+    SuccessfullyRegisteredWaitForAdmin: "Successfully registered. Please wait for administrator's approval.",
+    CheckInputAgain: "Please check your input again.",
+    MissingName: "Missing name",
+    InvalidNameLength: "Name must be 0-255 characters long",
+    MissingRoomNumber: "Missing room number",
+    InvalidRoomNumber: "Room number must be in range 0-32767",
+    InvalidPhoneNumber: "Phone number must be 0-15 characters long",
+    InvalidEmail: "Email must be 0-255 characters long",
+    MissingUsername: "Missing username",
+    InvalidUsernameLength: "Username must be 0-255 characters long",
+    MissingPassword: "Missing password",
   };
 
   static const Map<String, dynamic> VI = {
@@ -73,5 +99,18 @@ class AppLocale {
     Email: "Email",
     CreationTime: "Thời gian tạo",
     Retry: "Thử lại",
+    Register: "Đăng ký",
+    MissingRequiredFields: "Thiếu thông tin cần thiết",
+    SuccessfullyRegisteredWaitForAdmin: "Đã đăng ký thành công. Vui lòng chờ phê duyệt từ quản trị viên.",
+    CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
+    MissingName: "Thiếu tên",
+    InvalidNameLength: "Tên phải có độ dài 0-255 ký tự",
+    MissingRoomNumber: "Thiếu số phòng",
+    InvalidRoomNumber: "Số phòng phải trong khoảng 0-32767",
+    InvalidPhoneNumber: "Số điện thoại phải có độ dài 0-15 ký tự",
+    InvalidEmail: "Email phải có độ dài 0-255 ký tự",
+    MissingUsername: "Thiếu tên đăng nhập",
+    InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
+    MissingPassword: "Thiếu mật khẩu",
   };
 }

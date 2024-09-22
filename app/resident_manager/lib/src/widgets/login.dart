@@ -17,7 +17,7 @@ class LoginPage extends StateAwareWidget {
 
 class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
   final _actionLock = Lock();
-  Widget notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.square(dimension: 0);
 
   final _username = TextEditingController();
   final _password = TextEditingController();
@@ -25,12 +25,8 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   Future<void> _login(bool isAdmin) async {
     await _actionLock.run(
       () async {
-        notification = Text(AppLocale.LoggingInEllipsis.getString(context), style: const TextStyle(color: Colors.blue));
+        _notification = Text(AppLocale.LoggingInEllipsis.getString(context), style: const TextStyle(color: Colors.blue));
         refresh();
-
-        if (!context.mounted) {
-          return;
-        }
 
         if (!context.mounted) {
           return;
@@ -56,7 +52,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
             await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
-          notification = Text(
+          _notification = Text(
             invalidCredentials,
             style: const TextStyle(color: Colors.red),
           );
@@ -68,9 +64,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   }
 
   Future<void> _residentRegister() async {
-    // TODO: Implement this method
-    print(_username.text);
-    print(_password.text);
+    await Navigator.pushReplacementNamed(context, ApplicationRoute.register);
   }
 
   @override
@@ -81,6 +75,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.lock_outlined),
@@ -113,7 +108,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 onSubmitted: (_) => _login(false),
               ),
               const SizedBox.square(dimension: 5),
-              notification,
+              _notification,
               const SizedBox.square(dimension: 5),
               Container(
                 padding: const EdgeInsets.all(5),
@@ -121,7 +116,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 child: TextButton.icon(
                   icon: const Icon(Icons.login_outlined),
                   label: Text(AppLocale.LoginAsResident.getString(context)),
-                  onPressed: () => _login(false),
+                  onPressed: _actionLock.locked ? null : () => _login(false),
                 ),
               ),
               Container(
@@ -130,7 +125,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 child: TextButton.icon(
                   icon: const Icon(Icons.how_to_reg_outlined),
                   label: Text(AppLocale.RegisterAsResident.getString(context)),
-                  onPressed: () => _residentRegister(),
+                  onPressed: _actionLock.locked ? null : () => _residentRegister(),
                 ),
               ),
               Container(
@@ -139,7 +134,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 child: TextButton.icon(
                   icon: const Icon(Icons.admin_panel_settings_outlined),
                   label: Text(AppLocale.LoginAsAdministrator.getString(context)),
-                  onPressed: () => _login(true),
+                  onPressed: _actionLock.locked ? null : () => _login(true),
                 ),
               ),
             ],

@@ -9,15 +9,12 @@ import "package:path_provider/path_provider.dart";
 
 import "http.dart";
 import "translations.dart";
+import "models/auth.dart";
 
-class PublicAuthorization {
-  final String username;
-  final String password;
+class PublicAuthorization extends Authorization {
   final bool isAdmin;
 
-  PublicAuthorization({required this.username, required this.password, required this.isAdmin});
-
-  Map<String, String> get headers => {"Username": username, "Password": password};
+  PublicAuthorization({required super.username, required super.password, required this.isAdmin});
 }
 
 class _Authorization extends PublicAuthorization {

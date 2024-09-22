@@ -45,6 +45,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.how_to_reg_outlined),

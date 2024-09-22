@@ -15,6 +15,16 @@ class PersonalInfo {
     this.phone,
     this.email,
   });
+
+  Map<String, dynamic> personalInfoJson() {
+    return {
+      "name": name,
+      "room": room,
+      "birthday": birthday?.toIso8601String(),
+      "phone": phone,
+      "email": email,
+    };
+  }
 }
 
 /// Data model for objects holding personal info along with a snowflake ID.
