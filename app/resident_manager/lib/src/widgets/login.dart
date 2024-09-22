@@ -4,6 +4,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
+import "../routes.dart";
 import "../utils.dart";
 import "../core/translations.dart";
 
@@ -44,7 +45,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
         try {
           authorized = await state.authorize(username: username, password: _password.text, isAdmin: isAdmin);
         } catch (_) {
-          await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
           return;
         }
 
@@ -52,7 +53,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           await showToastSafe(msg: "$loggedInAs \"$username\"");
 
           if (mounted) {
-            await Navigator.pushReplacementNamed(context, "/admin/register-queue");
+            await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
           notification = Text(

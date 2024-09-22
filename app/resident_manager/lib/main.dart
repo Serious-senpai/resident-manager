@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
+import "src/routes.dart";
 import "src/core/state.dart";
 import "src/core/translations.dart";
 import "src/widgets/state.dart";
@@ -20,17 +21,17 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
   @override
   Widget build(BuildContext context) {
     final authorization = state.authorization;
-    String initialRoute = "/login";
+    String initialRoute = ApplicationRoute.login;
     if (authorization != null) {
-      initialRoute = authorization.isAdmin ? "/admin/register-queue" : "/home";
+      initialRoute = authorization.isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home;
     }
 
     return MaterialApp(
       title: AppLocale.ResidentManager.getString(context),
       routes: {
-        "/login": (context) => LoginPage(state: state),
-        "/home": (context) => HomePage(state: state),
-        "/admin/register-queue": (context) => RegisterQueuePage(state: state),
+        ApplicationRoute.login: (context) => LoginPage(state: state),
+        ApplicationRoute.home: (context) => HomePage(state: state),
+        ApplicationRoute.adminRegisterQueue: (context) => RegisterQueuePage(state: state),
       },
       initialRoute: initialRoute,
       localizationsDelegates: state.localization.localizationsDelegates,

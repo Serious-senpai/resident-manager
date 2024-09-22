@@ -44,18 +44,25 @@ jobs:
         working-directory: app/resident_manager
         run: flutter build ${{ matrix.build-name }}
 
+      - name: Upload macos build
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.build-name }}-build
+          path: app/resident_manager/build/macos/Build/Products/Release
+
       - name: Upload linux build
         if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build
+          name: ${{ matrix.build-name }}-build
           path: app/resident_manager/build/linux/x64/release/bundle
 
       - name: Upload windows build
         if: ${{ matrix.os == 'windows-latest' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build
+          name: ${{ matrix.build-name }}-build
           path: app/resident_manager/build/windows/x64/runner/Release
 
   apk:

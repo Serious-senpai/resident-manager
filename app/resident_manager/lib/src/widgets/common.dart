@@ -5,6 +5,7 @@ import "package:meta/meta.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "state.dart";
+import "../routes.dart";
 import "../utils.dart";
 import "../core/state.dart";
 import "../core/translations.dart";
@@ -63,13 +64,13 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
         leading: const Icon(Icons.lock_outlined),
         title: Text(
           AppLocale.Login.getString(context),
-          style: currentRoute == "/login" ? const TextStyle(color: Colors.blue) : null,
+          style: currentRoute == ApplicationRoute.login ? const TextStyle(color: Colors.blue) : null,
         ),
-        onTap: () => currentRoute == "/login"
+        onTap: () => currentRoute == ApplicationRoute.login
             ? Navigator.pop(context)
             : Navigator.pushReplacementNamed(
                 context,
-                "/login",
+                ApplicationRoute.login,
               ),
       ),
     ];
@@ -83,13 +84,13 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
               leading: const Icon(Icons.how_to_reg_outlined),
               title: Text(
                 AppLocale.RegisterQueue.getString(context),
-                style: currentRoute == "/admin/register-queue" ? const TextStyle(color: Colors.blue) : null,
+                style: currentRoute == ApplicationRoute.adminRegisterQueue ? const TextStyle(color: Colors.blue) : null,
               ),
-              onTap: () => currentRoute == "/admin/register-queue"
+              onTap: () => currentRoute == ApplicationRoute.adminRegisterQueue
                   ? Navigator.pop(context)
                   : Navigator.pushReplacementNamed(
                       context,
-                      "/admin/register-queue",
+                      ApplicationRoute.adminRegisterQueue,
                     ),
             ),
           ],
@@ -101,13 +102,13 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
               leading: const Icon(Icons.home_outlined),
               title: Text(
                 AppLocale.Home.getString(context),
-                style: currentRoute == "/home" ? const TextStyle(color: Colors.blue) : null,
+                style: currentRoute == ApplicationRoute.home ? const TextStyle(color: Colors.blue) : null,
               ),
-              onTap: () => currentRoute == "/home"
+              onTap: () => currentRoute == ApplicationRoute.home
                   ? Navigator.pop(context)
                   : Navigator.pushReplacementNamed(
                       context,
-                      "/home",
+                      ApplicationRoute.home,
                     ),
             ),
           ],
@@ -121,7 +122,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
           onTap: () async {
             await state.deauthorize();
             if (context.mounted) {
-              Navigator.pushReplacementNamed(context, "/login");
+              await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
             }
           },
         ),
