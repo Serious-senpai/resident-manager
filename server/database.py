@@ -65,26 +65,26 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'residents')
                     CREATE TABLE residents (
                         resident_id BIGINT PRIMARY KEY,
-                        name VARCHAR(255) NOT NULL,
+                        name NVARCHAR(255) NOT NULL,
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
-                        phone VARCHAR(15),
-                        email VARCHAR(255),
-                        username VARCHAR(255) UNIQUE NOT NULL,
-                        hashed_password VARCHAR(255) NOT NULL,
+                        phone NVARCHAR(15),
+                        email NVARCHAR(255),
+                        username NVARCHAR(255) UNIQUE NOT NULL,
+                        hashed_password NVARCHAR(255) NOT NULL,
                     )
                 """)
                 await cursor.execute("""
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'register_queue')
                     CREATE TABLE register_queue (
                         request_id BIGINT PRIMARY KEY,
-                        name VARCHAR(255) NOT NULL,
+                        name NVARCHAR(255) NOT NULL,
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
-                        phone VARCHAR(15),
-                        email VARCHAR(255),
-                        username VARCHAR(255) UNIQUE NOT NULL,
-                        hashed_password VARCHAR(255) NOT NULL,
+                        phone NVARCHAR(15),
+                        email NVARCHAR(255),
+                        username NVARCHAR(255) UNIQUE NOT NULL,
+                        hashed_password NVARCHAR(255) NOT NULL,
                     )
                 """)
                 await cursor.execute(
@@ -92,8 +92,8 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'config')
                     BEGIN
                         CREATE TABLE config (
-                            name VARCHAR(255) primary key,
-                            value VARCHAR(255) NOT NULL,
+                            name NVARCHAR(255) primary key,
+                            value NVARCHAR(255) NOT NULL,
                         )
                         INSERT INTO config VALUES ('admin_username', ?)
                         INSERT INTO config VALUES ('admin_hashed_password', ?)
