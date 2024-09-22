@@ -11,6 +11,7 @@ from ...routers import api_router
 @api_router.post(
     "/register",
     name="Residents register",
+    description="Register a resident account to be created.",
     tags=["authorization", "resident"],
     response_model=None,
     responses={status.HTTP_400_BAD_REQUEST: {}},
@@ -20,7 +21,6 @@ async def register(
     data: PersonalInfo,
     headers: Annotated[Authorization, Header()],
 ) -> None:
-    """Register a resident account to be created."""
     request = await RegisterRequest.create(
         name=data.name,
         room=data.room,

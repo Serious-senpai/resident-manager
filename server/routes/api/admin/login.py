@@ -16,13 +16,13 @@ __failure_status = status.HTTP_403_FORBIDDEN
 @api_router.post(
     "/admin/login",
     name="Administrators login",
+    description=f"Verify administrator authorization data, return {__success_status} on success, {__failure_status} on failure",
     tags=["authorization", "admin"],
     response_model=None,
     responses={__failure_status: {}},
     status_code=__success_status,
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:
-    f"""Verify administrator authorization data, return {__success_status} on success, {__failure_status} on failure"""
     if await Database.instance.verify_admin(headers.username, headers.password):
         return None
 

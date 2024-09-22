@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any, List, Optional
 
@@ -85,8 +86,24 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         username: str,
         password: str,
     ) -> Optional[RegisterRequest]:
-        hashed_password = hash_password(password)
+        # Validate data
+        if (
+            len(name) == 0
+            or len(name) > 255
+            or room < 0
+            or room > 32767
+            or (phone is not None and len(phone) > 15)
+            or (email is not None and len(email) > 255)
+            or len(username) == 0
+            or len(username) > 255
+            or len(password) == 0
+        ):
+            return None
 
+        if email is not None and re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?", email) is None:
+            return None
+
+        hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 request_id = generate_id()

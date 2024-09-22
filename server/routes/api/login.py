@@ -13,12 +13,12 @@ from ...utils import check_password
 @api_router.post(
     "/login",
     name="Residents login",
+    description="Verify authorization data, return resident information on success.",
     tags=["authorization", "resident"],
     responses={status.HTTP_403_FORBIDDEN: {}},
     status_code=status.HTTP_200_OK,
 )
 async def login(headers: Annotated[Authorization, Header()]) -> PublicInfo:
-    """Verify authorization data, return resident information on success."""
     resident = await Resident.from_username(headers.username)
     if resident is None:
         raise HTTPException(
