@@ -15,7 +15,7 @@ class AppLocale {
   static const String UnableToOpenUrl = "Unable to open URL";
   static const String ConnectionError = "Connection error";
   static const String Loading = "Loading";
-  static const String Name = "Name";
+  static const String Fullname = "Fullname";
   static const String Room = "Room";
   static const String DateOfBirth = "Date of birth";
   static const String Phone = "Phone";
@@ -27,9 +27,10 @@ class AppLocale {
   static const String SuccessfullyRegisteredWaitForAdmin = "Successfully created a registration request. Please wait for administrator's approval.";
   static const String CheckInputAgain = "Please check your input again.";
   static const String MissingName = "Missing name";
-  static const String InvalidNameLength = "Name must be 0-255 characters long";
+  static const String InvalidNameLength = "Fullname must be 0-255 characters long";
   static const String MissingRoomNumber = "Missing room number";
   static const String InvalidRoomNumber = "Room must be in range 0-32767";
+  static const String InvalidDateOfBirth = "Invalid date of birth";
   static const String InvalidPhoneNumber = "Phone number must be 0-15 characters long";
   static const String InvalidEmail = "Email must be 0-255 characters long";
   static const String MissingUsername = "Missing username";
@@ -53,7 +54,7 @@ class AppLocale {
     UnableToOpenUrl: "Unable to open URL",
     ConnectionError: "Connection error",
     Loading: "Loading",
-    Name: "Name",
+    Fullname: "Fullname",
     Room: "Room",
     DateOfBirth: "Date of birth",
     Phone: "Phone",
@@ -65,9 +66,10 @@ class AppLocale {
     SuccessfullyRegisteredWaitForAdmin: "Successfully registered. Please wait for administrator's approval.",
     CheckInputAgain: "Please check your input again.",
     MissingName: "Missing name",
-    InvalidNameLength: "Name must be 0-255 characters long",
+    InvalidNameLength: "Fullname must be 0-255 characters long",
     MissingRoomNumber: "Missing room number",
     InvalidRoomNumber: "Room number must be in range 0-32767",
+    InvalidDateOfBirth: "Invalid date of birth",
     InvalidPhoneNumber: "Phone number must be 0-15 characters long",
     InvalidEmail: "Email must be 0-255 characters long",
     MissingUsername: "Missing username",
@@ -92,7 +94,7 @@ class AppLocale {
     UnableToOpenUrl: "Không thể mở URL",
     ConnectionError: "Lỗi kết nối",
     Loading: "Đang tải",
-    Name: "Tên",
+    Fullname: "Họ và tên",
     Room: "Phòng",
     DateOfBirth: "Ngày sinh",
     Phone: "Số điện thoại",
@@ -103,10 +105,11 @@ class AppLocale {
     MissingRequiredFields: "Thiếu thông tin cần thiết",
     SuccessfullyRegisteredWaitForAdmin: "Đã đăng ký thành công. Vui lòng chờ phê duyệt từ quản trị viên.",
     CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
-    MissingName: "Thiếu tên",
+    MissingName: "Thiếu họ và tên",
     InvalidNameLength: "Tên phải có độ dài 0-255 ký tự",
     MissingRoomNumber: "Thiếu số phòng",
     InvalidRoomNumber: "Số phòng phải trong khoảng 0-32767",
+    InvalidDateOfBirth: "Ngày sinh không hợp lệ",
     InvalidPhoneNumber: "Số điện thoại phải có độ dài 0-15 ký tự",
     InvalidEmail: "Email phải có độ dài 0-255 ký tự",
     MissingUsername: "Thiếu tên đăng nhập",

@@ -94,7 +94,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      header(AppLocale.Name.getString(context)),
+                      header(AppLocale.Fullname.getString(context)),
                       header(AppLocale.Room.getString(context)),
                       header(AppLocale.DateOfBirth.getString(context)),
                       header(AppLocale.Phone.getString(context)),

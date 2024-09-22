@@ -31,81 +31,65 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
   final _actionLock = Lock();
   Widget _notification = const SizedBox.square(dimension: 0);
 
+  final _formKey = GlobalKey<FormState>();
+
   Future<void> _handle() async {
     await _actionLock.run(
       () async {
+        final check = _formKey.currentState?.validate();
+        if (check == null || !check) {
+          return;
+        }
+
         _notification = Text(AppLocale.Loading.getString(context), style: const TextStyle(color: Colors.blue));
         refresh();
 
         final name = _name.text;
-        final room = int.tryParse(_room.text);
-        if (room == null) {
-          _notification = Text(AppLocale.MissingRoomNumber.getString(context), style: const TextStyle(color: Colors.red));
-          return;
-        }
-
+        final room = int.parse(_room.text);
         final birthday = _birthday.text.isEmpty ? null : DateTime.tryParse(_birthday.text);
         final phone = _phone.text;
         final email = _email.text;
         final username = _username.text;
         final password = _password.text;
 
-        if (name.isEmpty) {
-          _notification = Text(AppLocale.MissingName.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (name.length > 255) {
-          _notification = Text(AppLocale.InvalidNameLength.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (room < 0 || room > 32767) {
-          _notification = Text(AppLocale.InvalidRoomNumber.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (phone.length > 15) {
-          _notification = Text(AppLocale.InvalidPhoneNumber.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (email.length > 255) {
-          _notification = Text(AppLocale.InvalidEmail.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (username.isEmpty) {
-          _notification = Text(AppLocale.MissingUsername.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (username.length > 255) {
-          _notification = Text(AppLocale.InvalidUsernameLength.getString(context), style: const TextStyle(color: Colors.red));
-        } else if (password.isEmpty) {
-          _notification = Text(AppLocale.MissingPassword.getString(context), style: const TextStyle(color: Colors.red));
-        } else {
-          try {
-            final result = await RegisterRequest.create(
-              state: state,
-              info: PersonalInfo(
-                name: name,
-                room: room,
-                birthday: birthday,
-                phone: phone,
-                email: email,
-              ),
-              authorization: Authorization(username: username, password: password),
-            );
+        try {
+          final result = await RegisterRequest.create(
+            state: state,
+            info: PersonalInfo(
+              name: name,
+              room: room,
+              birthday: birthday,
+              phone: phone,
+              email: email,
+            ),
+            authorization: Authorization(username: username, password: password),
+          );
 
-            if (result == 204) {
-              _notification = Text(
-                mounted ? AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
-                style: const TextStyle(color: Colors.blue),
-              );
-            } else {
-              _notification = Text(
-                mounted ? AppLocale.CheckInputAgain.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
-                style: const TextStyle(color: Colors.red),
-              );
-            }
-          } catch (e) {
-            if (e is SocketException || e is TimeoutException) {
-              _notification = Text(
-                mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError,
-                style: const TextStyle(color: Colors.red),
-              );
-            } else {
-              rethrow;
-            }
+          if (result == 204) {
+            _notification = Text(
+              mounted ? AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
+              style: const TextStyle(color: Colors.blue),
+            );
+          } else {
+            _notification = Text(
+              mounted ? AppLocale.CheckInputAgain.getString(context) : AppLocale.CheckInputAgain,
+              style: const TextStyle(color: Colors.red),
+            );
+          }
+        } catch (e) {
+          if (e is SocketException || e is TimeoutException) {
+            _notification = Text(
+              mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError,
+              style: const TextStyle(color: Colors.red),
+            );
+          } else {
+            rethrow;
           }
         }
+
+        refresh();
       },
     );
-
-    refresh();
   }
 
   @override
@@ -133,86 +117,157 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
       ),
       body: Padding(
         padding: EdgeInsets.only(left: padding, right: padding),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _name,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Name.getString(context), required: true),
-              ),
-            ),
-            TextField(
-              controller: _room,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Room.getString(context), required: true),
-              ),
-            ),
-            TextField(
-              controller: _birthday,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.DateOfBirth.getString(context)),
-              ),
-              onTap: () async {
-                final birthday = await showDatePicker(
-                  context: context,
-                  firstDate: DateTime.utc(1900),
-                  lastDate: DateTime.now(),
-                );
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: _name,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Fullname.getString(context), required: true),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppLocale.MissingName.getString(context);
+                  }
 
-                if (birthday != null) {
-                  _birthday.text = birthday.toIso8601String();
-                } else {
-                  _birthday.clear();
-                }
-              },
-              readOnly: true,
-            ),
-            TextField(
-              controller: _phone,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Phone.getString(context)),
+                  if (value.length > 255) {
+                    return AppLocale.InvalidNameLength.getString(context);
+                  }
+
+                  return null;
+                },
               ),
-            ),
-            TextField(
-              controller: _email,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Email.getString(context)),
+              TextFormField(
+                controller: _room,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Room.getString(context), required: true),
+                ),
+                validator: (value) {
+                  final roomInt = value == null ? null : int.tryParse(value);
+                  if (roomInt == null) {
+                    return AppLocale.MissingRoomNumber.getString(context);
+                  }
+
+                  if (roomInt < 0 || roomInt > 32767) {
+                    return AppLocale.InvalidRoomNumber.getString(context);
+                  }
+
+                  return null;
+                },
               ),
-            ),
-            TextField(
-              controller: _username,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Username.getString(context), required: true),
+              TextFormField(
+                controller: _birthday,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.DateOfBirth.getString(context)),
+                ),
+                onTap: () async {
+                  final birthday = await showDatePicker(
+                    context: context,
+                    firstDate: DateTime.utc(1900),
+                    lastDate: DateTime.now(),
+                  );
+
+                  if (birthday != null) {
+                    _birthday.text = birthday.toIso8601String();
+                  } else {
+                    _birthday.clear();
+                  }
+                },
+                readOnly: true,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    if (DateTime.tryParse(value) == null) {
+                      return AppLocale.InvalidDateOfBirth.getString(context);
+                    }
+                  }
+
+                  return null;
+                },
               ),
-            ),
-            TextField(
-              controller: _password,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(8.0),
-                label: fieldLabel(AppLocale.Password.getString(context), required: true),
+              TextFormField(
+                controller: _phone,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Phone.getString(context)),
+                ),
+                validator: (value) {
+                  if (value != null) {
+                    if (value.length > 15) {
+                      return AppLocale.InvalidPhoneNumber.getString(context);
+                    }
+                  }
+
+                  return null;
+                },
               ),
-              obscureText: true,
-            ),
-            const SizedBox.square(dimension: 5),
-            _notification,
-            const SizedBox.square(dimension: 5),
-            Container(
-              padding: const EdgeInsets.all(5),
-              width: double.infinity,
-              child: TextButton.icon(
-                icon: const Icon(Icons.how_to_reg_outlined),
-                label: Text(AppLocale.Register.getString(context)),
-                onPressed: _actionLock.locked ? null : _handle,
+              TextFormField(
+                controller: _email,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Email.getString(context)),
+                ),
+                validator: (value) {
+                  if (value != null) {
+                    if (value.length > 255) {
+                      return AppLocale.InvalidEmail.getString(context);
+                    }
+                  }
+
+                  return null;
+                },
               ),
-            ),
-          ],
+              TextFormField(
+                controller: _username,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Username.getString(context), required: true),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppLocale.MissingUsername.getString(context);
+                  }
+
+                  if (value.length > 255) {
+                    return AppLocale.InvalidUsernameLength.getString(context);
+                  }
+
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _password,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.Password.getString(context), required: true),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppLocale.MissingPassword.getString(context);
+                  }
+
+                  return null;
+                },
+              ),
+              const SizedBox.square(dimension: 5),
+              _notification,
+              const SizedBox.square(dimension: 5),
+              Container(
+                padding: const EdgeInsets.all(5),
+                width: double.infinity,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.how_to_reg_outlined),
+                  label: Text(AppLocale.Register.getString(context)),
+                  onPressed: _actionLock.locked ? null : _handle,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       drawer: createDrawer(context),
