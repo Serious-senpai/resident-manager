@@ -21,7 +21,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
         backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
-          icon: const Icon(Icons.home_outlined),
+          icon: const Icon(Icons.menu_outlined),
         ),
         title: Text(AppLocale.Home.getString(context)),
       ),

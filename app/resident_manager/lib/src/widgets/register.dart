@@ -111,7 +111,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
         backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
-          icon: const Icon(Icons.how_to_reg_outlined),
+          icon: const Icon(Icons.menu_outlined),
         ),
         title: Text(AppLocale.Register.getString(context)),
       ),
@@ -196,7 +196,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   label: fieldLabel(AppLocale.Phone.getString(context)),
                 ),
                 validator: (value) {
-                  if (value != null) {
+                  if (value != null && value.isNotEmpty) {
                     if (value.length > 15 || int.tryParse(value) == null) {
                       return AppLocale.InvalidPhoneNumber.getString(context);
                     }
@@ -212,7 +212,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   label: fieldLabel(AppLocale.Email.getString(context)),
                 ),
                 validator: (value) {
-                  if (value != null) {
+                  if (value != null && value.isNotEmpty) {
                     if (value.length > 255) {
                       return AppLocale.InvalidEmail.getString(context);
                     }

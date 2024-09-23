@@ -23,7 +23,7 @@ void main() {
       await tester.pump();
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.lock_outlined));
+      await tester.tap(find.byIcon(Icons.menu_outlined));
       await tester.pump();
 
       // Match drawer images

@@ -48,7 +48,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
-          icon: const Icon(Icons.how_to_reg_outlined),
+          icon: const Icon(Icons.menu_outlined),
         ),
         title: Text(AppLocale.RegisterQueue.getString(context)),
       ),

@@ -78,7 +78,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
         backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
-          icon: const Icon(Icons.lock_outlined),
+          icon: const Icon(Icons.menu_outlined),
         ),
         title: Text(AppLocale.Login.getString(context)),
       ),

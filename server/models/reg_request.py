@@ -102,6 +102,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         password: str,
     ) -> Optional[RegisterRequest]:
         # Validate data
+        if phone is not None and len(phone) == 0:
+            phone = None
+
+        if email is not None and len(email) == 0:
+            email = None
+
         if (
             len(name) == 0
             or len(name) > 255
