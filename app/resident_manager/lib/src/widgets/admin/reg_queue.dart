@@ -8,6 +8,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../utils.dart";
 import "../../core/config.dart";
 import "../../core/state.dart";
@@ -45,7 +46,11 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
       () async {
-        _notification = Text(AppLocale.Loading.getString(context), style: const TextStyle(color: Colors.blue));
+        _notification = TranslatedText(
+          (ctx) => AppLocale.Loading.getString(ctx),
+          state: state,
+          style: const TextStyle(color: Colors.blue),
+        );
         refresh();
 
         var success = false;
@@ -63,8 +68,9 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
           _selectedRequests.clear();
           offset = 0;
         } else {
-          _notification = Text(
-            mounted ? AppLocale.UnknownError.getString(context) : AppLocale.UnknownError,
+          _notification = TranslatedText(
+            (ctx) => AppLocale.UnknownError.getString(ctx),
+            state: state,
             style: const TextStyle(color: Colors.red),
           );
           refresh();

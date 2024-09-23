@@ -14,7 +14,9 @@ abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> 
   ApplicationState get state => widget.state;
 
   void refresh() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

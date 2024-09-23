@@ -1,9 +1,13 @@
+import "dart:async";
+import "dart:io";
+
 import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
+import "utils.dart";
 import "../routes.dart";
 import "../utils.dart";
 import "../core/translations.dart";
@@ -25,21 +29,31 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   Future<void> _login(bool isAdmin) async {
     await _actionLock.run(
       () async {
-        _notification = Text(AppLocale.LoggingInEllipsis.getString(context), style: const TextStyle(color: Colors.blue));
+        _notification = TranslatedText(
+          (ctx) => AppLocale.LoggingInEllipsis.getString(ctx),
+          state: state,
+          style: const TextStyle(color: Colors.blue),
+        );
         refresh();
-
-        if (!context.mounted) {
-          return;
-        }
 
         final username = _username.text;
 
         var authorized = false;
         try {
           authorized = await state.authorize(username: username, password: _password.text, isAdmin: isAdmin);
-        } catch (_) {
-          await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-          return;
+        } catch (e) {
+          if (e is SocketException || e is TimeoutException) {
+            _notification = TranslatedText(
+              (ctx) => AppLocale.ConnectionError.getString(ctx),
+              state: state,
+              style: const TextStyle(color: Colors.red),
+            );
+
+            refresh();
+            return;
+          } else {
+            rethrow;
+          }
         }
 
         if (authorized) {
@@ -49,8 +63,9 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
             await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
-          _notification = Text(
-            mounted ? AppLocale.InvalidCredentials.getString(context) : AppLocale.InvalidCredentials,
+          _notification = TranslatedText(
+            (ctx) => AppLocale.InvalidCredentials.getString(ctx),
+            state: state,
             style: const TextStyle(color: Colors.red),
           );
 

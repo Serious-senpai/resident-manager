@@ -7,6 +7,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
+import "utils.dart";
 import "../core/translations.dart";
 import "../core/models/auth.dart";
 import "../core/models/info.dart";
@@ -42,7 +43,11 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
           return;
         }
 
-        _notification = Text(AppLocale.Loading.getString(context), style: const TextStyle(color: Colors.blue));
+        _notification = TranslatedText(
+          (ctx) => AppLocale.Loading.getString(ctx),
+          state: state,
+          style: const TextStyle(color: Colors.blue),
+        );
         refresh();
 
         final name = _name.text;
@@ -67,30 +72,35 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
           );
 
           if (result == 200) {
-            _notification = Text(
-              mounted ? AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
+            _notification = TranslatedText(
+              (ctx) => AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(ctx),
+              state: state,
               style: const TextStyle(color: Colors.blue),
             );
           } else if (result == 400) {
-            _notification = Text(
-              mounted ? AppLocale.CheckInputAgain.getString(context) : AppLocale.CheckInputAgain,
+            _notification = TranslatedText(
+              (ctx) => AppLocale.CheckInputAgain.getString(ctx),
+              state: state,
               style: const TextStyle(color: Colors.red),
             );
           } else if (result == 409) {
-            _notification = Text(
-              mounted ? AppLocale.UsernameAlreadyTaken.getString(context) : AppLocale.UsernameAlreadyTaken,
+            _notification = TranslatedText(
+              (ctx) => AppLocale.UsernameAlreadyTaken.getString(ctx),
+              state: state,
               style: const TextStyle(color: Colors.red),
             );
           } else {
-            _notification = Text(
-              mounted ? AppLocale.UnknownError.getString(context) : AppLocale.UnknownError,
+            _notification = TranslatedText(
+              (ctx) => AppLocale.UnknownError.getString(ctx),
+              state: state,
               style: const TextStyle(color: Colors.red),
             );
           }
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
-            _notification = Text(
-              mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError,
+            _notification = TranslatedText(
+              (ctx) => AppLocale.ConnectionError.getString(ctx),
+              state: state,
               style: const TextStyle(color: Colors.red),
             );
           } else {
