@@ -4,6 +4,7 @@ class AppLocale {
   static const String ResidentManager = "Resident Manager";
   static const String Username = "Username";
   static const String Password = "Password";
+  static const String RetypePassword = "Retype Password";
   static const String LoginAsResident = "Login as resident";
   static const String RegisterAsResident = "Register as resident";
   static const String LoginAsAdministrator = "Login as administrator";
@@ -37,6 +38,7 @@ class AppLocale {
   static const String MissingUsername = "Missing username";
   static const String InvalidUsernameLength = "Username must be 0-255 characters long";
   static const String MissingPassword = "Missing password";
+  static const String RetypePasswordDoesNotMatch = "Retyped password does not match";
   static const String Approve = "Approve";
   static const String Reject = "Reject";
   static const String UnknownError = "Unknown error";
@@ -47,6 +49,7 @@ class AppLocale {
     ResidentManager: "Resident Manager",
     Username: "Username",
     Password: "Password",
+    RetypePassword: "Retype Password",
     LoginAsResident: "Login as resident",
     RegisterAsResident: "Register as resident",
     LoginAsAdministrator: "Login as administrator",
@@ -80,6 +83,7 @@ class AppLocale {
     MissingUsername: "Missing username",
     InvalidUsernameLength: "Username must be 0-255 characters long",
     MissingPassword: "Missing password",
+    RetypePasswordDoesNotMatch: "Retyped password does not match",
     Approve: "Approve",
     Reject: "Reject",
     UnknownError: "Unknown error",
@@ -91,6 +95,7 @@ class AppLocale {
     ResidentManager: "Quản lý cư dân",
     Username: "Tên đăng nhập",
     Password: "Mật khẩu",
+    RetypePassword: "Nhập lại mật khẩu",
     LoginAsResident: "Đăng nhập với tư cách cư dân",
     RegisterAsResident: "Đăng ký với tư cách cư dân",
     LoginAsAdministrator: "Đăng nhập với tư cách quản trị viên",
@@ -124,6 +129,7 @@ class AppLocale {
     MissingUsername: "Thiếu tên đăng nhập",
     InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
     MissingPassword: "Thiếu mật khẩu",
+    RetypePasswordDoesNotMatch: "Mật khẩu nhập lại không khớp",
     Approve: "Phê duyệt",
     Reject: "Từ chối",
     UnknownError: "Lỗi không xác định",

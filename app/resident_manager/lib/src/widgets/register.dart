@@ -27,6 +27,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
   final _email = TextEditingController();
   final _username = TextEditingController();
   final _password = TextEditingController();
+  final _passwordRetype = TextEditingController();
 
   final _actionLock = Lock();
   Widget _notification = const SizedBox.square(dimension: 0);
@@ -259,6 +260,21 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return AppLocale.MissingPassword.getString(context);
+                  }
+
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _passwordRetype,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.all(8.0),
+                  label: fieldLabel(AppLocale.RetypePassword.getString(context), required: true),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value != _password.text) {
+                    return AppLocale.RetypePasswordDoesNotMatch.getString(context);
                   }
 
                   return null;

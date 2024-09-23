@@ -105,7 +105,6 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 ),
                 enabled: !_actionLock.locked,
                 obscureText: true,
-                onSubmitted: (_) => _login(false),
               ),
               const SizedBox.square(dimension: 5),
               _notification,
