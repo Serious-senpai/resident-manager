@@ -65,7 +65,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
             authorization: Authorization(username: username, password: password),
           );
 
-          if (result == 204) {
+          if (result == 200) {
             _notification = Text(
               mounted ? AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
               style: const TextStyle(color: Colors.blue),
