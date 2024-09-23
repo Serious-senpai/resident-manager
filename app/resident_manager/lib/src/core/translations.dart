@@ -10,7 +10,7 @@ class AppLocale {
   static const String LoggingInEllipsis = "Logging in...";
   static const String LoggedInAs = "Logged in as";
   static const String InvalidCredentials = "Invalid credentials";
-  static const String RegisterQueue = "Register queue";
+  static const String RegisterQueue = "Registration queue";
   static const String Home = "Home";
   static const String UnableToOpenUrl = "Unable to open URL";
   static const String ConnectionError = "Connection error";
@@ -26,6 +26,7 @@ class AppLocale {
   static const String MissingRequiredFields = "Missing required fields";
   static const String SuccessfullyRegisteredWaitForAdmin = "Successfully created a registration request. Please wait for administrator's approval.";
   static const String CheckInputAgain = "Please check your input again.";
+  static const String UsernameAlreadyTaken = "This username has already been taken.";
   static const String MissingName = "Missing name";
   static const String InvalidNameLength = "Fullname must be 0-255 characters long";
   static const String MissingRoomNumber = "Missing room number";
@@ -52,7 +53,7 @@ class AppLocale {
     LoggingInEllipsis: "Logging in...",
     LoggedInAs: "Logged in as",
     InvalidCredentials: "Invalid credentials",
-    RegisterQueue: "Register queue",
+    RegisterQueue: "Registration queue",
     Home: "Home",
     UnableToOpenUrl: "Unable to open URL",
     ConnectionError: "Connection error",
@@ -68,6 +69,7 @@ class AppLocale {
     MissingRequiredFields: "Missing required fields",
     SuccessfullyRegisteredWaitForAdmin: "Successfully registered. Please wait for administrator's approval.",
     CheckInputAgain: "Please check your input again.",
+    UsernameAlreadyTaken: "This username has already been taken.",
     MissingName: "Missing name",
     InvalidNameLength: "Fullname must be 0-255 characters long",
     MissingRoomNumber: "Missing room number",
@@ -111,6 +113,7 @@ class AppLocale {
     MissingRequiredFields: "Thiếu thông tin cần thiết",
     SuccessfullyRegisteredWaitForAdmin: "Đã đăng ký thành công. Vui lòng chờ phê duyệt từ quản trị viên.",
     CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
+    UsernameAlreadyTaken: "Tên đăng nhập đã tồn tại",
     MissingName: "Thiếu họ và tên",
     InvalidNameLength: "Họ và tên không hợp lệ",
     MissingRoomNumber: "Thiếu số phòng",

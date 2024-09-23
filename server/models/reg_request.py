@@ -12,6 +12,7 @@ from .info import PublicInfo
 from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
+from ..errors import UserInputError, UsernameConflictError
 from ..utils import generate_id, hash_password
 
 
@@ -103,7 +104,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         email: Optional[str],
         username: str,
         password: str,
-    ) -> Optional[RegisterRequest]:
+    ) -> RegisterRequest:
         # Validate data
         if phone is not None and len(phone) == 0:
             phone = None
@@ -122,10 +123,10 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             or len(username) > 255
             or len(password) == 0
         ):
-            return None
+            raise UserInputError
 
         if email is not None and re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?", email) is None:
-            return None
+            raise UserInputError
 
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
@@ -149,7 +150,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     hashed_password,
                 )
             except pyodbc.DatabaseError:
-                return None
+                raise UsernameConflictError
 
         return cls(
             id=request_id,

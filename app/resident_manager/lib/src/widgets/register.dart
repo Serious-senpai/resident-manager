@@ -70,9 +70,19 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
               mounted ? AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context) : AppLocale.SuccessfullyRegisteredWaitForAdmin,
               style: const TextStyle(color: Colors.blue),
             );
-          } else {
+          } else if (result == 400) {
             _notification = Text(
               mounted ? AppLocale.CheckInputAgain.getString(context) : AppLocale.CheckInputAgain,
+              style: const TextStyle(color: Colors.red),
+            );
+          } else if (result == 409) {
+            _notification = Text(
+              mounted ? AppLocale.UsernameAlreadyTaken.getString(context) : AppLocale.UsernameAlreadyTaken,
+              style: const TextStyle(color: Colors.red),
+            );
+          } else {
+            _notification = Text(
+              mounted ? AppLocale.UnknownError.getString(context) : AppLocale.UnknownError,
               style: const TextStyle(color: Colors.red),
             );
           }
