@@ -32,7 +32,7 @@ class RegisterRequest extends PublicInfo {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as List;
+      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
       for (final item in data) {
         result.add(RegisterRequest.fromJson(item));
       }
