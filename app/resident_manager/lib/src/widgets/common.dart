@@ -20,7 +20,7 @@ abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> 
   @override
   @mustCallSuper
   void initState() {
-    state.pushTranslationCallback((Locale? _) => setState(() {}));
+    state.pushTranslationCallback((_) => refresh());
     super.initState();
   }
 
@@ -60,23 +60,26 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
         decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/apartment.png"), fit: BoxFit.cover)),
         child: null,
       ),
-      ListTile(
-        leading: const Icon(Icons.lock_outlined),
-        title: Text(
-          AppLocale.Login.getString(context),
-          style: currentRoute == ApplicationRoute.login ? const TextStyle(color: Colors.blue) : null,
-        ),
-        onTap: () => currentRoute == ApplicationRoute.login
-            ? Navigator.pop(context)
-            : Navigator.pushReplacementNamed(
-                context,
-                ApplicationRoute.login,
-              ),
-      ),
     ];
 
     final authorization = state.authorization;
-    if (authorization != null) {
+    if (authorization == null) {
+      navigator.add(
+        ListTile(
+          leading: const Icon(Icons.lock_outlined),
+          title: Text(
+            AppLocale.Login.getString(context),
+            style: currentRoute == ApplicationRoute.login ? const TextStyle(color: Colors.blue) : null,
+          ),
+          onTap: () => currentRoute == ApplicationRoute.login
+              ? Navigator.pop(context)
+              : Navigator.pushReplacementNamed(
+                  context,
+                  ApplicationRoute.login,
+                ),
+        ),
+      );
+    } else {
       if (authorization.isAdmin) {
         navigator.addAll(
           [

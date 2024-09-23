@@ -32,9 +32,6 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           return;
         }
 
-        final loggedInAs = AppLocale.LoggedInAs.getString(context);
-        final invalidCredentials = AppLocale.InvalidCredentials.getString(context);
-
         final username = _username.text;
 
         var authorized = false;
@@ -46,14 +43,14 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
         }
 
         if (authorized) {
-          await showToastSafe(msg: "$loggedInAs \"$username\"");
+          await showToastSafe(msg: "${mounted ? AppLocale.LoggedInAs.getString(context) : AppLocale.LoggedInAs} \"$username\"");
 
           if (mounted) {
             await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
           _notification = Text(
-            invalidCredentials,
+            mounted ? AppLocale.InvalidCredentials.getString(context) : AppLocale.InvalidCredentials,
             style: const TextStyle(color: Colors.red),
           );
 
