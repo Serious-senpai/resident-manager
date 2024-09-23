@@ -1,3 +1,7 @@
+import "dart:async";
+import "dart:io";
+
+import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -19,12 +23,47 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   List<RegisterRequest> _requests = [];
   int _offset = 0;
   Future<bool>? _queryFuture;
+  Widget _notification = const SizedBox.square(dimension: 0);
+
+  final _selectedRequests = <RegisterRequest>{};
+  final _actionLock = Lock();
 
   int get offset => _offset;
   set offset(int value) {
     _offset = value;
     _queryFuture = null;
     refresh();
+  }
+
+  Future<void> approve() async {
+    await _actionLock.run(
+      () async {
+        _notification = Text(AppLocale.Loading.getString(context), style: const TextStyle(color: Colors.blue));
+        refresh();
+
+        var success = false;
+        try {
+          success = await RegisterRequest.approve(state: state, objects: _selectedRequests);
+        } catch (e) {
+          if (e is SocketException || e is TimeoutException) {
+            await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          } else {
+            rethrow;
+          }
+        }
+
+        if (success) {
+          _selectedRequests.clear();
+          offset = offset; // trigger setter
+        } else {
+          _notification = Text(
+            mounted ? AppLocale.UnknownError.getString(context) : AppLocale.UnknownError,
+            style: const TextStyle(color: Colors.red),
+          );
+          refresh();
+        }
+      },
+    );
   }
 
   Future<bool> queryRegistrationRequests() async {
@@ -94,6 +133,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
+                      const TableCell(child: SizedBox.square(dimension: 0)),
                       header(AppLocale.Fullname.getString(context)),
                       header(AppLocale.Room.getString(context)),
                       header(AppLocale.DateOfBirth.getString(context)),
@@ -108,6 +148,20 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   rows.add(
                     TableRow(
                       children: [
+                        Checkbox.adaptive(
+                          value: _selectedRequests.contains(request),
+                          onChanged: (state) {
+                            if (state != null) {
+                              if (state) {
+                                _selectedRequests.add(request);
+                              } else {
+                                _selectedRequests.remove(request);
+                              }
+                            }
+
+                            refresh();
+                          },
+                        ),
                         row(request.name),
                         row(request.room.toString()),
                         row(request.birthday?.toString() ?? "---"),
@@ -122,13 +176,15 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Table(children: rows),
-                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          TextButton.icon(
+                            icon: const Icon(Icons.done_outlined),
+                            label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
+                            onPressed: _actionLock.locked ? null : approve,
+                          ),
+                          const SizedBox.square(dimension: 10),
                           IconButton(
                             icon: const Icon(Icons.chevron_left_outlined),
                             onPressed: () {
@@ -149,6 +205,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             },
                           ),
                         ],
+                      ),
+                      const SizedBox.square(dimension: 5),
+                      _notification,
+                      const SizedBox.square(dimension: 5),
+                      Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Table(children: rows),
                       ),
                     ],
                   ),

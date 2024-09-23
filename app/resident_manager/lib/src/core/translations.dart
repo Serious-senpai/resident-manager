@@ -36,6 +36,9 @@ class AppLocale {
   static const String MissingUsername = "Missing username";
   static const String InvalidUsernameLength = "Username must be 0-255 characters long";
   static const String MissingPassword = "Missing password";
+  static const String Approve = "Approve";
+  static const String Reject = "Reject";
+  static const String UnknownError = "Unknown error";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -75,6 +78,9 @@ class AppLocale {
     MissingUsername: "Missing username",
     InvalidUsernameLength: "Username must be 0-255 characters long",
     MissingPassword: "Missing password",
+    Approve: "Approve",
+    Reject: "Reject",
+    UnknownError: "Unknown error",
   };
 
   static const Map<String, dynamic> VI = {
@@ -115,5 +121,8 @@ class AppLocale {
     MissingUsername: "Thiếu tên đăng nhập",
     InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
     MissingPassword: "Thiếu mật khẩu",
+    Approve: "Phê duyệt",
+    Reject: "Từ chối",
+    UnknownError: "Lỗi không xác định",
   };
 }

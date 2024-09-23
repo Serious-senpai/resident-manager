@@ -1,9 +1,9 @@
 import "dart:async";
 import "dart:convert";
 
-import "package:resident_manager/src/core/models/auth.dart";
-
+import "auth.dart";
 import "info.dart";
+import "snowflake.dart";
 import "../state.dart";
 
 class RegisterRequest extends PublicInfo {
@@ -56,5 +56,25 @@ class RegisterRequest extends PublicInfo {
     );
 
     return response.statusCode;
+  }
+
+  static Future<bool> approve({required ApplicationState state, required Iterable<Snowflake> objects}) async {
+    final headers = state.authorization?.headers;
+    if (headers == null) {
+      return false;
+    }
+
+    headers["content-type"] = "application/json";
+    final data = <int>[];
+    for (final object in objects) {
+      data.add(object.id);
+    }
+
+    final response = await state.http.apiPost(
+      "/api/admin/reg-request/accept",
+      headers: headers,
+      body: json.encode(data),
+    );
+    return response.statusCode == 204;
   }
 }

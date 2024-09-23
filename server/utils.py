@@ -70,19 +70,14 @@ def snowflake_time(id: int) -> datetime:
 
 class __IDGenerator:
 
-    since_epoch_last: ClassVar[int] = int(1000 * since_epoch().total_seconds())
     counter: ClassVar[int] = 0
 
     @classmethod
     def generate_id(cls) -> int:
         now = int(1000 * since_epoch().total_seconds())
-        if now > cls.since_epoch_last:
-            cls.since_epoch_last = now
-            cls.counter = 0
-        else:
-            cls.counter += 1
-
-        return (now << 14) | cls.counter
+        result = (now << 14) | cls.counter
+        cls.counter = (cls.counter + 1) & 0x1FFF
+        return result
 
 
 generate_id = __IDGenerator.generate_id

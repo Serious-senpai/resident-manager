@@ -37,7 +37,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
         final username = _username.text;
 
-        bool authorized = false;
+        var authorized = false;
         try {
           authorized = await state.authorize(username: username, password: _password.text, isAdmin: isAdmin);
         } catch (_) {
