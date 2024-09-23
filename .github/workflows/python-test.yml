@@ -1,40 +1,16 @@
-name: Test
+name: Python test
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
-  flutter:
-    name: Run Flutter tests
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.24.3
-          channel: stable
-
-      - name: View Flutter status
-        run: |
-          flutter --version
-          flutter doctor -v
-
-      - name: Run tests
-        working-directory: app/resident_manager
-        run: flutter test
-
-  python:
-    name: Run Python tests
+  test:
+    name: Run tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
