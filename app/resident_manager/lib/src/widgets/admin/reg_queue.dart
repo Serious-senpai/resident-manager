@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:io";
+import "dart:math";
 
 import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
@@ -9,8 +10,10 @@ import "../common.dart";
 import "../state.dart";
 import "../../utils.dart";
 import "../../core/config.dart";
+import "../../core/state.dart";
 import "../../core/translations.dart";
 import "../../core/models/reg_request.dart";
+import "../../core/models/snowflake.dart";
 
 class RegisterQueuePage extends StateAwareWidget {
   const RegisterQueuePage({super.key, required super.state});
@@ -22,7 +25,10 @@ class RegisterQueuePage extends StateAwareWidget {
 class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
   List<RegisterRequest> _requests = [];
   int _offset = 0;
+  int _offsetLimit = 0;
+
   Future<bool>? _queryFuture;
+  Future<int?>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
   final _selectedRequests = <RegisterRequest>{};
@@ -32,10 +38,11 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   set offset(int value) {
     _offset = value;
     _queryFuture = null;
+    _countFuture = null;
     refresh();
   }
 
-  Future<void> approve() async {
+  Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
       () async {
         _notification = Text(AppLocale.Loading.getString(context), style: const TextStyle(color: Colors.blue));
@@ -43,7 +50,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
         var success = false;
         try {
-          success = await RegisterRequest.approve(state: state, objects: _selectedRequests);
+          success = await coro(state: state, objects: _selectedRequests);
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
             await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -79,7 +86,19 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
   @override
   Scaffold buildScaffold(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     _queryFuture ??= queryRegistrationRequests();
+    _countFuture ??= RegisterRequest.count(state: state).then(
+      (value) {
+        if (value != null) {
+          _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+        } else {
+          _offsetLimit = offset;
+        }
+
+        return _offsetLimit;
+      },
+    );
 
     return Scaffold(
       key: scaffoldKey,
@@ -173,43 +192,55 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   );
                 }
 
-                return SingleChildScrollView(
+                return InteractiveViewer(
+                  constrained: false,
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton.icon(
-                            icon: const Icon(Icons.done_outlined),
-                            label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
-                            onPressed: _actionLock.locked ? null : approve,
-                          ),
-                          const SizedBox.square(dimension: 10),
-                          IconButton(
-                            icon: const Icon(Icons.chevron_left_outlined),
-                            onPressed: () {
-                              if (offset > 0) {
-                                offset--;
-                              }
-                              refresh();
-                            },
-                          ),
-                          Text((offset + 1).toString()),
-                          IconButton(
-                            icon: const Icon(Icons.chevron_right_outlined),
-                            onPressed: () {
-                              if (_requests.isNotEmpty) {
-                                offset++;
-                              }
-                              refresh();
-                            },
-                          ),
-                        ],
+                      FutureBuilder(
+                        future: _countFuture,
+                        builder: (context, snapshot) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.done_outlined),
+                                label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
+                                onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
+                              ),
+                              TextButton.icon(
+                                icon: const Icon(Icons.close_outlined),
+                                label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
+                                onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
+                              ),
+                              const SizedBox.square(dimension: 10),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_left_outlined),
+                                onPressed: () {
+                                  if (offset > 0) {
+                                    offset--;
+                                  }
+                                  refresh();
+                                },
+                              ),
+                              Text("${offset + 1}/${_offsetLimit + 1}"),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_right_outlined),
+                                onPressed: () {
+                                  if (_offset < _offsetLimit) {
+                                    offset++;
+                                  }
+                                  refresh();
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox.square(dimension: 5),
                       _notification,
                       const SizedBox.square(dimension: 5),
-                      Padding(
+                      Container(
+                        width: max(mediaQuery.size.width, 1000),
                         padding: const EdgeInsets.all(5),
                         child: Table(children: rows),
                       ),

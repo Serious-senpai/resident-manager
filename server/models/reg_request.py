@@ -64,6 +64,9 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
     @classmethod
     async def accept_many(cls, ids: List[int]) -> None:
+        if len(ids) == 0:
+            return
+
         async with Database.instance.pool.acquire() as connection:
             mapping = [(generate_id(), id) for id in ids]
             temp_fmt = ", ".join("(?, ?)" for _ in mapping)
@@ -80,6 +83,15 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 """,
                 *itertools.chain(mapping),
             )
+
+    @classmethod
+    async def reject_many(cls, ids: List[int]) -> None:
+        if len(ids) == 0:
+            return
+
+        async with Database.instance.pool.acquire() as connection:
+            temp_fmt = ", ".join("?" for _ in ids)
+            await connection.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *ids)
 
     @classmethod
     def from_row(cls, row: Any) -> RegisterRequest:

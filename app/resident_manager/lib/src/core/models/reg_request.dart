@@ -58,7 +58,11 @@ class RegisterRequest extends PublicInfo {
     return response.statusCode;
   }
 
-  static Future<bool> approve({required ApplicationState state, required Iterable<Snowflake> objects}) async {
+  static Future<bool> _approve_or_reject({
+    required ApplicationState state,
+    required Iterable<Snowflake> objects,
+    required String path,
+  }) async {
     final headers = state.authorization?.headers;
     if (headers == null) {
       return false;
@@ -71,10 +75,38 @@ class RegisterRequest extends PublicInfo {
     }
 
     final response = await state.http.apiPost(
-      "/api/admin/reg-request/accept",
+      path,
       headers: headers,
       body: json.encode(data),
     );
     return response.statusCode == 204;
+  }
+
+  static Future<bool> approve({
+    required ApplicationState state,
+    required Iterable<Snowflake> objects,
+  }) {
+    return _approve_or_reject(state: state, objects: objects, path: "/api/admin/reg-request/accept");
+  }
+
+  static Future<bool> reject({
+    required ApplicationState state,
+    required Iterable<Snowflake> objects,
+  }) {
+    return _approve_or_reject(state: state, objects: objects, path: "/api/admin/reg-request/reject");
+  }
+
+  static Future<int?> count({required ApplicationState state}) async {
+    final headers = state.authorization?.headers;
+    if (headers == null) {
+      return null;
+    }
+
+    final response = await state.http.apiGet("/api/admin/reg-request/count", headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(utf8.decode(response.bodyBytes));
+    }
+
+    return null;
   }
 }

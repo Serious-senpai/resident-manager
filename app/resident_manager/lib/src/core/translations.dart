@@ -115,7 +115,7 @@ class AppLocale {
     CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
     UsernameAlreadyTaken: "Tên đăng nhập đã tồn tại",
     MissingName: "Thiếu họ và tên",
-    InvalidNameLength: "Họ và tên không hợp lệ",
+    InvalidNameLength: "Họ và tên phải có độ dài 0-255 ký tự",
     MissingRoomNumber: "Thiếu số phòng",
     InvalidRoomNumber: "Số phòng không hợp lệ",
     InvalidDateOfBirth: "Ngày sinh không hợp lệ",
