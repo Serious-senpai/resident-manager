@@ -142,27 +142,28 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
-            request_id = generate_id()
-            try:
-                await connection.execute(
-                    """
-                    IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
-                    INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ELSE
-                    RAISERROR(15600, -1, -1)
-                    """,
-                    username,
-                    request_id,
-                    name,
-                    room,
-                    birthday,
-                    phone,
-                    email,
-                    username,
-                    hashed_password,
-                )
-            except pyodbc.DatabaseError:
-                raise UsernameConflictError
+            async with connection.cursor() as cursor:
+                request_id = generate_id()
+                try:
+                    await cursor.execute(
+                        """
+                        IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
+                        INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ELSE
+                        RAISERROR(15600, -1, -1)
+                        """,
+                        username,
+                        request_id,
+                        name,
+                        room,
+                        birthday,
+                        phone,
+                        email,
+                        username,
+                        hashed_password,
+                    )
+                except pyodbc.DatabaseError:
+                    raise UsernameConflictError
 
         return cls(
             id=request_id,
