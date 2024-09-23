@@ -33,7 +33,7 @@ class Resident(PublicInfo, HashedAuthorization):
     async def from_id(cls, id: int) -> Optional[Resident]:
         """This function is a coroutine.
 
-        Fetch a resident from the cache with a specified ID.
+        Fetch a resident from the database with a specified ID.
 
         Parameters
         -----
@@ -58,7 +58,7 @@ class Resident(PublicInfo, HashedAuthorization):
     async def from_username(cls, username: str) -> Optional[Resident]:
         """This function is a coroutine.
 
-        Fetch a resident from the cache with a specified username.
+        Fetch a resident from the database with a specified username.
 
         Parameters
         -----

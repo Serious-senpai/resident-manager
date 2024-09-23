@@ -61,7 +61,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
         if (success) {
           _selectedRequests.clear();
-          offset = offset; // trigger setter
+          offset = 0;
         } else {
           _notification = Text(
             mounted ? AppLocale.UnknownError.getString(context) : AppLocale.UnknownError,
@@ -198,7 +198,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                     children: [
                       FutureBuilder(
                         future: _countFuture,
-                        builder: (context, snapshot) {
+                        builder: (context, _) {
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -222,7 +222,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                   refresh();
                                 },
                               ),
-                              Text("${offset + 1}/${_offsetLimit + 1}"),
+                              Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}"),
                               IconButton(
                                 icon: const Icon(Icons.chevron_right_outlined),
                                 onPressed: () {

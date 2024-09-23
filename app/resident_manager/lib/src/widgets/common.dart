@@ -51,6 +51,8 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
     if (state != null) state.closeDrawer();
   }
 
+  bool _allowOpenBrowser = true; // @khoint5304's weird mouse
+
   /// Create a default [Drawer] for all pages within this application
   Drawer createDrawer(BuildContext context) {
     var currentRoute = ModalRoute.of(context)?.settings.name;
@@ -145,6 +147,11 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                   icon: Image.asset("assets/github/github-mark.png", height: 20, width: 20),
                   iconSize: 20,
                   onPressed: () async {
+                    if (!_allowOpenBrowser) {
+                      return;
+                    }
+
+                    _allowOpenBrowser = false;
                     var launched = false;
                     try {
                       launched = await launchUrl(Uri.parse("https://github.com/Serious-senpai/resident-manager"));
@@ -157,6 +164,9 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                         msg: context.mounted ? AppLocale.UnableToOpenUrl.getString(context) : AppLocale.UnableToOpenUrl,
                       );
                     }
+
+                    await Future.delayed(const Duration(seconds: 2));
+                    _allowOpenBrowser = true;
                   },
                   padding: EdgeInsets.zero,
                 ),
