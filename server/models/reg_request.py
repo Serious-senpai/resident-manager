@@ -9,7 +9,7 @@ import pyodbc  # type: ignore
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
-from .residents import Resident
+from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..utils import generate_id, hash_password
@@ -23,7 +23,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
     Each object of this class corresponds to a database row."""
 
-    async def accept(self) -> Resident:
+    async def accept(self) -> Snowflake:
         """This function is a coroutine.
 
         Accept the registration request, create a new resident record in the database
@@ -31,51 +31,54 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
         Returns
         -----
-        `Resident`
-            The newly registered resident.
+        `Snowflake`
+            The newly registered resident as a `Snowflake` object.
         """
         async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    """
-                    DELETE FROM register_queue
-                    OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
-                    INTO residents
-                    WHERE request_id = ?
-                    """,
-                    generate_id(),
-                    self.id,
-                )
+            id = generate_id()
+            await connection.execute(
+                """
+                DELETE FROM register_queue
+                OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                INTO residents
+                WHERE request_id = ?
+                """,
+                id,
+                self.id,
+            )
 
-                row = await cursor.fetchone()
-                resident = Resident.from_row(row)
-
-        return resident
+        return Snowflake(id=id)
 
     async def decline(self) -> None:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)
 
+    @staticmethod
+    async def count() -> int:
+        async with Database.instance.pool.acquire() as connection:
+            cursor = await connection.execute("SELECT COUNT(*) FROM register_queue")
+            row = await cursor.fetchone()
+            return row[0]
+
     @classmethod
     async def accept_many(cls, ids: List[int]) -> None:
         async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                mapping = [(generate_id(), id) for id in ids]
-                temp_fmt = ", ".join("(?, ?)" for _ in mapping)
-                temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
+            mapping = [(generate_id(), id) for id in ids]
+            temp_fmt = ", ".join("(?, ?)" for _ in mapping)
+            temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
 
-                await cursor.execute(
-                    f"""
-                    DELETE FROM register_queue
-                    OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
-                    INTO residents
-                    FROM register_queue
-                    INNER JOIN {temp_decl}
-                    ON register_queue.request_id = temp.request_id
-                    """,
-                    *itertools.chain(mapping),
-                )
+            await connection.execute(
+                f"""
+                DELETE FROM register_queue
+                OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                INTO residents
+                FROM register_queue
+                INNER JOIN {temp_decl}
+                ON register_queue.request_id = temp.request_id
+                """,
+                *itertools.chain(mapping),
+            )
 
     @classmethod
     def from_row(cls, row: Any) -> RegisterRequest:
@@ -126,28 +129,27 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                request_id = generate_id()
-                try:
-                    await cursor.execute(
-                        """
-                        IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
-                        INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ELSE
-                        RAISERROR(15600, -1, -1)
-                        """,
-                        username,
-                        request_id,
-                        name,
-                        room,
-                        birthday,
-                        phone,
-                        email,
-                        username,
-                        hashed_password,
-                    )
-                except pyodbc.DatabaseError:
-                    return None
+            request_id = generate_id()
+            try:
+                await connection.execute(
+                    """
+                    IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
+                    INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ELSE
+                    RAISERROR(15600, -1, -1)
+                    """,
+                    username,
+                    request_id,
+                    name,
+                    room,
+                    birthday,
+                    phone,
+                    email,
+                    username,
+                    hashed_password,
+                )
+            except pyodbc.DatabaseError:
+                return None
 
         return cls(
             id=request_id,
