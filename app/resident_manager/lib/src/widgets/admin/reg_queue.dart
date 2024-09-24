@@ -238,6 +238,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                   refresh();
                                 },
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.refresh_outlined),
+                                onPressed: () {
+                                  offset = 0;
+                                  refresh();
+                                },
+                              ),
                             ],
                           );
                         },

@@ -81,7 +81,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 INNER JOIN {temp_decl}
                 ON register_queue.request_id = temp.request_id
                 """,
-                *itertools.chain(mapping),
+                *itertools.chain(*mapping),
             )
 
     @classmethod

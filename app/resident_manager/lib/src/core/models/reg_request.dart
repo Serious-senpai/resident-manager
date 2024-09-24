@@ -58,7 +58,7 @@ class RegisterRequest extends PublicInfo {
     return response.statusCode;
   }
 
-  static Future<bool> _approve_or_reject({
+  static Future<bool> _approveOrReject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
     required String path,
@@ -86,14 +86,14 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approve_or_reject(state: state, objects: objects, path: "/api/admin/reg-request/accept");
+    return _approveOrReject(state: state, objects: objects, path: "/api/admin/reg-request/accept");
   }
 
   static Future<bool> reject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approve_or_reject(state: state, objects: objects, path: "/api/admin/reg-request/reject");
+    return _approveOrReject(state: state, objects: objects, path: "/api/admin/reg-request/reject");
   }
 
   static Future<int?> count({required ApplicationState state}) async {
