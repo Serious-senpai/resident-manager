@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
 from fastapi import HTTPException, Header, status
 
@@ -18,8 +18,13 @@ from .....routers import api_router
     responses={status.HTTP_401_UNAUTHORIZED: {}},
     status_code=status.HTTP_200_OK,
 )
-async def admin_reg_request(offset: int, headers: Annotated[Authorization, Header()]) -> List[RegisterRequest]:
+async def admin_reg_request(
+    offset: int,
+    headers: Annotated[Authorization, Header()],
+    name: Optional[str] = None,
+    room: Optional[int] = None,
+) -> List[RegisterRequest]:
     if not await Database.instance.verify_admin(headers.username, headers.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    return await RegisterRequest.query(offset=offset)
+    return await RegisterRequest.query(offset=offset, name=name, room=room)

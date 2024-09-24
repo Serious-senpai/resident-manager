@@ -177,19 +177,33 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         )
 
     @classmethod
-    async def query(cls, *, offset: int) -> List[RegisterRequest]:
+    async def query(
+        cls,
+        *,
+        offset: int,
+        name: Optional[str] = None,
+        room: Optional[int] = None,
+    ) -> List[RegisterRequest]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(
-                    """
-                    SELECT * FROM register_queue
-                    ORDER BY request_id DESC
-                    OFFSET ? ROWS
-                    FETCH NEXT ? ROWS ONLY
-                    """,
-                    offset,
-                    DB_PAGINATION_QUERY,
-                )
+                where: List[str] = []
+                params: List[Any] = []
+
+                if name is not None and len(name) > 0:
+                    where.append("DIFFERENCE(name, ?) = 4")
+                    params.append(name)
+
+                if room is not None:
+                    where.append("room = ?")
+                    params.append(room)
+
+                query = ["SELECT * FROM register_queue"]
+                if len(where) > 0:
+                    query.append("WHERE " + " AND ".join(where))
+
+                query.append("ORDER BY request_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
+
+                await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
 
                 rows = await cursor.fetchall()
                 return [cls.from_row(row) for row in rows]
