@@ -5,11 +5,11 @@ from typing import ClassVar, Optional, TYPE_CHECKING
 import aioodbc  # type: ignore
 
 from .config import (
-    DEFAULT_ADMIN_HASHED_PASSWORD,
+    DEFAULT_ADMIN_PASSWORD,
     DEFAULT_ADMIN_USERNAME,
     ODBC_CONNECTION_STRING,
 )
-from .utils import check_password
+from .utils import check_password, hash_password
 
 
 __all__ = ("Database",)
@@ -100,7 +100,7 @@ class Database:
                     END
                     """,
                     DEFAULT_ADMIN_USERNAME,
-                    DEFAULT_ADMIN_HASHED_PASSWORD,
+                    hash_password(DEFAULT_ADMIN_PASSWORD),
                 )
 
     async def close(self) -> None:

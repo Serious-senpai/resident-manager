@@ -47,12 +47,12 @@ class Resident(PublicInfo, HashedAuthorization):
         """
         async with Database.instance.pool.acquire() as connection:
             cursor = await connection.execute("SELECT * FROM residents WHERE id = ?", id)
-            row = await cursor.fetchall()
+            row = await cursor.fetchone()
 
-            try:
-                return cls.from_row(row[0])
-            except IndexError:
+            if row is None:
                 return None
+
+            return cls.from_row(row)
 
     @classmethod
     async def from_username(cls, username: str) -> Optional[Resident]:
@@ -72,9 +72,9 @@ class Resident(PublicInfo, HashedAuthorization):
         """
         async with Database.instance.pool.acquire() as connection:
             cursor = await connection.execute("SELECT * FROM residents WHERE username = ?", username)
-            row = await cursor.fetchall()
+            row = await cursor.fetchone()
 
-            try:
-                return cls.from_row(row[0])
-            except IndexError:
+            if row is None:
                 return None
+
+            return cls.from_row(row)

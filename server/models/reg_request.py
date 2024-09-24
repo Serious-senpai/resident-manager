@@ -59,8 +59,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
     async def count() -> int:
         async with Database.instance.pool.acquire() as connection:
             cursor = await connection.execute("SELECT COUNT(*) FROM register_queue")
-            row = await cursor.fetchone()
-            return row[0]
+            return await cursor.fetchval()
 
     @classmethod
     async def accept_many(cls, ids: List[int]) -> None:
