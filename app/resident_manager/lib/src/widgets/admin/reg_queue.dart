@@ -65,6 +65,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         }
 
         if (success) {
+          _notification = const SizedBox.square(dimension: 0);
           _selectedRequests.clear();
           offset = 0;
         } else {
@@ -158,7 +159,22 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      const TableCell(child: SizedBox.square(dimension: 0)),
+                      TableCell(
+                        child: Checkbox.adaptive(
+                          value: _selectedRequests.containsAll(_requests),
+                          onChanged: (state) {
+                            if (state != null) {
+                              if (state) {
+                                _selectedRequests.addAll(_requests);
+                              } else {
+                                _selectedRequests.removeAll(_requests);
+                              }
+                            }
+
+                            refresh();
+                          },
+                        ),
+                      ),
                       header(AppLocale.Fullname.getString(context)),
                       header(AppLocale.Room.getString(context)),
                       header(AppLocale.DateOfBirth.getString(context)),
