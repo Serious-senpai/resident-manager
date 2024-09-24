@@ -31,13 +31,14 @@ class AppLocale {
   static const String MissingName = "Missing name";
   static const String InvalidNameLength = "Fullname must be 0-255 characters long";
   static const String MissingRoomNumber = "Missing room number";
-  static const String InvalidRoomNumber = "Invalid room number";
+  static const String InvalidRoomNumber = "Room number must be in range 0-32767";
   static const String InvalidDateOfBirth = "Invalid date of birth";
   static const String InvalidPhoneNumber = "Invalid phone number";
   static const String InvalidEmail = "Invalid email";
   static const String MissingUsername = "Missing username";
   static const String InvalidUsernameLength = "Username must be 0-255 characters long";
   static const String MissingPassword = "Missing password";
+  static const String InvalidPasswordLength = "Password must be 8-255 characters long";
   static const String RetypePasswordDoesNotMatch = "Retyped password does not match";
   static const String Approve = "Approve";
   static const String Reject = "Reject";
@@ -83,6 +84,7 @@ class AppLocale {
     MissingUsername: "Missing username",
     InvalidUsernameLength: "Username must be 0-255 characters long",
     MissingPassword: "Missing password",
+    InvalidPasswordLength: "Password must be 8-255 characters long",
     RetypePasswordDoesNotMatch: "Retyped password does not match",
     Approve: "Approve",
     Reject: "Reject",
@@ -122,13 +124,14 @@ class AppLocale {
     MissingName: "Thiếu họ và tên",
     InvalidNameLength: "Họ và tên phải có độ dài 0-255 ký tự",
     MissingRoomNumber: "Thiếu số phòng",
-    InvalidRoomNumber: "Số phòng không hợp lệ",
+    InvalidRoomNumber: "Số phòng trong phạm vi 0 - 32767",
     InvalidDateOfBirth: "Ngày sinh không hợp lệ",
     InvalidPhoneNumber: "Số điện thoại không hợp lệ",
     InvalidEmail: "Email không hợp lệ",
     MissingUsername: "Thiếu tên đăng nhập",
     InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
     MissingPassword: "Thiếu mật khẩu",
+    InvalidPasswordLength: "Mật khẩu phải có độ dài 8-255 ký tự",
     RetypePasswordDoesNotMatch: "Mật khẩu nhập lại không khớp",
     Approve: "Phê duyệt",
     Reject: "Từ chối",

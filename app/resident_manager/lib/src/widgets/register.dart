@@ -234,7 +234,8 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 ),
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
-                    if (value.length > 255) {
+                    final pattern = RegExp(r"^[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?$");
+                    if (value.length > 255 || !pattern.hasMatch(value)) {
                       return AppLocale.InvalidEmail.getString(context);
                     }
                   }
@@ -270,6 +271,10 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return AppLocale.MissingPassword.getString(context);
+                  }
+
+                  if (value.length < 8) {
+                    return AppLocale.InvalidPasswordLength.getString(context);
                   }
 
                   return null;

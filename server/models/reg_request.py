@@ -133,7 +133,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             or (email is not None and len(email) > 255)
             or len(username) == 0
             or len(username) > 255
-            or len(password) == 0
+            or len(password) < 8
         ):
             raise UserInputError
 
