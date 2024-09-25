@@ -53,7 +53,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
 
         final name = _name.text;
         final room = int.parse(_room.text);
-        final birthday = _birthday.text.isEmpty ? null : DateTime.tryParse(_birthday.text);
+        final birthday = _birthday.text.isEmpty ? null : DateFormat.fromFormattedDate(_birthday.text);
         final phone = _phone.text;
         final email = _email.text;
         final username = _username.text;
@@ -151,17 +151,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   contentPadding: const EdgeInsets.all(8.0),
                   label: fieldLabel(AppLocale.Fullname.getString(context), required: true),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocale.MissingName.getString(context);
-                  }
-
-                  if (value.length > 255) {
-                    return AppLocale.InvalidNameLength.getString(context);
-                  }
-
-                  return null;
-                },
+                validator: (value) => nameValidator(context, required: true, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -170,23 +160,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   contentPadding: const EdgeInsets.all(8.0),
                   label: fieldLabel(AppLocale.Room.getString(context), required: true),
                 ),
-                validator: (value) {
-                  if (value == null) {
-                    return AppLocale.MissingRoomNumber.getString(context);
-                  }
-
-                  final pattern = RegExp(r"^\d*$");
-                  if (!pattern.hasMatch(value)) {
-                    return AppLocale.InvalidRoomNumber.getString(context);
-                  }
-
-                  final roomInt = int.parse(value);
-                  if (roomInt < 0 || roomInt > 32767) {
-                    return AppLocale.InvalidRoomNumber.getString(context);
-                  }
-
-                  return null;
-                },
+                validator: (value) => roomValidator(context, required: true, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,

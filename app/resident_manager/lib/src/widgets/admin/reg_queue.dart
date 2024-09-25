@@ -278,31 +278,46 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.all(10),
-                                        child: Column(
-                                          children: [
-                                            TextField(
-                                              controller: _userSearch,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                label: Text(AppLocale.Fullname.getString(context)),
+                                        child: Form(
+                                          child: Column(
+                                            children: [
+                                              TextFormField(
+                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                controller: _userSearch,
+                                                decoration: InputDecoration(
+                                                  contentPadding: const EdgeInsets.all(8.0),
+                                                  label: Text(AppLocale.Fullname.getString(context)),
+                                                ),
+                                                onFieldSubmitted: (_) {
+                                                  Navigator.pop(context);
+                                                  offset = 0;
+                                                },
+                                                validator: (value) => nameValidator(context, required: false, value: value),
                                               ),
-                                            ),
-                                            TextField(
-                                              controller: _roomSearch,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                label: Text(AppLocale.Room.getString(context)),
+                                              TextFormField(
+                                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                controller: _roomSearch,
+                                                decoration: InputDecoration(
+                                                  contentPadding: const EdgeInsets.all(8.0),
+                                                  label: Text(AppLocale.Room.getString(context)),
+                                                ),
+                                                onFieldSubmitted: (_) {
+                                                  Navigator.pop(context);
+                                                  offset = 0;
+                                                },
+                                                validator: (value) => roomValidator(context, required: false, value: value),
                                               ),
-                                            ),
-                                            const SizedBox.square(dimension: 10),
-                                            IconButton(
-                                              icon: const Icon(Icons.done_outlined),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                                offset = 0;
-                                              },
-                                            ),
-                                          ],
+                                              const SizedBox.square(dimension: 10),
+                                              TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  offset = 0;
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],

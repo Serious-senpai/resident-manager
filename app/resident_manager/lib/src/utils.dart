@@ -1,7 +1,10 @@
+import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_localization/flutter_localization.dart";
 import "package:fluttertoast/fluttertoast.dart";
 
 import "core/config.dart";
+import "core/translations.dart";
 
 Future<bool> showToastSafe({
   required String msg,
@@ -48,4 +51,47 @@ extension DateFormat on DateTime {
   String formatDate() {
     return "$day/$month/$year";
   }
+
+  static DateTime fromFormattedDate(String s) {
+    final parts = s.split("/");
+    return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+  }
+}
+
+String? nameValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingName.getString(context);
+    }
+
+    return null;
+  }
+
+  if (value.length > 255) {
+    return AppLocale.InvalidNameLength.getString(context);
+  }
+
+  return null;
+}
+
+String? roomValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRoomNumber.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d*$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidRoomNumber.getString(context);
+  }
+
+  final roomInt = int.parse(value);
+  if (roomInt < 0 || roomInt > 32767) {
+    return AppLocale.InvalidRoomNumber.getString(context);
+  }
+
+  return null;
 }
