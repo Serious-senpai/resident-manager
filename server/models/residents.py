@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypeVar
+from typing import Any, List, Optional, TypeVar
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
@@ -78,3 +78,12 @@ class Resident(PublicInfo, HashedAuthorization):
                 return None
 
             return cls.from_row(row)
+
+    @classmethod
+    async def delete_many(cls, ids: List[int]) -> None:
+        if len(ids) == 0:
+            return
+
+        async with Database.instance.pool.acquire() as connection:
+            temp_fmt = ", ".join("?" for _ in ids)
+            await connection.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *ids)
