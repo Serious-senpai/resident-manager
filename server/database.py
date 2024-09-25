@@ -65,7 +65,7 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'residents')
                     CREATE TABLE residents (
                         resident_id BIGINT PRIMARY KEY,
-                        name NVARCHAR(255) NOT NULL,
+                        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
                         phone NVARCHAR(15),
@@ -78,7 +78,7 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'register_queue')
                     CREATE TABLE register_queue (
                         request_id BIGINT PRIMARY KEY,
-                        name NVARCHAR(255) NOT NULL,
+                        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
                         room SMALLINT NOT NULL,
                         birthday DATETIME,
                         phone NVARCHAR(15),
@@ -106,11 +106,11 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'fee')
                     CREATE TABLE fee (
                         fee_id BIGINT PRIMARY KEY,
-                        name NVARCHAR(255) NOT NULL,
+                        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
                         lower INT NOT NULL,
                         upper INT NOT NULL,
                         date DATETIME NOT NULL,
-                        description NVARCHAR(255),
+                        description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8,
                         CHECK (lower <= upper),
                     )
                     """)
