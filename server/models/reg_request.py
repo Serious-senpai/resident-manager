@@ -189,7 +189,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 params: List[Any] = []
 
                 if name is not None and len(name) > 0:
-                    where.append("DIFFERENCE(name, ?) = 4")
+                    where.append("LOWER(name) = LOWER(?)")
                     params.append(name)
 
                 if room is not None:

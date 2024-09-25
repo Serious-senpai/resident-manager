@@ -145,6 +145,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _name,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -163,6 +164,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _room,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -182,6 +184,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _birthday,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -212,6 +215,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _phone,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -228,6 +232,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _email,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -245,6 +250,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _username,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -263,6 +269,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _password,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -274,7 +281,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                     return AppLocale.MissingPassword.getString(context);
                   }
 
-                  if (value.length < 8) {
+                  if (value.length < 8 || value.length > 255) {
                     return AppLocale.InvalidPasswordLength.getString(context);
                   }
 
@@ -282,6 +289,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 },
               ),
               TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _passwordRetype,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),

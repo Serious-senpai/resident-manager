@@ -92,7 +92,7 @@ class Database:
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'config')
                     BEGIN
                         CREATE TABLE config (
-                            name NVARCHAR(255) primary key,
+                            name NVARCHAR(255) PRIMARY KEY,
                             value NVARCHAR(255) NOT NULL,
                         )
                         INSERT INTO config VALUES ('admin_username', ?)
@@ -102,6 +102,17 @@ class Database:
                     DEFAULT_ADMIN_USERNAME,
                     hash_password(DEFAULT_ADMIN_PASSWORD),
                 )
+                await cursor.execute("""
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'fee')
+                    CREATE TABLE fee (
+                        fee_id BIGINT PRIMARY KEY,
+                        name NVARCHAR(255) NOT NULL,
+                        lower INT NOT NULL,
+                        upper INT NOT NULL,
+                        date DATETIME NOT NULL,
+                        description NVARCHAR(255),
+                        CHECK (lower <= upper),
+                    """)
 
     async def close(self) -> None:
         if self.__pool is not None:
