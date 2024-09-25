@@ -189,7 +189,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 params: List[Any] = []
 
                 if name is not None and len(name) > 0:
-                    where.append("LOWER(name) = LOWER(?)")
+                    where.append("CHARINDEX(?, name COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8) > 0")
                     params.append(name)
 
                 if room is not None:
