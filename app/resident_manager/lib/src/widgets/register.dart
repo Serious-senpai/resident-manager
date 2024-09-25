@@ -8,6 +8,7 @@ import "package:flutter_localization/flutter_localization.dart";
 import "common.dart";
 import "state.dart";
 import "utils.dart";
+import "../utils.dart";
 import "../core/translations.dart";
 import "../core/models/auth.dart";
 import "../core/models/info.dart";
@@ -194,7 +195,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   );
 
                   if (birthday != null) {
-                    _birthday.text = birthday.toIso8601String();
+                    _birthday.text = birthday.toLocal().formatDate();
                   } else {
                     _birthday.clear();
                   }

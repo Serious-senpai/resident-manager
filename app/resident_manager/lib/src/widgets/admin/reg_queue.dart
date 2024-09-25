@@ -205,7 +205,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                         ),
                         row(request.name),
                         row(request.room.toString()),
-                        row(request.birthday?.toLocal().toString() ?? "---"),
+                        row(request.birthday?.toLocal().formatDate() ?? "---"),
                         row(request.phone ?? "---"),
                         row(request.email ?? "---"),
                         row(request.createdAt.toLocal().toString()),

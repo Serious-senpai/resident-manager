@@ -43,3 +43,9 @@ DateTime fromEpoch(Duration dt) {
 DateTime snowflakeTime(int id) {
   return fromEpoch(Duration(milliseconds: id >> 14));
 }
+
+extension DateFormat on DateTime {
+  String formatDate() {
+    return "$day/$month/$year";
+  }
+}
