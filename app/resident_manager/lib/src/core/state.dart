@@ -10,9 +10,11 @@ import "package:path_provider/path_provider.dart";
 import "http.dart";
 import "translations.dart";
 import "models/auth.dart";
+import "models/residents.dart";
 
 class PublicAuthorization extends Authorization {
   final bool isAdmin;
+  Resident? resident;
 
   PublicAuthorization({required super.username, required super.password, required this.isAdmin});
 }
@@ -35,7 +37,12 @@ class _Authorization extends PublicAuthorization {
     );
 
     final result = response.statusCode < 400;
-    if (result) {
+
+    // Do not cache admin data
+    if (result && !isAdmin) {
+      final data = json.decode(utf8.decode(response.bodyBytes));
+      resident = Resident.fromJson(data);
+
       await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
     } else {
       await removeAuthData();
