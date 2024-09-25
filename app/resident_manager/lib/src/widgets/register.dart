@@ -171,11 +171,16 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   label: fieldLabel(AppLocale.Room.getString(context), required: true),
                 ),
                 validator: (value) {
-                  final roomInt = value == null ? null : int.tryParse(value);
-                  if (roomInt == null) {
+                  if (value == null) {
                     return AppLocale.MissingRoomNumber.getString(context);
                   }
 
+                  final pattern = RegExp(r"^\d*$");
+                  if (!pattern.hasMatch(value)) {
+                    return AppLocale.InvalidRoomNumber.getString(context);
+                  }
+
+                  final roomInt = int.parse(value);
                   if (roomInt < 0 || roomInt > 32767) {
                     return AppLocale.InvalidRoomNumber.getString(context);
                   }
@@ -203,16 +208,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                     _birthday.clear();
                   }
                 },
-                readOnly: true,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (DateTime.tryParse(value) == null) {
-                      return AppLocale.InvalidDateOfBirth.getString(context);
-                    }
-                  }
-
-                  return null;
-                },
+                readOnly: true, // no need for validator
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -223,7 +219,8 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 ),
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
-                    if (value.length > 15 || int.tryParse(value) == null) {
+                    final pattern = RegExp(r"^\+?[\d\s]+$");
+                    if (value.length > 15 || !pattern.hasMatch(value)) {
                       return AppLocale.InvalidPhoneNumber.getString(context);
                     }
                   }
