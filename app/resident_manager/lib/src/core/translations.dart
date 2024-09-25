@@ -43,6 +43,7 @@ class AppLocale {
   static const String Approve = "Approve";
   static const String Reject = "Reject";
   static const String UnknownError = "Unknown error";
+  static const String Search = "Search";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -89,6 +90,7 @@ class AppLocale {
     Approve: "Approve",
     Reject: "Reject",
     UnknownError: "Unknown error",
+    Search: "Search",
   };
 
   static const Map<String, dynamic> VI = {
@@ -136,5 +138,6 @@ class AppLocale {
     Approve: "Phê duyệt",
     Reject: "Từ chối",
     UnknownError: "Lỗi không xác định",
+    Search: "Tìm kiếm",
   };
 }

@@ -18,16 +18,29 @@ class RegisterRequest extends PublicInfo {
 
   RegisterRequest.fromJson(super.data) : super.fromJson();
 
-  static Future<List<RegisterRequest>> query({required ApplicationState state, required int offset}) async {
+  static Future<List<RegisterRequest>> query({
+    required ApplicationState state,
+    required int offset,
+    String? name,
+    int? room,
+  }) async {
     final result = <RegisterRequest>[];
     final authorization = state.authorization;
     if (authorization == null) {
       return result;
     }
 
+    final params = {"offset": offset.toString()};
+    if (name != null && name.isNotEmpty) {
+      params["name"] = name;
+    }
+    if (room != null) {
+      params["room"] = room.toString();
+    }
+
     final response = await state.http.apiGet(
       "/api/admin/reg-request",
-      queryParameters: {"offset": offset.toString()},
+      queryParameters: params,
       headers: authorization.headers,
     );
 

@@ -35,6 +35,9 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   final _selectedRequests = <RegisterRequest>{};
   final _actionLock = Lock();
 
+  final _userSearch = TextEditingController();
+  final _roomSearch = TextEditingController();
+
   int get offset => _offset;
   set offset(int value) {
     _offset = value;
@@ -82,7 +85,12 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
   Future<bool> queryRegistrationRequests() async {
     try {
-      _requests = await RegisterRequest.query(state: state, offset: DB_PAGINATION_QUERY * offset);
+      _requests = await RegisterRequest.query(
+        state: state,
+        offset: DB_PAGINATION_QUERY * offset,
+        name: _userSearch.text,
+        room: int.tryParse(_roomSearch.text),
+      );
       refresh();
       return true;
     } catch (_) {
@@ -214,67 +222,115 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   );
                 }
 
-                return InteractiveViewer(
-                  constrained: false,
-                  child: Column(
-                    children: [
-                      FutureBuilder(
-                        future: _countFuture,
-                        builder: (context, _) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              TextButton.icon(
-                                icon: const Icon(Icons.done_outlined),
-                                label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
-                                onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
-                              ),
-                              TextButton.icon(
-                                icon: const Icon(Icons.close_outlined),
-                                label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
-                                onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
-                              ),
-                              const SizedBox.square(dimension: 10),
-                              IconButton(
-                                icon: const Icon(Icons.chevron_left_outlined),
-                                onPressed: () {
-                                  if (offset > 0) {
-                                    offset--;
-                                  }
-                                  refresh();
-                                },
-                              ),
-                              Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}"),
-                              IconButton(
-                                icon: const Icon(Icons.chevron_right_outlined),
-                                onPressed: () {
-                                  if (_offset < _offsetLimit) {
-                                    offset++;
-                                  }
-                                  refresh();
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.refresh_outlined),
-                                onPressed: () {
-                                  offset = 0;
-                                  refresh();
-                                },
-                              ),
-                            ],
-                          );
-                        },
+                return Column(
+                  children: [
+                    FutureBuilder(
+                      future: _countFuture,
+                      builder: (context, _) {
+                        return Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              icon: const Icon(Icons.done_outlined),
+                              label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
+                              onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.close_outlined),
+                              label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
+                              onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
+                            ),
+                            const SizedBox.square(dimension: 10),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left_outlined),
+                              onPressed: () {
+                                if (offset > 0) {
+                                  offset--;
+                                }
+                                refresh();
+                              },
+                            ),
+                            Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}"),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right_outlined),
+                              onPressed: () {
+                                if (_offset < _offsetLimit) {
+                                  offset++;
+                                }
+                                refresh();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.refresh_outlined),
+                              onPressed: () {
+                                offset = 0;
+                                refresh();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.search_outlined),
+                              onPressed: () async {
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) => SimpleDialog(
+                                    title: Text(AppLocale.Search.getString(context)),
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          children: [
+                                            TextField(
+                                              controller: _userSearch,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                label: Text(AppLocale.Fullname.getString(context)),
+                                              ),
+                                            ),
+                                            TextField(
+                                              controller: _roomSearch,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                label: Text(AppLocale.Room.getString(context)),
+                                              ),
+                                            ),
+                                            const SizedBox.square(dimension: 10),
+                                            IconButton(
+                                              icon: const Icon(Icons.done_outlined),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                offset = 0;
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox.square(dimension: 5),
+                    _notification,
+                    const SizedBox.square(dimension: 5),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: Container(
+                            width: max(mediaQuery.size.width, 1000),
+                            padding: const EdgeInsets.all(5),
+                            child: Table(children: rows),
+                          ),
+                        ),
                       ),
-                      const SizedBox.square(dimension: 5),
-                      _notification,
-                      const SizedBox.square(dimension: 5),
-                      Container(
-                        width: max(mediaQuery.size.width, 1000),
-                        padding: const EdgeInsets.all(5),
-                        child: Table(children: rows),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               }
 
