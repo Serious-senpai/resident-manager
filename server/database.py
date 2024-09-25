@@ -112,6 +112,7 @@ class Database:
                         date DATETIME NOT NULL,
                         description NVARCHAR(255),
                         CHECK (lower <= upper),
+                    )
                     """)
 
     async def close(self) -> None:
