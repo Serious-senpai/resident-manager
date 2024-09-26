@@ -1,3 +1,5 @@
+import "dart:io";
+
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:fluttertoast/fluttertoast.dart";
@@ -19,6 +21,11 @@ Future<bool> showToastSafe({
   dynamic webPosition = "right",
 }) async {
   try {
+    if (Platform.environment.containsKey("FLUTTER_TEST")) {
+      // Fluttertoast.showToast hang in flutter test? No issue URLs found yet.
+      return false;
+    }
+
     return await Fluttertoast.showToast(
           msg: msg,
           toastLength: toastLength,

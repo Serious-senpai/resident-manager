@@ -9,8 +9,10 @@ class HTTPClient {
     host: "apartment-management.azurewebsites.net",
   );
 
-  final _http = Client();
+  final Client _http;
   final _semaphore = Semaphore(5);
+
+  HTTPClient({Client? client}) : _http = client ?? Client();
 
   /// Perform a HTTP GET request
   Future<Response> get(Uri url, {Map<String, String>? headers}) => _semaphore.run(() => _http.get(url, headers: headers));

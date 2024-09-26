@@ -62,7 +62,7 @@ class Database:
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'residents')
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'residents' AND type = 'U')
                     CREATE TABLE residents (
                         resident_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -75,7 +75,7 @@ class Database:
                     )
                 """)
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'register_queue')
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'register_queue' AND type = 'U')
                     CREATE TABLE register_queue (
                         request_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -89,7 +89,7 @@ class Database:
                 """)
                 await cursor.execute(
                     """
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'config')
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'config' AND type = 'U')
                     BEGIN
                         CREATE TABLE config (
                             name NVARCHAR(255) PRIMARY KEY,
@@ -102,8 +102,10 @@ class Database:
                     DEFAULT_ADMIN_USERNAME,
                     hash_password(DEFAULT_ADMIN_PASSWORD),
                 )
+
+                # Fee lower, upper = [VND] * 100
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'fee')
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'fee' AND type = 'U')
                     CREATE TABLE fee (
                         fee_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -111,9 +113,31 @@ class Database:
                         upper INT NOT NULL,
                         date DATETIME NOT NULL,
                         description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8,
+                        flags TINYINT NOT NULL,
                         CHECK (lower <= upper),
                     )
-                    """)
+                """)
+
+                # Room area = [area in m2] * 100
+                await cursor.execute("""
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'rooms' AND type = 'U')
+                    CREATE TABLE rooms (
+                        room SMALLINT NOT NULL,
+                        area INT NOT NULL,
+                        motorbike TINYINT NOT NULL,
+                        car TINYINT NOT NULL,
+                    )
+                """)
+
+                # Payment amount = [VND] * 100
+                await cursor.execute("""
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'payments' AND type = 'U')
+                    CREATE TABLE payments (
+                        payment_id BIGINT NOT NULL,
+                        room SMALLINT NOT NULL,
+                        amount INT NOT NULL,
+                    )
+                """)
 
     async def close(self) -> None:
         if self.__pool is not None:

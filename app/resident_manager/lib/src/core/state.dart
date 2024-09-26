@@ -4,6 +4,7 @@ import "dart:ui";
 
 import "package:async_locks/async_locks.dart";
 import "package:flutter_localization/flutter_localization.dart";
+import "package:http/http.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 
@@ -54,7 +55,8 @@ class _Authorization extends PublicAuthorization {
   Future<void> removeAuthData() async {
     await _withLoginFile(
       (file) async {
-        if (await file.exists()) {
+        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
+        if (file.existsSync()) {
           await file.delete();
         }
       },
@@ -103,7 +105,7 @@ class _Authorization extends PublicAuthorization {
 }
 
 class ApplicationState {
-  final http = HTTPClient();
+  final HTTPClient http;
 
   final FlutterLocalization localization = FlutterLocalization.instance;
   final List<void Function(Locale?)> _onTranslationCallbacks = <void Function(Locale?)>[];
@@ -111,7 +113,7 @@ class ApplicationState {
   _Authorization? _authorization;
   PublicAuthorization? get authorization => _authorization;
 
-  ApplicationState() {
+  ApplicationState({Client? client}) : http = HTTPClient(client: client ?? Client()) {
     localization.init(
       mapLocales: [
         const MapLocale("en", AppLocale.EN),
