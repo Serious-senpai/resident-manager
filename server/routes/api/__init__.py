@@ -1,3 +1,1 @@
-from .admin import *
-from .login import *
-from .register import *
+from .v1 import *

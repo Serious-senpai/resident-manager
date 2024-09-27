@@ -4,13 +4,13 @@ from typing import Annotated
 
 from fastapi import HTTPException, Header, status
 
-from ...models import Authorization, PublicInfo, Resident
-from ...routers import api_router
-from ...utils import check_password
+from ....apps import api_v1
+from ....models import Authorization, PublicInfo, Resident
+from ....utils import check_password
 
 
 # Not much we can do: https://stackoverflow.com/a/7562744
-@api_router.post(
+@api_v1.post(
     "/login",
     name="Residents login",
     description="Verify authorization data, return resident information on success.",

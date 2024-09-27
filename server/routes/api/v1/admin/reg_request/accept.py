@@ -4,12 +4,12 @@ from typing import Annotated, List
 
 from fastapi import HTTPException, Header, status
 
-from .....database import Database
-from .....models import Authorization, RegisterRequest
-from .....routers import api_router
+from ......apps import api_v1
+from ......database import Database
+from ......models import Authorization, RegisterRequest
 
 
-@api_router.post(
+@api_v1.post(
     "/admin/reg-request/accept",
     name="Registration requests approval",
     description="Approve one or more registration requests",

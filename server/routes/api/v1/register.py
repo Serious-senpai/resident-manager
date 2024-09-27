@@ -4,12 +4,12 @@ from typing import Annotated
 
 from fastapi import HTTPException, Header, status
 
-from ...errors import UserInputError, UsernameConflictError
-from ...models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
-from ...routers import api_router
+from ....apps import api_v1
+from ....errors import UserInputError, UsernameConflictError
+from ....models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
 
 
-@api_router.post(
+@api_v1.post(
     "/register",
     name="Residents registration",
     description="Register a resident account to be created.",

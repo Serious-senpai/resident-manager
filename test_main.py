@@ -46,7 +46,7 @@ def test_docs() -> None:
 def test_admin_login_ok() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/api/admin/login",
+            "/api/v1/admin/login",
             headers={
                 "Username": "admin",
                 "Password": DEFAULT_ADMIN_PASSWORD,
@@ -58,7 +58,7 @@ def test_admin_login_ok() -> None:
 def test_admin_login_incorrect_password() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/api/admin/login",
+            "/api/v1/admin/login",
             headers={
                 "Username": "admin",
                 "Password": "password",
@@ -70,7 +70,7 @@ def test_admin_login_incorrect_password() -> None:
 def test_admin_login_incorrect_username() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/api/admin/login",
+            "/api/v1/admin/login",
             headers={
                 "Username": "user",
                 "Password": DEFAULT_ADMIN_PASSWORD,
@@ -82,7 +82,7 @@ def test_admin_login_incorrect_username() -> None:
 def test_admin_login_incorrect_username_password() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/api/admin/login",
+            "/api/v1/admin/login",
             headers={
                 "Username": "user",
                 "Password": "password",
@@ -105,7 +105,7 @@ def test_register_main_flow() -> None:
 
     with TestClient(app) as client:
         response = client.post(
-            "/api/register",
+            "/api/v1/register",
             json={
                 "name": name,
                 "room": room,
@@ -121,7 +121,7 @@ def test_register_main_flow() -> None:
         assert response.status_code == status.HTTP_200_OK
 
         response = client.get(
-            "/api/admin/reg-request",
+            "/api/v1/admin/reg-request",
             params={"offset": 0, "name": name},
             headers={
                 "Username": "admin",
@@ -135,7 +135,7 @@ def test_register_main_flow() -> None:
         assert_match(data[0], name=name, room=room, birthday=birthday, phone=phone, email=email)
 
         response = client.post(
-            "/api/admin/reg-request/accept",
+            "/api/v1/admin/reg-request/accept",
             json=[data[0]["id"]],
             headers={
                 "Username": "admin",
@@ -145,7 +145,7 @@ def test_register_main_flow() -> None:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         response = client.post(
-            "/api/login",
+            "/api/v1/login",
             headers={
                 "Username": username,
                 "Password": password,
@@ -157,7 +157,7 @@ def test_register_main_flow() -> None:
         assert_match(data, name=name, room=room, birthday=birthday, phone=phone, email=email)
 
         response = client.post(
-            "/api/admin/delete",
+            "/api/v1/admin/delete",
             json=[data["id"]],
             headers={
                 "Username": "admin",

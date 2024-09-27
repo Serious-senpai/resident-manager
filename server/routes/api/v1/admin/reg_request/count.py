@@ -4,12 +4,12 @@ from typing import Annotated
 
 from fastapi import HTTPException, Header, status
 
-from .....database import Database
-from .....models import Authorization, RegisterRequest
-from .....routers import api_router
+from ......apps import api_v1
+from ......database import Database
+from ......models import Authorization, RegisterRequest
 
 
-@api_router.get(
+@api_v1.get(
     "/admin/reg-request/count",
     name="Registration requests count",
     description="Return number of registration requests",

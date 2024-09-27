@@ -39,7 +39,7 @@ class RegisterRequest extends PublicInfo {
     }
 
     final response = await state.http.apiGet(
-      "/api/admin/reg-request",
+      "/api/v1/admin/reg-request",
       queryParameters: params,
       headers: authorization.headers,
     );
@@ -63,7 +63,7 @@ class RegisterRequest extends PublicInfo {
     headers["content-type"] = "application/json";
 
     final response = await state.http.apiPost(
-      "/api/register",
+      "/api/v1/register",
       headers: headers,
       body: json.encode(info.personalInfoJson()),
     );
@@ -99,14 +99,14 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/admin/reg-request/accept");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/accept");
   }
 
   static Future<bool> reject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/admin/reg-request/reject");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/reject");
   }
 
   static Future<int?> count({required ApplicationState state}) async {
@@ -115,7 +115,7 @@ class RegisterRequest extends PublicInfo {
       return null;
     }
 
-    final response = await state.http.apiGet("/api/admin/reg-request/count", headers: headers);
+    final response = await state.http.apiGet("/api/v1/admin/reg-request/count", headers: headers);
     if (response.statusCode == 200) {
       return json.decode(utf8.decode(response.bodyBytes));
     }

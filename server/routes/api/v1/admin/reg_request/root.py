@@ -4,13 +4,13 @@ from typing import Annotated, List, Optional
 
 from fastapi import HTTPException, Header, status
 
-from .....config import DB_PAGINATION_QUERY
-from .....database import Database
-from .....models import Authorization, RegisterRequest
-from .....routers import api_router
+from ......apps import api_v1
+from ......config import DB_PAGINATION_QUERY
+from ......database import Database
+from ......models import Authorization, RegisterRequest
 
 
-@api_router.get(
+@api_v1.get(
     "/admin/reg-request",
     name="Registration requests query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} registration requests from the specified offset",

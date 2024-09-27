@@ -33,7 +33,7 @@ class _Authorization extends PublicAuthorization {
 
   Future<bool> validate({required HTTPClient client}) async {
     final response = await client.apiPost(
-      isAdmin ? "/api/admin/login" : "/api/login",
+      isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
       headers: headers,
     );
 

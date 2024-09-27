@@ -11,7 +11,7 @@ final client = MockClient(
   (request) async {
     // print("Received request $request (path: ${request.url.path})");
     if (request.method == "POST") {
-      if (request.url.path == "/api/admin/login") {
+      if (request.url.path == "/api/v1/admin/login") {
         return Response("", 204);
       }
     }

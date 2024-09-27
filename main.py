@@ -14,7 +14,7 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from server import api_router, Database
+from server import api_v1, Database
 
 
 class ApplicationLifespan(AbstractAsyncContextManager):
@@ -42,12 +42,26 @@ class ApplicationLifespan(AbstractAsyncContextManager):
 app = FastAPI(
     title="Apartment management API",
     description="REST API for apartment management application",
+    docs_url=None,
+    redoc_url=None,
     lifespan=ApplicationLifespan,
 )
-app.include_router(api_router)
+app.mount("/api/v1", api_v1)
 
 
 @app.get("/", include_in_schema=False)
 async def root() -> RedirectResponse:
     """Redirect to API documentation"""
-    return RedirectResponse("/docs")
+    return RedirectResponse("/api/v1/docs")
+
+
+@app.get("/docs", include_in_schema=False)
+async def docs() -> RedirectResponse:
+    """Redirect to API documentation"""
+    return RedirectResponse("/api/v1/docs")
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc() -> RedirectResponse:
+    """Redirect to API documentation"""
+    return RedirectResponse("/api/v1/redoc")
