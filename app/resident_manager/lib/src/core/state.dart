@@ -125,7 +125,7 @@ class ApplicationState {
   Future<PublicKey> serverKey() async {
     Future<PublicKey> fetcher() async {
       final response = await http.apiGet("/api/v1/key");
-      return PublicKey(base64.decode(utf8.decode(response.bodyBytes)));
+      return PublicKey(base64.decode(json.decode(utf8.decode(response.bodyBytes))));
     }
 
     return _serverKey ??= await fetcher();

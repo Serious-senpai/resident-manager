@@ -20,4 +20,3 @@ from .....models import Authorization
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:
     await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
