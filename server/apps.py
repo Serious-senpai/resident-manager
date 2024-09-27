@@ -11,4 +11,5 @@ __all__ = (
 api_v1 = fastapi.FastAPI(
     title="Apartment management API v1",
     description="REST API for apartment management application",
+    version="1.0.0",
 )
