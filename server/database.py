@@ -122,7 +122,7 @@ class Database:
                 await cursor.execute("""
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'rooms' AND type = 'U')
                     CREATE TABLE rooms (
-                        room SMALLINT NOT NULL,
+                        room SMALLINT PRIMARY KEY,
                         area INT NOT NULL,
                         motorbike TINYINT NOT NULL,
                         car TINYINT NOT NULL,
@@ -133,7 +133,7 @@ class Database:
                 await cursor.execute("""
                     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'payments' AND type = 'U')
                     CREATE TABLE payments (
-                        payment_id BIGINT NOT NULL,
+                        payment_id BIGINT PRIMARY KEY,
                         room SMALLINT NOT NULL,
                         amount INT NOT NULL,
                     )

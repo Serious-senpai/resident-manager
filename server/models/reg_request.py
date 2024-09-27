@@ -37,16 +37,17 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         """
         async with Database.instance.pool.acquire() as connection:
             id = generate_id()
-            await connection.execute(
-                """
-                DELETE FROM register_queue
-                OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
-                INTO residents
-                WHERE request_id = ?
-                """,
-                id,
-                self.id,
-            )
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                    DELETE FROM register_queue
+                    OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                    INTO residents
+                    WHERE request_id = ?
+                    """,
+                    id,
+                    self.id,
+                )
 
         return Snowflake(id=id)
 
@@ -58,8 +59,9 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
     @staticmethod
     async def count() -> int:
         async with Database.instance.pool.acquire() as connection:
-            cursor = await connection.execute("SELECT COUNT(*) FROM register_queue")
-            return await cursor.fetchval()
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT COUNT(*) FROM register_queue")
+                return await cursor.fetchval()
 
     @classmethod
     async def accept_many(cls, ids: List[int]) -> None:
@@ -71,17 +73,18 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             temp_fmt = ", ".join("(?, ?)" for _ in mapping)
             temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
 
-            await connection.execute(
-                f"""
-                DELETE FROM register_queue
-                OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
-                INTO residents
-                FROM register_queue
-                INNER JOIN {temp_decl}
-                ON register_queue.request_id = temp.request_id
-                """,
-                *itertools.chain(*mapping),
-            )
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    f"""
+                    DELETE FROM register_queue
+                    OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                    INTO residents
+                    FROM register_queue
+                    INNER JOIN {temp_decl}
+                    ON register_queue.request_id = temp.request_id
+                    """,
+                    *itertools.chain(*mapping),
+                )
 
     @classmethod
     async def reject_many(cls, ids: List[int]) -> None:
@@ -90,7 +93,9 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
         async with Database.instance.pool.acquire() as connection:
             temp_fmt = ", ".join("?" for _ in ids)
-            await connection.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *ids)
+
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *ids)
 
     @classmethod
     def from_row(cls, row: Any) -> RegisterRequest:
