@@ -1,13 +1,11 @@
 import "dart:convert";
 
 import "package:async_locks/async_locks.dart";
+import "package:flutter/foundation.dart";
 import "package:http/http.dart";
 
 class HTTPClient {
-  static final Uri baseUrl = Uri(
-    scheme: "https",
-    host: "apartment-management.azurewebsites.net",
-  );
+  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("apartment-management.azurewebsites.net");
 
   final Client _http;
   final _semaphore = Semaphore(5);
