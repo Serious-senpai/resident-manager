@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import HTTPException, Header, status
+from fastapi import Header, status
 
 from .....apps import api_v1
 from .....database import Database
