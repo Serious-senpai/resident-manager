@@ -1,11 +1,16 @@
+import "dart:convert";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:http/http.dart";
 import "package:http/testing.dart";
+import "package:pinenacl/x25519.dart";
 import "package:resident_manager/main.dart";
 import "package:resident_manager/src/core/state.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
+
+final serverKey = PrivateKey.generate();
 
 final client = MockClient(
   (request) async {
@@ -13,6 +18,10 @@ final client = MockClient(
     if (request.method == "POST") {
       if (request.url.path == "/api/v1/admin/login") {
         return Response("", 204);
+      }
+    } else if (request.method == "GET") {
+      if (request.url.path == "/api/v1/key") {
+        return Response(json.encode(base64.encode(serverKey.publicKey)), 200);
       }
     }
 
