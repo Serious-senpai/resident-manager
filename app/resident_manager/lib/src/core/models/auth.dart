@@ -20,7 +20,7 @@ class Authorization {
     return {
       "username": username,
       "encrypted": base64.encode(box.encrypt(utf8.encode(password))),
-      "public_key": base64.encode(publicKey),
+      "pkey": base64.encode(publicKey),
     };
   }
 }
