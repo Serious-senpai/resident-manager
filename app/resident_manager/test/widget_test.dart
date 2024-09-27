@@ -21,7 +21,7 @@ final client = MockClient(
       }
     } else if (request.method == "GET") {
       if (request.url.path == "/api/v1/key") {
-        return Response(base64.encode(serverKey.publicKey), 200);
+        return Response(json.encode(base64.encode(serverKey.publicKey)), 200);
       }
     }
 
