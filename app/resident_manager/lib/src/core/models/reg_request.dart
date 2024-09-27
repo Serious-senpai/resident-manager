@@ -41,7 +41,7 @@ class RegisterRequest extends PublicInfo {
     final response = await state.http.apiGet(
       "/api/v1/admin/reg-request",
       queryParameters: params,
-      headers: authorization.headers,
+      headers: await state.authorizationHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -59,7 +59,7 @@ class RegisterRequest extends PublicInfo {
     required PersonalInfo info,
     required Authorization authorization,
   }) async {
-    final headers = authorization.headers;
+    final headers = authorization.constructHeaders(await state.serverKey());
     headers["content-type"] = "application/json";
 
     final response = await state.http.apiPost(
@@ -76,7 +76,7 @@ class RegisterRequest extends PublicInfo {
     required Iterable<Snowflake> objects,
     required String path,
   }) async {
-    final headers = state.authorization?.headers;
+    final headers = await state.authorizationHeaders();
     if (headers == null) {
       return false;
     }
@@ -110,7 +110,7 @@ class RegisterRequest extends PublicInfo {
   }
 
   static Future<int?> count({required ApplicationState state}) async {
-    final headers = state.authorization?.headers;
+    final headers = await state.authorizationHeaders();
     if (headers == null) {
       return null;
     }

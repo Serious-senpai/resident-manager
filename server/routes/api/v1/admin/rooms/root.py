@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, List, Optional
 
-from fastapi import HTTPException, Header, status
+from fastapi import Header, status
 
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
@@ -15,7 +15,7 @@ from ......models import Authorization, Room
     name="Room information query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} room information from the specified offset",
     tags=["admin"],
-    responses={status.HTTP_401_UNAUTHORIZED: {}},
+    responses={status.HTTP_401_UNAUTHORIZED: {}, status.HTTP_403_FORBIDDEN: {}},
     status_code=status.HTTP_200_OK,
 )
 async def admin_rooms(
@@ -24,7 +24,5 @@ async def admin_rooms(
     room: Optional[int] = None,
     floor: Optional[int] = None,
 ) -> List[Room]:
-    if not await Database.instance.verify_admin(headers.username, headers.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-
+    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
     return await Room.query(offset=offset, room=room, floor=floor)

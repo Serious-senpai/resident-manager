@@ -7,6 +7,7 @@ import "package:flutter_localization/flutter_localization.dart";
 import "package:http/http.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
+import "package:pinenacl/x25519.dart";
 
 import "http.dart";
 import "translations.dart";
@@ -31,11 +32,17 @@ class _Authorization extends PublicAuthorization {
     };
   }
 
-  Future<bool> validate({required HTTPClient client}) async {
-    final response = await client.apiPost(
+  Future<bool> validate({required ApplicationState state}) async {
+    final response = await state.http.apiPost(
       isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
-      headers: headers,
+      headers: constructHeaders(await state.serverKey()),
     );
+
+    if (response.statusCode == 401) {
+      // Invalid server public key
+      state.invalidateServerKey();
+      return await validate(state: state); // Recursive retry
+    }
 
     final result = response.statusCode < 400;
 
@@ -77,7 +84,7 @@ class _Authorization extends PublicAuthorization {
     }
   }
 
-  static Future<_Authorization?> prepare({required HTTPClient client}) async {
+  static Future<_Authorization?> prepare({required ApplicationState state}) async {
     final auth = await _withLoginFile(
       (file) async {
         // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
@@ -96,7 +103,7 @@ class _Authorization extends PublicAuthorization {
       },
     );
 
-    if (auth != null && await auth.validate(client: client)) {
+    if (auth != null && await auth.validate(state: state)) {
       return auth;
     }
 
@@ -112,6 +119,21 @@ class ApplicationState {
 
   _Authorization? _authorization;
   PublicAuthorization? get authorization => _authorization;
+
+  PublicKey? _serverKey;
+
+  Future<PublicKey> serverKey() async {
+    Future<PublicKey> fetcher() async {
+      final response = await http.apiGet("/api/v1/key");
+      return PublicKey(base64.decode(utf8.decode(response.bodyBytes)));
+    }
+
+    return _serverKey ??= await fetcher();
+  }
+
+  void invalidateServerKey() {
+    _serverKey = null;
+  }
 
   ApplicationState({Client? client}) : http = HTTPClient(client: client ?? Client()) {
     localization.init(
@@ -130,7 +152,7 @@ class ApplicationState {
 
   Future<bool> authorize({required String username, required String password, required bool isAdmin}) async {
     final auth = _Authorization(username: username, password: password, isAdmin: isAdmin);
-    final result = await auth.validate(client: http);
+    final result = await auth.validate(state: this);
     _authorization = result ? auth : null;
 
     return result;
@@ -141,8 +163,12 @@ class ApplicationState {
     _authorization = null;
   }
 
+  Future<Map<String, String>?> authorizationHeaders() async {
+    return _authorization?.constructHeaders(await serverKey());
+  }
+
   Future<void> prepare() async {
-    _authorization = await _Authorization.prepare(client: http);
+    _authorization = await _Authorization.prepare(state: this);
   }
 
   void pushTranslationCallback(void Function(Locale?) callback) {

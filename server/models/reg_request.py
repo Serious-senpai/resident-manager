@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import re
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional, overload
 
 import pyodbc  # type: ignore
 
@@ -12,7 +12,7 @@ from .info import PublicInfo
 from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
-from ..errors import UserInputError, UsernameConflictError
+from ..errors import BadRequest, UsernameConflictError
 from ..utils import generate_id, hash_password
 
 
@@ -110,6 +110,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             hashed_password=row[7],
         )
 
+    @overload
     @classmethod
     async def create(
         cls,
@@ -120,7 +121,38 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         email: Optional[str],
         username: str,
         password: str,
-    ) -> RegisterRequest:
+        *,
+        raise_http_exception: Literal[False],
+    ) -> Optional[RegisterRequest]: ...
+
+    @overload
+    @classmethod
+    async def create(
+        cls,
+        name: str,
+        room: int,
+        birthday: Optional[datetime],
+        phone: Optional[str],
+        email: Optional[str],
+        username: str,
+        password: str,
+        *,
+        raise_http_exception: Literal[True] = True,
+    ) -> RegisterRequest: ...
+
+    @classmethod
+    async def create(
+        cls,
+        name: str,
+        room: int,
+        birthday: Optional[datetime],
+        phone: Optional[str],
+        email: Optional[str],
+        username: str,
+        password: str,
+        *,
+        raise_http_exception: bool = True,
+    ) -> Optional[RegisterRequest]:
         # Validate data
         if phone is not None and len(phone) == 0:
             phone = None
@@ -139,10 +171,16 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             or len(username) > 255
             or len(password) < 8
         ):
-            raise UserInputError
+            if raise_http_exception:
+                raise BadRequest
+
+            return None
 
         if email is not None and re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?", email) is None:
-            raise UserInputError
+            if raise_http_exception:
+                raise BadRequest
+
+            return None
 
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
@@ -167,7 +205,10 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                         hashed_password,
                     )
                 except pyodbc.DatabaseError:
-                    raise UsernameConflictError
+                    if raise_http_exception:
+                        raise UsernameConflictError(username)
+
+                    return None
 
         return cls(
             id=request_id,

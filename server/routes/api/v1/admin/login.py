@@ -9,21 +9,15 @@ from .....database import Database
 from .....models import Authorization
 
 
-__success_status = status.HTTP_204_NO_CONTENT
-__failure_status = status.HTTP_403_FORBIDDEN
-
-
 @api_v1.post(
     "/admin/login",
     name="Administrators login",
-    description=f"Verify administrator authorization data, return {__success_status} on success, {__failure_status} on failure",
+    description="Verify administrator authorization data.",
     tags=["admin"],
     response_model=None,
-    responses={__failure_status: {}},
-    status_code=__success_status,
+    responses={status.HTTP_403_FORBIDDEN: {}},
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:
-    if await Database.instance.verify_admin(headers.username, headers.password):
-        return None
-
-    raise HTTPException(status_code=__failure_status)
+    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

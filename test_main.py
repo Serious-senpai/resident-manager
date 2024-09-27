@@ -3,13 +3,15 @@ from __future__ import annotations
 import random
 import string
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import status
 from fastapi.testclient import TestClient
+from nacl.encoding import Base64Encoder
+from nacl.public import Box, PrivateKey, PublicKey
 
 from main import app
-from server import DEFAULT_ADMIN_PASSWORD
+from server import DEFAULT_ADMIN_PASSWORD, Authorization, check_password
 
 
 def random_string(length: int) -> str:
@@ -24,6 +26,8 @@ def assert_match(
     birthday: datetime,
     phone: str,
     email: str,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> None:
     assert name == data["name"]
     assert room == data["room"]
@@ -36,6 +40,28 @@ def assert_match(
     assert phone == data["phone"]
     assert email == data["email"]
 
+    if username is not None:
+        assert username == data["username"]
+
+    if password is not None:
+        assert check_password(password, hashed=data["hashed_password"])
+
+
+def generate_auth_headers(client: TestClient, *, username: str, password: str) -> Authorization:
+    private_key = PrivateKey.generate()
+    public_key = private_key.public_key
+
+    response = client.get("/api/v1/key")
+    server_key = PublicKey(response.read(), encoder=Base64Encoder)
+
+    box = Box(private_key, server_key)
+
+    return Authorization(
+        username=username,
+        encrypted=box.encrypt(password.encode("utf-8"), encoder=Base64Encoder).decode("utf-8"),
+        pkey=public_key.encode(encoder=Base64Encoder).decode("utf-8"),
+    )
+
 
 def test_docs() -> None:
     with TestClient(app) as client:
@@ -47,10 +73,11 @@ def test_admin_login_ok() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/admin/login",
-            headers={
-                "Username": "admin",
-                "Password": DEFAULT_ADMIN_PASSWORD,
-            },
+            headers=generate_auth_headers(
+                client,
+                username="admin",
+                password=DEFAULT_ADMIN_PASSWORD,
+            ).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -59,10 +86,11 @@ def test_admin_login_incorrect_password() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/admin/login",
-            headers={
-                "Username": "admin",
-                "Password": "password",
-            },
+            headers=generate_auth_headers(
+                client,
+                username="admin",
+                password=random_string(50),
+            ).model_dump(),
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -71,10 +99,11 @@ def test_admin_login_incorrect_username() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/admin/login",
-            headers={
-                "Username": "user",
-                "Password": DEFAULT_ADMIN_PASSWORD,
-            },
+            headers=generate_auth_headers(
+                client,
+                username=random_string(20),
+                password=DEFAULT_ADMIN_PASSWORD,
+            ).model_dump(),
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -83,10 +112,11 @@ def test_admin_login_incorrect_username_password() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/admin/login",
-            headers={
-                "Username": "user",
-                "Password": "password",
-            },
+            headers=generate_auth_headers(
+                client,
+                username=random_string(20),
+                password=random_string(50),
+            ).model_dump(),
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -113,43 +143,40 @@ def test_register_main_flow() -> None:
                 "phone": phone,
                 "email": email,
             },
-            headers={
-                "Username": username,
-                "Password": password,
-            },
+            headers=generate_auth_headers(client, username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
 
         response = client.get(
             "/api/v1/admin/reg-request",
             params={"offset": 0, "name": name},
-            headers={
-                "Username": "admin",
-                "Password": DEFAULT_ADMIN_PASSWORD,
-            },
+            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
         assert len(data) == 1
-        assert_match(data[0], name=name, room=room, birthday=birthday, phone=phone, email=email)
+        assert_match(
+            data[0],
+            name=name,
+            room=room,
+            birthday=birthday,
+            phone=phone,
+            email=email,
+            username=username,
+            password=password,
+        )
 
         response = client.post(
             "/api/v1/admin/reg-request/accept",
             json=[data[0]["id"]],
-            headers={
-                "Username": "admin",
-                "Password": DEFAULT_ADMIN_PASSWORD,
-            },
+            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         response = client.post(
             "/api/v1/login",
-            headers={
-                "Username": username,
-                "Password": password,
-            },
+            headers=generate_auth_headers(client, username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -159,9 +186,6 @@ def test_register_main_flow() -> None:
         response = client.post(
             "/api/v1/admin/delete",
             json=[data["id"]],
-            headers={
-                "Username": "admin",
-                "Password": DEFAULT_ADMIN_PASSWORD,
-            },
+            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
