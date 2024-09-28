@@ -189,6 +189,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                       header(AppLocale.Phone.getString(context)),
                       header(AppLocale.Email.getString(context)),
                       header(AppLocale.CreationTime.getString(context)),
+                      header(AppLocale.Username.getString(context)),
                     ],
                   ),
                 ];
@@ -217,6 +218,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                         row(request.phone ?? "---"),
                         row(request.email ?? "---"),
                         row(request.createdAt.toLocal().toString()),
+                        row(request.username ?? "---"),
                       ],
                     ),
                   );

@@ -7,6 +7,9 @@ import "snowflake.dart";
 import "../state.dart";
 
 class RegisterRequest extends PublicInfo {
+  String? username;
+  String? hashedPassword;
+
   RegisterRequest({
     required super.id,
     required super.name,
@@ -14,9 +17,14 @@ class RegisterRequest extends PublicInfo {
     super.birthday,
     super.phone,
     super.email,
+    this.username,
+    this.hashedPassword,
   });
 
-  RegisterRequest.fromJson(super.data) : super.fromJson();
+  RegisterRequest.fromJson(dynamic data) : super.fromJson(data) {
+    username = data["username"] as String?;
+    hashedPassword = data["hashed_password"] as String?;
+  }
 
   static Future<List<RegisterRequest>> query({
     required ApplicationState state,
