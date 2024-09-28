@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar, Dict, Optional, Type, Union, TYPE_CHECKING
+from typing import Any, ClassVar, Dict, Type, Union, TYPE_CHECKING
 
 from fastapi import HTTPException, status
 
