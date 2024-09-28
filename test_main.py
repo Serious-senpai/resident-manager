@@ -52,7 +52,7 @@ def generate_auth_headers(client: TestClient, *, username: str, password: str) -
     public_key = private_key.public_key
 
     response = client.get("/api/v1/key")
-    server_key = PublicKey(response.read(), encoder=Base64Encoder)
+    server_key = PublicKey(response.json(), encoder=Base64Encoder)
 
     box = Box(private_key, server_key)
 
