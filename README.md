@@ -1,4 +1,4 @@
-# apartment-manager
+# resident-manager
 
 [![Azure deployment](https://github.com/Serious-senpai/resident-manager/actions/workflows/deploy.yml/badge.svg)](https://github.com/Serious-senpai/resident-manager/actions/workflows/deploy.yml)
 [![Flutter build](https://github.com/Serious-senpai/resident-manager/actions/workflows/build.yml/badge.svg)](https://github.com/Serious-senpai/resident-manager/actions/workflows/build.yml)

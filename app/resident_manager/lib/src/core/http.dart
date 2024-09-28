@@ -5,7 +5,7 @@ import "package:flutter/foundation.dart";
 import "package:http/http.dart";
 
 class HTTPClient {
-  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("apartment-management.azurewebsites.net");
+  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
 
   final Client _http;
   final _semaphore = Semaphore(5);
