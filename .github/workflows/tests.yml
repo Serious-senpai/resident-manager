@@ -1,4 +1,4 @@
-name: Python test
+name: Run tests
 
 on:
   push:
@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Run tests
+  python:
+    name: Test server
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -74,3 +74,33 @@ jobs:
         with:
           name: coverage-html-${{ matrix.python-version }}
           path: htmlcov
+
+  flutter:
+    name: Test client application
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    env:
+      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Run tests
+        working-directory: app/resident_manager
+        run: flutter test

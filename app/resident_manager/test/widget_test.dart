@@ -1,4 +1,5 @@
 import "dart:convert";
+import "dart:io";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -10,7 +11,7 @@ import "package:resident_manager/main.dart";
 import "package:resident_manager/src/core/state.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 
-final serverKey = PrivateKey.generate();
+final serverKey = PrivateKey.fromSeed(base64.decode(Platform.environment["PRIVATE_KEY_SEED"]!));
 final adminUsername = "admin";
 final adminPassword = "password";
 
@@ -41,11 +42,7 @@ final client = MockClient(
 
         return Response("", 204);
       }
-    } else if (request.method == "GET") {
-      if (request.url.path == "/api/v1/key") {
-        return Response(json.encode(base64.encode(serverKey.publicKey)), 200);
-      }
-    }
+    } else if (request.method == "GET") {}
 
     return Response("Not found", 404);
   },
