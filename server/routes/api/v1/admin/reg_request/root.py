@@ -7,6 +7,7 @@ from fastapi import Header, status
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
 from ......database import Database
+from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
 from ......models import Authorization, RegisterRequest
 
 
@@ -15,7 +16,7 @@ from ......models import Authorization, RegisterRequest
     name="Registration requests query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} registration requests from the specified offset",
     tags=["admin"],
-    responses={status.HTTP_401_UNAUTHORIZED: {}, status.HTTP_403_FORBIDDEN: {}},
+    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_200_OK,
 )
 async def admin_reg_request(

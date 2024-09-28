@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Header, status
 
 from .....apps import api_v1
+from .....errors import AuthenticationRequired, PasswordDecryptionError, register_error
 from .....database import Database
 from .....models import Authorization
 
@@ -15,7 +16,7 @@ from .....models import Authorization
     description="Verify administrator authorization data.",
     tags=["admin"],
     response_model=None,
-    responses={status.HTTP_403_FORBIDDEN: {}},
+    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_login(headers: Annotated[Authorization, Header()]) -> None:

@@ -46,13 +46,14 @@ class Resident(PublicInfo, HashedAuthorization):
             The resident with the specified ID, or `None` if not found.
         """
         async with Database.instance.pool.acquire() as connection:
-            cursor = await connection.execute("SELECT * FROM residents WHERE id = ?", id)
-            row = await cursor.fetchone()
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT * FROM residents WHERE id = ?", id)
+                row = await cursor.fetchone()
 
-            if row is None:
-                return None
+                if row is None:
+                    return None
 
-            return cls.from_row(row)
+                return cls.from_row(row)
 
     @classmethod
     async def from_username(cls, username: str) -> Optional[Resident]:
@@ -71,13 +72,14 @@ class Resident(PublicInfo, HashedAuthorization):
             The resident with the specified username, or `None` if not found.
         """
         async with Database.instance.pool.acquire() as connection:
-            cursor = await connection.execute("SELECT * FROM residents WHERE username = ?", username)
-            row = await cursor.fetchone()
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT * FROM residents WHERE username = ?", username)
+                row = await cursor.fetchone()
 
-            if row is None:
-                return None
+                if row is None:
+                    return None
 
-            return cls.from_row(row)
+                return cls.from_row(row)
 
     @classmethod
     async def delete_many(cls, ids: List[int]) -> None:
@@ -86,4 +88,5 @@ class Resident(PublicInfo, HashedAuthorization):
 
         async with Database.instance.pool.acquire() as connection:
             temp_fmt = ", ".join("?" for _ in ids)
-            await connection.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *ids)
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *ids)

@@ -6,7 +6,7 @@ from fastapi import Header, status
 
 from ....apps import api_v1
 from ....models import Authorization, PublicInfo, Resident
-from ....errors import AuthenticationRequired, UserNotFound
+from ....errors import AuthenticationRequired, PasswordDecryptionError, UserNotFound, register_error
 from ....utils import check_password
 
 
@@ -15,7 +15,7 @@ from ....utils import check_password
     name="Residents login",
     description="Verify authorization data, return resident information on success.",
     tags=["resident"],
-    responses={status.HTTP_403_FORBIDDEN: {}},
+    responses=register_error(AuthenticationRequired, PasswordDecryptionError, UserNotFound),
     status_code=status.HTTP_200_OK,
 )
 async def login(headers: Annotated[Authorization, Header()]) -> PublicInfo:

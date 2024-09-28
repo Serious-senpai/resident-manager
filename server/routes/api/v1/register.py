@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Header, status
 
 from ....apps import api_v1
+from ....errors import BadRequest, UsernameConflictError, register_error
 from ....models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
 
 
@@ -13,7 +14,7 @@ from ....models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
     name="Residents registration",
     description="Register a resident account to be created.",
     tags=["resident"],
-    responses={status.HTTP_400_BAD_REQUEST: {}, status.HTTP_409_CONFLICT: {}},
+    responses=register_error(BadRequest, UsernameConflictError),
     status_code=status.HTTP_200_OK,
 )
 async def register(

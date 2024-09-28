@@ -6,6 +6,7 @@ from fastapi import Header, status
 
 from ......apps import api_v1
 from ......database import Database
+from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
 from ......models import Authorization, RegisterRequest
 
 
@@ -15,7 +16,7 @@ from ......models import Authorization, RegisterRequest
     description="Reject one or more registration requests",
     tags=["admin"],
     response_model=None,
-    responses={status.HTTP_401_UNAUTHORIZED: {}, status.HTTP_403_FORBIDDEN: {}},
+    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_reg_request_reject(ids: List[int], headers: Annotated[Authorization, Header()]) -> None:

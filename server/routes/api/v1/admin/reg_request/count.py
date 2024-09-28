@@ -6,6 +6,7 @@ from fastapi import Header, status
 
 from ......apps import api_v1
 from ......database import Database
+from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
 from ......models import Authorization, RegisterRequest
 
 
@@ -14,7 +15,7 @@ from ......models import Authorization, RegisterRequest
     name="Registration requests count",
     description="Return number of registration requests",
     tags=["admin"],
-    responses={status.HTTP_401_UNAUTHORIZED: {}, status.HTTP_403_FORBIDDEN: {}},
+    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_200_OK,
 )
 async def admin_reg_request_count(headers: Annotated[Authorization, Header()]) -> int:

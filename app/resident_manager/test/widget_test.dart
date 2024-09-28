@@ -11,12 +11,34 @@ import "package:resident_manager/src/core/state.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 
 final serverKey = PrivateKey.generate();
+final adminUsername = "admin";
+final adminPassword = "password";
 
 final client = MockClient(
   (request) async {
     // print("Received request $request (path: ${request.url.path})");
     if (request.method == "POST") {
       if (request.url.path == "/api/v1/admin/login") {
+        final username = request.headers["username"];
+        final encrypted = request.headers["encrypted"];
+        final pkey = request.headers["pkey"];
+
+        if (username == null || encrypted == null || pkey == null) {
+          return Response("", 422);
+        }
+
+        if (username != adminUsername) {
+          return Response("", 403);
+        }
+
+        // https://github.com/ilap/pinenacl-dart/blob/master/example/box.dart
+        final box = Box(myPrivateKey: serverKey, theirPublicKey: PublicKey(base64.decode(pkey)));
+        final password = utf8.decode(box.decrypt(EncryptedMessage.fromList(base64.decode(encrypted))));
+
+        if (password != adminPassword) {
+          return Response("", 403);
+        }
+
         return Response("", 204);
       }
     } else if (request.method == "GET") {
@@ -75,9 +97,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Authorization fields
-      // No need to enter correct credentials since HTTP requests are mocked anyway.
       final fields = find.byWidgetPredicate((widget) => widget is TextField);
       expect(fields, findsExactly(2));
+
+      await tester.enterText(fields.at(0), adminUsername);
+      await tester.enterText(fields.at(1), adminPassword);
 
       // Press the "Login as admin" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));

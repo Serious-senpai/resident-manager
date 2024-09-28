@@ -172,7 +172,7 @@ class Database:
 
         except AuthenticationRequired:
             if raise_http_exception:
-                raise AuthenticationRequired
+                raise
 
             return False
 

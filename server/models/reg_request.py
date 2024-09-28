@@ -206,7 +206,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     )
                 except pyodbc.DatabaseError:
                     if raise_http_exception:
-                        raise UsernameConflictError(username)
+                        raise UsernameConflictError
 
                     return None
 
