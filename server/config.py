@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import os
 from datetime import datetime, timezone
 
@@ -8,6 +9,7 @@ __all__ = (
     "ODBC_CONNECTION_STRING",
     "VNPAY_TMN_CODE",
     "VNPAY_SECRET_KEY",
+    "PRIVATE_KEY_SEED",
     "EPOCH",
     "SALT_LENGTH",
     "DEFAULT_ADMIN_USERNAME",
@@ -19,6 +21,7 @@ __all__ = (
 ODBC_CONNECTION_STRING = os.environ["ODBC_CONNECTION_STRING"]
 VNPAY_TMN_CODE = os.environ["VNPAY_TMN_CODE"]
 VNPAY_SECRET_KEY = os.environ["VNPAY_SECRET_KEY"]
+PRIVATE_KEY_SEED = base64.b64decode(os.environ["PRIVATE_KEY_SEED"])
 
 EPOCH = datetime(2024, 1, 1, 0, 0, 0, 0, timezone.utc)
 

@@ -62,7 +62,7 @@ class RegisterRequest extends PublicInfo {
     required PersonalInfo info,
     required Authorization authorization,
   }) async {
-    final headers = authorization.constructHeaders(await state.serverKey());
+    final headers = authorization.constructHeaders();
     headers["content-type"] = "application/json";
 
     final response = await state.post(
@@ -71,11 +71,6 @@ class RegisterRequest extends PublicInfo {
       body: json.encode(info.personalInfoJson()),
       authorize: false,
     );
-
-    if (response.statusCode == 401) {
-      state.invalidateServerKey();
-      return await create(state: state, info: info, authorization: authorization);
-    }
 
     return response.statusCode;
   }

@@ -47,12 +47,11 @@ def assert_match(
         assert check_password(password, hashed=data["hashed_password"])
 
 
-def generate_auth_headers(client: TestClient, *, username: str, password: str) -> Authorization:
+def generate_auth_headers(*, username: str, password: str) -> Authorization:
     private_key = PrivateKey.generate()
     public_key = private_key.public_key
 
-    response = client.get("/api/v1/key")
-    server_key = PublicKey(response.json(), encoder=Base64Encoder)
+    server_key = PublicKey(b"FUgK7Fi7O7eSDi5Ekd/hbmjIN3k/WcLevFTgZqmn9Bo=", encoder=Base64Encoder)
 
     box = Box(private_key, server_key)
 
@@ -74,7 +73,6 @@ def test_admin_login_ok() -> None:
         response = client.post(
             "/api/v1/admin/login",
             headers=generate_auth_headers(
-                client,
                 username="admin",
                 password=DEFAULT_ADMIN_PASSWORD,
             ).model_dump(),
@@ -87,7 +85,6 @@ def test_admin_login_incorrect_password() -> None:
         response = client.post(
             "/api/v1/admin/login",
             headers=generate_auth_headers(
-                client,
                 username="admin",
                 password=random_string(50),
             ).model_dump(),
@@ -100,7 +97,6 @@ def test_admin_login_incorrect_username() -> None:
         response = client.post(
             "/api/v1/admin/login",
             headers=generate_auth_headers(
-                client,
                 username=random_string(20),
                 password=DEFAULT_ADMIN_PASSWORD,
             ).model_dump(),
@@ -113,7 +109,6 @@ def test_admin_login_incorrect_username_password() -> None:
         response = client.post(
             "/api/v1/admin/login",
             headers=generate_auth_headers(
-                client,
                 username=random_string(20),
                 password=random_string(50),
             ).model_dump(),
@@ -143,14 +138,14 @@ def test_register_main_flow() -> None:
                 "phone": phone,
                 "email": email,
             },
-            headers=generate_auth_headers(client, username=username, password=password).model_dump(),
+            headers=generate_auth_headers(username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
 
         response = client.get(
             "/api/v1/admin/reg-request",
             params={"offset": 0, "name": name},
-            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+            headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -170,13 +165,13 @@ def test_register_main_flow() -> None:
         response = client.post(
             "/api/v1/admin/reg-request/accept",
             json=[data[0]["id"]],
-            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+            headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         response = client.post(
             "/api/v1/login",
-            headers=generate_auth_headers(client, username=username, password=password).model_dump(),
+            headers=generate_auth_headers(username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -186,6 +181,6 @@ def test_register_main_flow() -> None:
         response = client.post(
             "/api/v1/admin/delete",
             json=[data["id"]],
-            headers=generate_auth_headers(client, username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+            headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT

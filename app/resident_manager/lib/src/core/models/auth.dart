@@ -2,6 +2,8 @@ import "dart:convert";
 
 import "package:pinenacl/x25519.dart";
 
+import "../config.dart";
+
 class Authorization {
   final String username;
   final String password;
@@ -11,7 +13,7 @@ class Authorization {
     required this.password,
   });
 
-  Map<String, String> constructHeaders(PublicKey serverKey) {
+  Map<String, String> constructHeaders() {
     final privateKey = PrivateKey.generate();
     final publicKey = privateKey.publicKey;
 
