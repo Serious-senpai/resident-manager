@@ -47,7 +47,7 @@ class UserNotFound(ResidentManagerHTTPException, status=status.HTTP_404_NOT_FOUN
     pass
 
 
-class UsernameConflictError(ResidentManagerHTTPException, status=status.HTTP_409_CONFLICT, message="Username has already taken"):
+class UsernameConflictError(ResidentManagerHTTPException, status=status.HTTP_409_CONFLICT, message="Username has already been taken"):
     """Exception raised when a username is already taken."""
     pass
 
