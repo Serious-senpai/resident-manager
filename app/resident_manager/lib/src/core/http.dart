@@ -1,12 +1,9 @@
 import "dart:convert";
 
 import "package:async_locks/async_locks.dart";
-import "package:flutter/foundation.dart";
 import "package:http/http.dart";
 
 class HTTPClient {
-  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
-
   final Client _http;
   final _semaphore = Semaphore(5);
 
@@ -23,27 +20,6 @@ class HTTPClient {
     Encoding? encoding,
   }) =>
       _semaphore.run(() => _http.post(url, headers: headers, body: body, encoding: encoding));
-
-  Future<Response> apiGet(
-    String path, {
-    Map<String, String>? queryParameters,
-    Map<String, String>? headers,
-  }) =>
-      get(baseUrl.replace(path: path, queryParameters: queryParameters), headers: headers);
-
-  Future<Response> apiPost(
-    String path, {
-    Map<String, String>? queryParameters,
-    Map<String, String>? headers,
-    Object? body,
-    Encoding? encoding,
-  }) =>
-      post(
-        baseUrl.replace(path: path, queryParameters: queryParameters),
-        headers: headers,
-        body: body,
-        encoding: encoding,
-      );
 
   /// Cancel all running operations
   void cancelAll() => _semaphore.cancelAll();

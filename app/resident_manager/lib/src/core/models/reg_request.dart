@@ -46,12 +46,7 @@ class RegisterRequest extends PublicInfo {
       params["room"] = room.toString();
     }
 
-    final response = await state.http.apiGet(
-      "/api/v1/admin/reg-request",
-      queryParameters: params,
-      headers: await state.authorizationHeaders(),
-    );
-
+    final response = await state.get("/api/v1/admin/reg-request", queryParameters: params);
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)) as List;
       for (final item in data) {
@@ -70,10 +65,11 @@ class RegisterRequest extends PublicInfo {
     final headers = authorization.constructHeaders(await state.serverKey());
     headers["content-type"] = "application/json";
 
-    final response = await state.http.apiPost(
+    final response = await state.post(
       "/api/v1/register",
       headers: headers,
       body: json.encode(info.personalInfoJson()),
+      authorize: false,
     );
 
     if (response.statusCode == 401) {
@@ -89,28 +85,13 @@ class RegisterRequest extends PublicInfo {
     required Iterable<Snowflake> objects,
     required String path,
   }) async {
-    final headers = await state.authorizationHeaders();
-    if (headers == null) {
-      return false;
-    }
-
-    headers["content-type"] = "application/json";
+    final headers = {"content-type": "application/json"};
     final data = <int>[];
     for (final object in objects) {
       data.add(object.id);
     }
 
-    final response = await state.http.apiPost(
-      path,
-      headers: headers,
-      body: json.encode(data),
-    );
-
-    if (response.statusCode == 401) {
-      state.invalidateServerKey();
-      return await _approveOrReject(state: state, objects: objects, path: path);
-    }
-
+    final response = await state.post(path, headers: headers, body: json.encode(data));
     return response.statusCode == 204;
   }
 
@@ -129,12 +110,7 @@ class RegisterRequest extends PublicInfo {
   }
 
   static Future<int?> count({required ApplicationState state}) async {
-    final headers = await state.authorizationHeaders();
-    if (headers == null) {
-      return null;
-    }
-
-    final response = await state.http.apiGet("/api/v1/admin/reg-request/count", headers: headers);
+    final response = await state.get("/api/v1/admin/reg-request/count");
     if (response.statusCode == 200) {
       return json.decode(utf8.decode(response.bodyBytes));
     }

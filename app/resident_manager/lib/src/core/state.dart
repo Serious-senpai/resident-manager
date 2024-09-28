@@ -3,6 +3,7 @@ import "dart:io";
 import "dart:ui";
 
 import "package:async_locks/async_locks.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:http/http.dart";
 import "package:path/path.dart";
@@ -33,9 +34,10 @@ class _Authorization extends PublicAuthorization {
   }
 
   Future<bool> validate({required ApplicationState state}) async {
-    final response = await state.http.apiPost(
+    final response = await state.post(
       isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
       headers: constructHeaders(await state.serverKey()),
+      authorize: false,
     );
 
     if (response.statusCode == 401) {
@@ -112,6 +114,8 @@ class _Authorization extends PublicAuthorization {
 }
 
 class ApplicationState {
+  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
+
   final HTTPClient http;
 
   final FlutterLocalization localization = FlutterLocalization.instance;
@@ -124,7 +128,7 @@ class ApplicationState {
 
   Future<PublicKey> serverKey() async {
     Future<PublicKey> fetcher() async {
-      final response = await http.apiGet("/api/v1/key");
+      final response = await get("/api/v1/key", authorize: false);
       return PublicKey(base64.decode(json.decode(utf8.decode(response.bodyBytes))));
     }
 
@@ -163,8 +167,11 @@ class ApplicationState {
     _authorization = null;
   }
 
-  Future<Map<String, String>?> authorizationHeaders() async {
-    return _authorization?.constructHeaders(await serverKey());
+  Future<void> _attachAuthorizationHeaders(Map<String, String> headers) async {
+    final auth = _authorization;
+    if (auth != null) {
+      headers.addAll(auth.constructHeaders(await serverKey()));
+    }
   }
 
   Future<void> prepare() async {
@@ -177,5 +184,65 @@ class ApplicationState {
 
   void popTranslationCallback() {
     _onTranslationCallbacks.removeLast();
+  }
+
+  Future<Response> get(
+    String path, {
+    Map<String, String>? queryParameters,
+    Map<String, String>? headers,
+    bool authorize = true,
+    bool refetchKey = true,
+  }) async {
+    headers ??= {};
+    if (authorize) await _attachAuthorizationHeaders(headers);
+
+    var response = await http.get(
+      baseUrl.replace(path: path, queryParameters: queryParameters),
+      headers: headers,
+    );
+    if (response.statusCode == 401 && refetchKey) {
+      invalidateServerKey();
+      if (authorize) await _attachAuthorizationHeaders(headers);
+
+      response = await http.get(
+        baseUrl.replace(path: path, queryParameters: queryParameters),
+        headers: headers,
+      );
+    }
+
+    return response;
+  }
+
+  Future<Response> post(
+    String path, {
+    Map<String, String>? queryParameters,
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+    bool authorize = true,
+    bool refetchKey = true,
+  }) async {
+    headers ??= {};
+    if (authorize) await _attachAuthorizationHeaders(headers);
+
+    var response = await http.post(
+      baseUrl.replace(path: path, queryParameters: queryParameters),
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
+    if (response.statusCode == 401 && refetchKey) {
+      invalidateServerKey();
+      if (authorize) await _attachAuthorizationHeaders(headers);
+
+      response = await http.post(
+        baseUrl.replace(path: path, queryParameters: queryParameters),
+        headers: headers,
+        body: body,
+        encoding: encoding,
+      );
+    }
+
+    return response;
   }
 }

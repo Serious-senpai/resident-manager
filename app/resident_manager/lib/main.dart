@@ -10,6 +10,7 @@ import "src/widgets/home.dart";
 import "src/widgets/login.dart";
 import "src/widgets/register.dart";
 import "src/widgets/admin/reg_queue.dart";
+import "src/widgets/admin/residents.dart";
 
 class MainApplication extends StateAwareWidget {
   const MainApplication({super.key, required super.state});
@@ -34,6 +35,7 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
         ApplicationRoute.register: (context) => RegisterPage(state: state),
         ApplicationRoute.home: (context) => HomePage(state: state),
         ApplicationRoute.adminRegisterQueue: (context) => RegisterQueuePage(state: state),
+        ApplicationRoute.adminResidentsPage: (context) => ResidentsPage(state: state),
       },
       initialRoute: initialRoute,
       localizationsDelegates: state.localization.localizationsDelegates,

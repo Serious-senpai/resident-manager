@@ -226,110 +226,114 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
                 return Column(
                   children: [
-                    FutureBuilder(
-                      future: _countFuture,
-                      builder: (context, _) {
-                        return Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            TextButton.icon(
-                              icon: const Icon(Icons.done_outlined),
-                              label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
-                              onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
-                            ),
-                            TextButton.icon(
-                              icon: const Icon(Icons.close_outlined),
-                              label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
-                              onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
-                            ),
-                            const SizedBox.square(dimension: 10),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left_outlined),
-                              onPressed: () {
-                                if (offset > 0) {
-                                  offset--;
-                                }
-                                refresh();
-                              },
-                            ),
-                            Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}"),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right_outlined),
-                              onPressed: () {
-                                if (_offset < _offsetLimit) {
-                                  offset++;
-                                }
-                                refresh();
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.refresh_outlined),
-                              onPressed: () {
-                                offset = 0;
-                                refresh();
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.search_outlined),
-                              onPressed: () async {
-                                await showDialog(
-                                  context: context,
-                                  builder: (context) => SimpleDialog(
-                                    title: Text(AppLocale.Search.getString(context)),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Form(
-                                          child: Column(
-                                            children: [
-                                              TextFormField(
-                                                autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                controller: _userSearch,
-                                                decoration: InputDecoration(
-                                                  contentPadding: const EdgeInsets.all(8.0),
-                                                  label: Text(AppLocale.Fullname.getString(context)),
-                                                ),
-                                                onFieldSubmitted: (_) {
-                                                  Navigator.pop(context);
-                                                  offset = 0;
-                                                },
-                                                validator: (value) => nameValidator(context, required: false, value: value),
-                                              ),
-                                              TextFormField(
-                                                autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                controller: _roomSearch,
-                                                decoration: InputDecoration(
-                                                  contentPadding: const EdgeInsets.all(8.0),
-                                                  label: Text(AppLocale.Room.getString(context)),
-                                                ),
-                                                onFieldSubmitted: (_) {
-                                                  Navigator.pop(context);
-                                                  offset = 0;
-                                                },
-                                                validator: (value) => roomValidator(context, required: false, value: value),
-                                              ),
-                                              const SizedBox.square(dimension: 10),
-                                              TextButton.icon(
-                                                icon: const Icon(Icons.done_outlined),
-                                                label: Text(AppLocale.Search.getString(context)),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  offset = 0;
-                                                },
-                                              ),
-                                            ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.done_outlined),
+                          label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
+                          onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.close_outlined),
+                          label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
+                          onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
+                        ),
+                      ],
+                    ),
+                    const SizedBox.square(dimension: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left_outlined),
+                          onPressed: () {
+                            if (offset > 0) {
+                              offset--;
+                            }
+                            refresh();
+                          },
+                        ),
+                        FutureBuilder(
+                          future: _countFuture,
+                          builder: (context, _) {
+                            return Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}");
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right_outlined),
+                          onPressed: () {
+                            if (_offset < _offsetLimit) {
+                              offset++;
+                            }
+                            refresh();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_outlined),
+                          onPressed: () {
+                            offset = 0;
+                            refresh();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.search_outlined),
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (context) => SimpleDialog(
+                                title: Text(AppLocale.Search.getString(context)),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Form(
+                                      child: Column(
+                                        children: [
+                                          TextFormField(
+                                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                                            controller: _userSearch,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              label: Text(AppLocale.Fullname.getString(context)),
+                                            ),
+                                            onFieldSubmitted: (_) {
+                                              Navigator.pop(context);
+                                              offset = 0;
+                                            },
+                                            validator: (value) => nameValidator(context, required: false, value: value),
                                           ),
-                                        ),
+                                          TextFormField(
+                                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                                            controller: _roomSearch,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              label: Text(AppLocale.Room.getString(context)),
+                                            ),
+                                            onFieldSubmitted: (_) {
+                                              Navigator.pop(context);
+                                              offset = 0;
+                                            },
+                                            validator: (value) => roomValidator(context, required: false, value: value),
+                                          ),
+                                          const SizedBox.square(dimension: 10),
+                                          TextButton.icon(
+                                            icon: const Icon(Icons.done_outlined),
+                                            label: Text(AppLocale.Search.getString(context)),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              offset = 0;
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox.square(dimension: 5),
                     _notification,
