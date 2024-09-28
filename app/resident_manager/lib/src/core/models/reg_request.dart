@@ -68,6 +68,11 @@ class RegisterRequest extends PublicInfo {
       body: json.encode(info.personalInfoJson()),
     );
 
+    if (response.statusCode == 401) {
+      state.invalidateServerKey();
+      return await create(state: state, info: info, authorization: authorization);
+    }
+
     return response.statusCode;
   }
 
@@ -92,6 +97,12 @@ class RegisterRequest extends PublicInfo {
       headers: headers,
       body: json.encode(data),
     );
+
+    if (response.statusCode == 401) {
+      state.invalidateServerKey();
+      return await _approveOrReject(state: state, objects: objects, path: path);
+    }
+
     return response.statusCode == 204;
   }
 
