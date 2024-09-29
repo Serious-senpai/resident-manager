@@ -6,10 +6,16 @@ import "info.dart";
 import "snowflake.dart";
 import "../state.dart";
 
+/// Represents a registration request.
 class RegisterRequest extends PublicInfo {
+  /// The username for the registration request, this data is only available from the admin endpoint.
   String? username;
+
+  /// The hashed password for the registration request, this data is only available from the admin endpoint.
   String? hashedPassword;
 
+  /// Constructs a [RegisterRequest] object with the given [id], [name], [room], [birthday], [phone], [email], [username],
+  /// and [hashedPassword].
   RegisterRequest({
     required super.id,
     required super.name,
@@ -21,11 +27,15 @@ class RegisterRequest extends PublicInfo {
     this.hashedPassword,
   });
 
+  /// Constructs a [RegisterRequest] object from a JSON object.
   RegisterRequest.fromJson(dynamic data) : super.fromJson(data) {
     username = data["username"] as String?;
     hashedPassword = data["hashed_password"] as String?;
   }
 
+  /// Queries the server for registration requests.
+  ///
+  /// If [state] hasn't been authorized as an administratoor yet, the result will always be empty.
   static Future<List<RegisterRequest>> query({
     required ApplicationState state,
     required int offset,
@@ -57,6 +67,9 @@ class RegisterRequest extends PublicInfo {
     return result;
   }
 
+  /// Request the server to create a new registration request.
+  ///
+  /// Returns the status code of the HTTP request.
   static Future<int> create({
     required ApplicationState state,
     required PersonalInfo info,
@@ -90,6 +103,7 @@ class RegisterRequest extends PublicInfo {
     return response.statusCode == 204;
   }
 
+  /// Approve a list of registration requests.
   static Future<bool> approve({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
@@ -97,6 +111,7 @@ class RegisterRequest extends PublicInfo {
     return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/accept");
   }
 
+  /// Reject a list of registration requests.
   static Future<bool> reject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
@@ -104,6 +119,7 @@ class RegisterRequest extends PublicInfo {
     return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/reject");
   }
 
+  /// Count the number of registration requests.
   static Future<int?> count({required ApplicationState state}) async {
     final response = await state.get("/api/v1/admin/reg-request/count");
     if (response.statusCode == 200) {
