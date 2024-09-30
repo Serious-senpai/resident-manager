@@ -5,8 +5,6 @@ import re
 from datetime import datetime
 from typing import Any, List, Literal, Optional, overload
 
-import pyodbc  # type: ignore
-
 from .auth import HashedAuthorization
 from .info import PublicInfo
 from .snowflake import Snowflake
