@@ -168,7 +168,7 @@ def test_register_main_flow() -> None:
 
         response = client.post(
             "/api/v1/admin/reg-request/accept",
-            json=[data[0]["id"]],
+            json=[data[0]],
             headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -184,7 +184,7 @@ def test_register_main_flow() -> None:
 
         response = client.post(
             "/api/v1/admin/delete",
-            json=[data["id"]],
+            json=[data],
             headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT

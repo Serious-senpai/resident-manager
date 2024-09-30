@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Literal, Optional
 
-from fastapi import Header, status
+from fastapi import status
 
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
