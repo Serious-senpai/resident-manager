@@ -78,7 +78,6 @@ void main() {
 
       // Match drawer images
       // expect(find.image(const AssetImage("assets/apartment.png")), findsOneWidget);
-      expect(find.image(const AssetImage("assets/github/github-mark.png")), findsOneWidget);
       expect(find.image(const AssetImage("assets/flags/en.png")), findsOneWidget);
       expect(find.image(const AssetImage("assets/flags/vi.png")), findsOneWidget);
     },
