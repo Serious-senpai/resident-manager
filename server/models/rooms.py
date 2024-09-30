@@ -31,6 +31,13 @@ class Room(pydantic.BaseModel):
             car=row[3],
         )
 
+    @staticmethod
+    async def count() -> int:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT COUNT(*) FROM rooms")
+                return await cursor.fetchval()
+
     @classmethod
     async def query(
         cls,
