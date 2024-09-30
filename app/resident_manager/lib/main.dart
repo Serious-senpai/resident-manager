@@ -30,6 +30,12 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
 
     return MaterialApp(
       title: AppLocale.ResidentManager.getString(context),
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          color: Colors.blue,
+          elevation: 1.0,
+        ),
+      ),
       routes: {
         ApplicationRoute.login: (context) => LoginPage(state: state),
         ApplicationRoute.register: (context) => RegisterPage(state: state),

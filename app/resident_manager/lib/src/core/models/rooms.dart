@@ -17,7 +17,7 @@ class Room {
 
   Room.fromJson(dynamic data)
       : room = data["room"],
-        area = data["area"],
+        area = data["area"] / 100,
         motorbike = data["motorbike"],
         car = data["car"];
 
@@ -43,15 +43,23 @@ class Room {
       params["floor"] = floor.toString();
     }
 
-    final response = await state.get("/api/v1/admin/rooms-request", queryParameters: params);
+    final response = await state.get("/api/v1/admin/rooms", queryParameters: params);
 
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)) as List;
-      for (final item in data) {
-        result.add(Room.fromJson(item));
-      }
+      result.addAll(data.map(Room.fromJson));
     }
 
     return result;
+  }
+
+  /// Count the number of rooms.
+  static Future<int?> count({required ApplicationState state}) async {
+    final response = await state.get("/api/v1/admin/rooms/count");
+    if (response.statusCode == 200) {
+      return json.decode(utf8.decode(response.bodyBytes));
+    }
+
+    return null;
   }
 }

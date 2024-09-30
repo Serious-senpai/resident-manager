@@ -59,9 +59,7 @@ class RegisterRequest extends PublicInfo {
     final response = await state.get("/api/v1/admin/reg-request", queryParameters: params);
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)) as List;
-      for (final item in data) {
-        result.add(RegisterRequest.fromJson(item));
-      }
+      result.addAll(data.map(RegisterRequest.fromJson));
     }
 
     return result;
@@ -94,10 +92,7 @@ class RegisterRequest extends PublicInfo {
     required String path,
   }) async {
     final headers = {"content-type": "application/json"};
-    final data = <int>[];
-    for (final object in objects) {
-      data.add(object.id);
-    }
+    final data = objects.map((o) => o.id);
 
     final response = await state.post(path, headers: headers, body: json.encode(data));
     return response.statusCode == 204;

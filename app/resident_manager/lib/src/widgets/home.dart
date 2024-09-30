@@ -18,7 +18,6 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),

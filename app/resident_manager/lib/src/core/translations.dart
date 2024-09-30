@@ -44,7 +44,11 @@ class AppLocale {
   static const String Reject = "Reject";
   static const String UnknownError = "UnknownError";
   static const String Search = "Search";
+  static const String Searching = "Searching";
   static const String ResidentsList = "ResidentsList";
+  static const String Area1 = "Area1";
+  static const String MotorbikesCount = "MotorbikesCount";
+  static const String CarsCount = "CarsCount";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -92,7 +96,11 @@ class AppLocale {
     Reject: "Reject",
     UnknownError: "Unknown error",
     Search: "Search",
+    Searching: "Searching",
     ResidentsList: "Residents list",
+    Area1: "Area",
+    MotorbikesCount: "Motorbikes count",
+    CarsCount: "Cars count",
   };
 
   static const Map<String, dynamic> VI = {
@@ -141,6 +149,10 @@ class AppLocale {
     Reject: "Từ chối",
     UnknownError: "Lỗi không xác định",
     Search: "Tìm kiếm",
+    Searching: "Đang tìm kiếm",
     ResidentsList: "Danh sách cư dân",
+    Area1: "Diện tích",
+    MotorbikesCount: "Số lượng xe máy",
+    CarsCount: "Số lượng ô tô",
   };
 }

@@ -95,6 +95,19 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                       ApplicationRoute.adminRegisterQueue,
                     ),
             ),
+            ListTile(
+              leading: const Icon(Icons.people_outlined),
+              title: Text(
+                AppLocale.ResidentsList.getString(context),
+                style: currentRoute == ApplicationRoute.adminResidentsPage ? const TextStyle(color: Colors.blue) : null,
+              ),
+              onTap: () => currentRoute == ApplicationRoute.adminResidentsPage
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(
+                      context,
+                      ApplicationRoute.adminResidentsPage,
+                    ),
+            ),
           ],
         );
       } else {

@@ -46,6 +46,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     refresh();
   }
 
+  bool get searching => _userSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty;
+
   Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
       () async {
@@ -118,7 +120,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),
@@ -276,8 +277,12 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             refresh();
                           },
                         ),
-                        IconButton(
+                        TextButton.icon(
                           icon: const Icon(Icons.search_outlined),
+                          label: Text(
+                            searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                          ),
                           onPressed: () async {
                             await showDialog(
                               context: context,

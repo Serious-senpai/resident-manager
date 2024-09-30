@@ -130,7 +130,6 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),
