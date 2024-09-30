@@ -13,6 +13,7 @@ jobs:
     name: Test server application
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
 
@@ -36,7 +37,9 @@ jobs:
         run: pip install -r dev-requirements.txt
 
       - name: Install ODBC driver 18
-        run: scripts/odbc.sh
+        run: |
+          chmod +x scripts/odbc.sh
+          scripts/odbc.sh
 
       - name: Run tests
         run: coverage run -m pytest -v .
