@@ -10,6 +10,9 @@ from ......errors import AuthenticationRequired, PasswordDecryptionError, regist
 from ......models import Authorization, RegisterRequest
 
 
+__all__ = ("admin_reg_request_reject",)
+
+
 @api_v1.post(
     "/admin/reg-request/reject",
     name="Registration requests rejection",

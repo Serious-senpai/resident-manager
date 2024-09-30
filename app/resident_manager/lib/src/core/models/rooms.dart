@@ -17,7 +17,7 @@ class Room {
 
   Room.fromJson(dynamic data)
       : room = data["room"],
-        area = data["area"] / 100,
+        area = data["area"],
         motorbike = data["motorbike"],
         car = data["car"];
 

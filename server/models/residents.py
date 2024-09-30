@@ -4,6 +4,7 @@ from typing import Any, List, Optional, TypeVar
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
+from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 
 
@@ -30,56 +31,46 @@ class Resident(PublicInfo, HashedAuthorization):
         )
 
     @classmethod
-    async def from_id(cls, id: int) -> Optional[Resident]:
-        """This function is a coroutine.
-
-        Fetch a resident from the database with a specified ID.
-
-        Parameters
-        -----
-        id: `int`
-            The ID of the resident to fetch.
-
-        Returns
-        -----
-        `Optional[Resident]`
-            The resident with the specified ID, or `None` if not found.
-        """
+    async def query(
+        cls,
+        *,
+        offset: int = 0,
+        id: Optional[int] = None,
+        name: Optional[str] = None,
+        room: Optional[int] = None,
+        username: Optional[str] = None,
+    ) -> List[Resident]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM residents WHERE id = ?", id)
-                row = await cursor.fetchone()
+                where: List[str] = []
+                params: List[Any] = []
 
-                if row is None:
-                    return None
+                if id is not None:
+                    where.append("resident_id = ?")
+                    params.append(id)
 
-                return cls.from_row(row)
+                if name is not None and len(name) > 0:
+                    where.append("CHARINDEX(?, name) > 0")
+                    params.append(name)
 
-    @classmethod
-    async def from_username(cls, username: str) -> Optional[Resident]:
-        """This function is a coroutine.
+                if room is not None:
+                    where.append("room = ?")
+                    params.append(room)
 
-        Fetch a resident from the database with a specified username.
+                if username is not None and len(username) > 0:
+                    where.append("username = ?")
+                    params.append(username)
 
-        Parameters
-        -----
-        username: `str`
-            The username of the resident to fetch.
+                query = ["SELECT * FROM residents"]
+                if len(where) > 0:
+                    query.append("WHERE " + " AND ".join(where))
 
-        Returns
-        -----
-        `Optional[Resident]`
-            The resident with the specified username, or `None` if not found.
-        """
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM residents WHERE username = ?", username)
-                row = await cursor.fetchone()
+                query.append("ORDER BY resident_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
 
-                if row is None:
-                    return None
+                await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
 
-                return cls.from_row(row)
+                rows = await cursor.fetchall()
+                return [cls.from_row(row) for row in rows]
 
     @classmethod
     async def delete_many(cls, ids: List[int]) -> None:

@@ -10,6 +10,9 @@ from ....errors import AuthenticationRequired, PasswordDecryptionError, UserNotF
 from ....utils import check_password
 
 
+__all__ = ("login",)
+
+
 @api_v1.post(
     "/login",
     name="Residents login",
@@ -19,10 +22,11 @@ from ....utils import check_password
     status_code=status.HTTP_200_OK,
 )
 async def login(headers: Annotated[Authorization, Header()]) -> PublicInfo:
-    resident = await Resident.from_username(headers.username)
-    if resident is None:
+    residents = await Resident.query(username=headers.username)
+    if len(residents) == 0:
         raise UserNotFound
 
+    resident = residents[0]
     if not check_password(headers.decrypt_password(), hashed=resident.hashed_password):
         raise AuthenticationRequired
 

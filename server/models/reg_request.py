@@ -24,6 +24,19 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
     Each object of this class corresponds to a database row."""
 
+    @classmethod
+    def from_row(cls, row: Any) -> RegisterRequest:
+        return cls(
+            id=row[0],
+            name=row[1],
+            room=row[2],
+            birthday=row[3],
+            phone=row[4],
+            email=row[5],
+            username=row[6],
+            hashed_password=row[7],
+        )
+
     async def accept(self) -> Snowflake:
         """This function is a coroutine.
 
@@ -96,19 +109,6 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
 
             async with connection.cursor() as cursor:
                 await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *ids)
-
-    @classmethod
-    def from_row(cls, row: Any) -> RegisterRequest:
-        return cls(
-            id=row[0],
-            name=row[1],
-            room=row[2],
-            birthday=row[3],
-            phone=row[4],
-            email=row[5],
-            username=row[6],
-            hashed_password=row[7],
-        )
 
     @overload
     @classmethod
@@ -185,54 +185,53 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                request_id = generate_id()
-                try:
-                    await cursor.execute(
-                        """
-                        IF NOT EXISTS (SELECT username FROM residents WHERE username = ?)
-                        INSERT INTO register_queue VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ELSE
-                        RAISERROR(15600, -1, -1)
-                        """,
-                        username,
-                        request_id,
-                        name,
-                        room,
-                        birthday,
-                        phone,
-                        email,
-                        username,
-                        hashed_password,
+                await cursor.execute(
+                    """
+                    IF NOT EXISTS (
+                        SELECT username FROM residents WHERE username = ?
+                        UNION
+                        SELECT username FROM register_queue WHERE username = ?
                     )
-                except pyodbc.DatabaseError:
-                    if raise_http_exception:
-                        raise UsernameConflictError
+                    INSERT INTO register_queue OUTPUT INSERTED.* VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    username,
+                    username,
+                    generate_id(),
+                    name,
+                    room,
+                    birthday,
+                    phone,
+                    email,
+                    username,
+                    hashed_password,
+                )
+                row = await cursor.fetchone()
+                if row is not None:
+                    return cls.from_row(row)
 
-                    return None
+        if raise_http_exception:
+            raise UsernameConflictError
 
-        return cls(
-            id=request_id,
-            name=name,
-            room=room,
-            birthday=birthday,
-            phone=phone,
-            email=email,
-            username=username,
-            hashed_password=hashed_password,
-        )
+        return None
 
     @classmethod
     async def query(
         cls,
         *,
-        offset: int,
+        offset: int = 0,
+        id: Optional[int] = None,
         name: Optional[str] = None,
         room: Optional[int] = None,
+        username: Optional[str] = None,
     ) -> List[RegisterRequest]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 where: List[str] = []
                 params: List[Any] = []
+
+                if id is not None:
+                    where.append("request_id = ?")
+                    params.append(id)
 
                 if name is not None and len(name) > 0:
                     where.append("CHARINDEX(?, name) > 0")
@@ -241,6 +240,10 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 if room is not None:
                     where.append("room = ?")
                     params.append(room)
+
+                if username is not None and len(username) > 0:
+                    where.append("username = ?")
+                    params.append(username)
 
                 query = ["SELECT * FROM register_queue"]
                 if len(where) > 0:

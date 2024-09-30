@@ -141,10 +141,14 @@ def test_register_main_flow() -> None:
             headers=generate_auth_headers(username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert_match(data, name=name, room=room, birthday=birthday, phone=phone, email=email)
+
+        request_id = data["id"]
 
         response = client.get(
             "/api/v1/admin/reg-request",
-            params={"offset": 0, "name": name},
+            params={"offset": 0, "id": request_id},
             headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK

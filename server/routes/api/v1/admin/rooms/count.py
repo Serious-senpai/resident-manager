@@ -10,6 +10,9 @@ from ......errors import AuthenticationRequired, PasswordDecryptionError, regist
 from ......models import Authorization, Room
 
 
+__all__ = ("admin_rooms_count",)
+
+
 @api_v1.get(
     "/admin/rooms/count",
     name="Rooms count",

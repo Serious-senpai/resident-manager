@@ -10,6 +10,9 @@ from ......errors import AuthenticationRequired, PasswordDecryptionError, regist
 from ......models import Authorization, RegisterRequest
 
 
+__all__ = ("admin_reg_request_count",)
+
+
 @api_v1.get(
     "/admin/reg-request/count",
     name="Registration requests count",

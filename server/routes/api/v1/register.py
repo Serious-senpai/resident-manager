@@ -9,6 +9,9 @@ from ....errors import BadRequest, UsernameConflictError, register_error
 from ....models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
 
 
+__all__ = ("register",)
+
+
 @api_v1.post(
     "/register",
     name="Residents registration",

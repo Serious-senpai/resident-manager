@@ -10,6 +10,9 @@ from .....database import Database
 from .....models import Authorization
 
 
+__all__ = ("admin_login",)
+
+
 @api_v1.post(
     "/admin/login",
     name="Administrators login",

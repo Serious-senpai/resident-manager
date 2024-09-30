@@ -8,27 +8,27 @@ from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
 from ......database import Database
 from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import Authorization, RegisterRequest
+from ......models import Authorization, Resident
 
 
-__all__ = ("admin_reg_request",)
+__all__ = ("admin_residents",)
 
 
 @api_v1.get(
-    "/admin/reg-request",
-    name="Registration requests query",
+    "/admin/residents",
+    name="Residents query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} registration requests from the specified offset",
     tags=["admin"],
     responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_200_OK,
 )
-async def admin_reg_request(
+async def admin_residents(
     headers: Annotated[Authorization, Header()],
     offset: int = 0,
     id: Optional[int] = None,
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-) -> List[RegisterRequest]:
+) -> List[Resident]:
     await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    return await RegisterRequest.query(offset=offset, id=id, name=name, room=room, username=username)
+    return await Resident.query(offset=offset, id=id, name=name, room=room, username=username)

@@ -26,7 +26,7 @@ class Room(pydantic.BaseModel):
     def from_row(cls, row: Any) -> Room:
         return cls(
             room=row[0],
-            area=row[1],
+            area=row[1] / 100,
             motorbike=row[2],
             car=row[3],
         )

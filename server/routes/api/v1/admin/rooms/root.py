@@ -11,6 +11,9 @@ from ......errors import AuthenticationRequired, PasswordDecryptionError, regist
 from ......models import Authorization, Room
 
 
+__all__ = ("admin_rooms",)
+
+
 @api_v1.get(
     "/admin/rooms",
     name="Room information query",

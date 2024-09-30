@@ -10,6 +10,9 @@ from .....errors import AuthenticationRequired, PasswordDecryptionError, registe
 from .....models import Authorization, Resident
 
 
+__all__ = ("admin_delete",)
+
+
 @api_v1.post(
     "/admin/delete",
     name="Account deletion",
