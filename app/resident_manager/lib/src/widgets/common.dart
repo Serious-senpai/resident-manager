@@ -1,12 +1,9 @@
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:meta/meta.dart";
-import "package:url_launcher/url_launcher.dart";
 
 import "state.dart";
 import "../routes.dart";
-import "../utils.dart";
 import "../core/state.dart";
 import "../core/translations.dart";
 
@@ -52,8 +49,6 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
     final state = scaffoldKey.currentState;
     if (state != null) state.closeDrawer();
   }
-
-  bool _allowOpenBrowser = true; // @khoint5304's weird mouse
 
   /// Create a default [Drawer] for all pages within this application
   Drawer createDrawer(BuildContext context) {
@@ -145,34 +140,6 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
             left: 5,
             child: Row(
               children: [
-                IconButton(
-                  icon: Image.asset("assets/github/github-mark.png", height: 20, width: 20),
-                  iconSize: 20,
-                  onPressed: () async {
-                    if (!_allowOpenBrowser) {
-                      return;
-                    }
-
-                    _allowOpenBrowser = false;
-                    var launched = false;
-                    try {
-                      launched = await launchUrl(Uri.parse("https://github.com/Serious-senpai/resident-manager"));
-                    } on PlatformException {
-                      // pass
-                    }
-
-                    if (!launched) {
-                      await showToastSafe(
-                        msg: context.mounted ? AppLocale.UnableToOpenUrl.getString(context) : AppLocale.UnableToOpenUrl,
-                      );
-                    }
-
-                    await Future.delayed(const Duration(seconds: 2));
-                    _allowOpenBrowser = true;
-                  },
-                  padding: EdgeInsets.zero,
-                ),
-                const SizedBox.square(dimension: 20),
                 IconButton(
                   icon: Image.asset("assets/flags/en.png", height: 20, width: 20),
                   iconSize: 20,
