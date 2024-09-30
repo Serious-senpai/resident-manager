@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import Header, status
+from fastapi import status
 
 from ....apps import api_v1
-from ....models import Authorization, PublicInfo, Resident
+from ....models import AuthorizationHeader, PublicInfo, Resident
 from ....errors import AuthenticationRequired, PasswordDecryptionError, UserNotFound, register_error
 from ....utils import check_password
 
@@ -21,7 +19,7 @@ __all__ = ("login",)
     responses=register_error(AuthenticationRequired, PasswordDecryptionError, UserNotFound),
     status_code=status.HTTP_200_OK,
 )
-async def login(headers: Annotated[Authorization, Header()]) -> PublicInfo:
+async def login(headers: AuthorizationHeader) -> PublicInfo:
     residents = await Resident.query(username=headers.username)
     if len(residents) == 0:
         raise UserNotFound

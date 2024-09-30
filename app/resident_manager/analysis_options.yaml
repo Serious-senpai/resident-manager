@@ -24,6 +24,10 @@ linter:
   rules:
     avoid_print: true
     constant_identifier_names: false
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
     prefer_double_quotes: true
 
 # Additional information about this file can be found at

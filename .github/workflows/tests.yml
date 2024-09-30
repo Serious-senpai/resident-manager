@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   python:
-    name: Test server application
+    name: Test web application
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

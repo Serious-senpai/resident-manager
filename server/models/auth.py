@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 import pydantic
+from fastapi import Header
 from nacl.encoding import Base64Encoder
 from nacl.public import Box, PublicKey
 
@@ -8,7 +11,7 @@ from ..errors import PasswordDecryptionError
 from ..security import SERVER_SECRET_KEY
 
 
-__all__ = ("Authorization", "HashedAuthorization")
+__all__ = ("Authorization", "AuthorizationHeader", "HashedAuthorization")
 
 
 class Authorization(pydantic.BaseModel):
@@ -28,6 +31,9 @@ class Authorization(pydantic.BaseModel):
                 raise PasswordDecryptionError
 
             raise
+
+
+AuthorizationHeader = Annotated[Authorization, Header(description="Authorization headers")]
 
 
 class HashedAuthorization(pydantic.BaseModel):

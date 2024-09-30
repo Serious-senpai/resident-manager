@@ -25,8 +25,6 @@ class RegisterQueuePage extends StateAwareWidget {
 
 class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
   List<RegisterRequest> _requests = [];
-  int _offset = 0;
-  int _offsetLimit = 0;
 
   Future<bool>? _queryFuture;
   Future<int?>? _countFuture;
@@ -35,9 +33,14 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   final _selectedRequests = <RegisterRequest>{};
   final _actionLock = Lock();
 
-  final _userSearch = TextEditingController();
+  final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
+  final _usernameSearch = TextEditingController();
+  String? orderBy;
+  bool ascending = true;
 
+  int _offset = 0;
+  int _offsetLimit = 0;
   int get offset => _offset;
   set offset(int value) {
     _offset = value;
@@ -46,7 +49,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     refresh();
   }
 
-  bool get searching => _userSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty;
+  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
 
   Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
@@ -90,8 +93,11 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
       _requests = await RegisterRequest.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
-        name: _userSearch.text,
+        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
+        username: _usernameSearch.text,
+        orderBy: orderBy,
+        ascending: ascending,
       );
       refresh();
       return true;
@@ -141,7 +147,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                       dimension: 50,
                       child: CircularProgressIndicator(),
                     ),
-                    const SizedBox.square(dimension: 20),
+                    const SizedBox.square(dimension: 5),
                     Text(AppLocale.Loading.getString(context)),
                   ],
                 ),
@@ -150,13 +156,37 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                const headerStyle = TextStyle(fontWeight: FontWeight.bold);
-                TableCell header(String text) => TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(text, style: headerStyle),
+                TableCell header(String text, [String? newOrderBy]) {
+                  if (newOrderBy != null) {
+                    if (orderBy == newOrderBy) {
+                      text += ascending ? " ▴" : " ▾";
+                    } else {
+                      text += " ↕";
+                    }
+                  }
+
+                  return TableCell(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: GestureDetector(
+                        onTap: () {
+                          if (newOrderBy != null) {
+                            if (newOrderBy == orderBy) {
+                              ascending = !ascending;
+                            } else {
+                              ascending = true;
+                            }
+
+                            orderBy = newOrderBy;
+                            offset = 0;
+                          }
+                        },
+                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                    );
+                    ),
+                  );
+                }
+
                 TableCell row(String text) => TableCell(
                       child: Padding(
                         padding: const EdgeInsets.all(5),
@@ -184,13 +214,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                           },
                         ),
                       ),
-                      header(AppLocale.Fullname.getString(context)),
-                      header(AppLocale.Room.getString(context)),
+                      header(AppLocale.Fullname.getString(context), "name"),
+                      header(AppLocale.Room.getString(context), "room"),
                       header(AppLocale.DateOfBirth.getString(context)),
                       header(AppLocale.Phone.getString(context)),
                       header(AppLocale.Email.getString(context)),
-                      header(AppLocale.CreationTime.getString(context)),
-                      header(AppLocale.Username.getString(context)),
+                      header(AppLocale.CreationTime.getString(context), "request_id"),
+                      header(AppLocale.Username.getString(context), "username"),
                     ],
                   ),
                 ];
@@ -296,7 +326,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                         children: [
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _userSearch,
+                                            controller: _nameSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
                                               label: Text(AppLocale.Fullname.getString(context)),
@@ -320,14 +350,42 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                             },
                                             validator: (value) => roomValidator(context, required: false, value: value),
                                           ),
-                                          const SizedBox.square(dimension: 10),
-                                          TextButton.icon(
-                                            icon: const Icon(Icons.done_outlined),
-                                            label: Text(AppLocale.Search.getString(context)),
-                                            onPressed: () {
+                                          TextFormField(
+                                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                                            controller: _usernameSearch,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              label: Text(AppLocale.Username.getString(context)),
+                                            ),
+                                            onFieldSubmitted: (_) {
                                               Navigator.pop(context);
                                               offset = 0;
                                             },
+                                          ),
+                                          const SizedBox.square(dimension: 10),
+                                          Row(
+                                            children: [
+                                              TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  offset = 0;
+                                                },
+                                              ),
+                                              TextButton.icon(
+                                                icon: const Icon(Icons.clear_outlined),
+                                                label: Text(AppLocale.ClearAll.getString(context)),
+                                                onPressed: () {
+                                                  _nameSearch.clear();
+                                                  _roomSearch.clear();
+                                                  _usernameSearch.clear();
+
+                                                  Navigator.pop(context);
+                                                  offset = 0;
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
@@ -360,16 +418,18 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                 );
               }
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox.square(
-                    dimension: 50,
-                    child: Icon(Icons.highlight_off_outlined),
-                  ),
-                  const SizedBox.square(dimension: 20),
-                  Text(AppLocale.ConnectionError.getString(context)),
-                ],
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox.square(
+                      dimension: 50,
+                      child: Icon(Icons.highlight_off_outlined),
+                    ),
+                    const SizedBox.square(dimension: 5),
+                    Text(AppLocale.ConnectionError.getString(context)),
+                  ],
+                ),
               );
           }
         },

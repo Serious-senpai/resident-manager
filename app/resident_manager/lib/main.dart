@@ -31,7 +31,7 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
     return MaterialApp(
       title: AppLocale.ResidentManager.getString(context),
       theme: ThemeData(
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           color: Colors.blue,
           elevation: 1.0,
         ),

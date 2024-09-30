@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Annotated, List, Optional
+from typing import List, Optional
 
-from fastapi import Header, status
+from fastapi import status
 
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
 from ......database import Database
 from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import Authorization, Room
+from ......models import AuthorizationHeader, Room
 
 
 __all__ = ("admin_rooms",)
@@ -24,7 +24,7 @@ __all__ = ("admin_rooms",)
 )
 async def admin_rooms(
     offset: int,
-    headers: Annotated[Authorization, Header()],
+    headers: AuthorizationHeader,
     room: Optional[int] = None,
     floor: Optional[int] = None,
 ) -> List[Room]:

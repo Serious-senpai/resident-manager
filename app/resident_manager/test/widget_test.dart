@@ -12,8 +12,8 @@ import "package:resident_manager/src/core/state.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 
 final serverKey = PrivateKey.fromSeed(base64.decode(Platform.environment["PRIVATE_KEY_SEED"]!));
-final adminUsername = "admin";
-final adminPassword = "password";
+const adminUsername = "admin";
+const adminPassword = "password";
 
 final client = MockClient(
   (request) async {

@@ -36,6 +36,21 @@ class PersonalInfo {
       "email": email,
     };
   }
+
+  Map<String, String> personalInfoQuery() {
+    final result = {"name": name, "room": room.toString()};
+    if (birthday != null) {
+      result["birthday"] = birthday!.toIso8601String();
+    }
+    if (phone != null) {
+      result["phone"] = phone!;
+    }
+    if (email != null) {
+      result["email"] = email!;
+    }
+
+    return result;
+  }
 }
 
 /// Data model for objects holding personal info along with a snowflake ID.

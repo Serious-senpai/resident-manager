@@ -16,9 +16,9 @@ class PersonalInfo(pydantic.BaseModel):
 
     name: str
     room: int
-    birthday: Optional[datetime]
-    phone: Optional[str]
-    email: Optional[str]
+    birthday: Optional[datetime] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
 
     def to_personal_info(self) -> PersonalInfo:
         return PersonalInfo(

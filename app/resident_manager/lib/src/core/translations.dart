@@ -49,6 +49,7 @@ class AppLocale {
   static const String Area1 = "Area1";
   static const String MotorbikesCount = "MotorbikesCount";
   static const String CarsCount = "CarsCount";
+  static const String ClearAll = "ClearAll";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -101,6 +102,7 @@ class AppLocale {
     Area1: "Area",
     MotorbikesCount: "Motorbikes count",
     CarsCount: "Cars count",
+    ClearAll: "Clear all",
   };
 
   static const Map<String, dynamic> VI = {
@@ -154,5 +156,6 @@ class AppLocale {
     Area1: "Diện tích",
     MotorbikesCount: "Số lượng xe máy",
     CarsCount: "Số lượng ô tô",
+    ClearAll: "Xóa tất cả",
   };
 }

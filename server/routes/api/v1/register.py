@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Header, status
+from fastapi import Query, status
 
 from ....apps import api_v1
 from ....errors import BadRequest, UsernameConflictError, register_error
-from ....models import Authorization, PersonalInfo, PublicInfo, RegisterRequest
+from ....models import AuthorizationHeader, PersonalInfo, PublicInfo, RegisterRequest
 
 
 __all__ = ("register",)
@@ -21,8 +21,8 @@ __all__ = ("register",)
     status_code=status.HTTP_200_OK,
 )
 async def register(
-    data: PersonalInfo,
-    headers: Annotated[Authorization, Header()],
+    headers: AuthorizationHeader,
+    data: Annotated[PersonalInfo, Query()],
 ) -> PublicInfo:
     request = await RegisterRequest.create(
         name=data.name,

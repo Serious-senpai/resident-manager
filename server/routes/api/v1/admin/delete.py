@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Annotated, List
+from typing import List
 
-from fastapi import Header, status
+from fastapi import status
 
 from .....apps import api_v1
 from .....database import Database
 from .....errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from .....models import Authorization, Resident
+from .....models import AuthorizationHeader, Resident, Snowflake
 
 
 __all__ = ("admin_delete",)
@@ -22,6 +22,6 @@ __all__ = ("admin_delete",)
     responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_delete(ids: List[int], headers: Annotated[Authorization, Header()]) -> None:
+async def admin_delete(headers: AuthorizationHeader, objects: List[Snowflake]) -> None:
     await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    await Resident.delete_many(ids)
+    await Resident.delete_many(objects)

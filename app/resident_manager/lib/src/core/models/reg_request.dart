@@ -39,8 +39,12 @@ class RegisterRequest extends PublicInfo {
   static Future<List<RegisterRequest>> query({
     required ApplicationState state,
     required int offset,
+    int? id,
     String? name,
     int? room,
+    String? username,
+    String? orderBy,
+    bool? ascending,
   }) async {
     final result = <RegisterRequest>[];
     final authorization = state.authorization;
@@ -49,11 +53,23 @@ class RegisterRequest extends PublicInfo {
     }
 
     final params = {"offset": offset.toString()};
+    if (id != null) {
+      params["id"] = id.toString();
+    }
     if (name != null && name.isNotEmpty) {
       params["name"] = name;
     }
     if (room != null) {
       params["room"] = room.toString();
+    }
+    if (username != null && username.isNotEmpty) {
+      params["username"] = username;
+    }
+    if (orderBy != null && orderBy.isNotEmpty) {
+      params["order_by"] = orderBy;
+    }
+    if (ascending != null) {
+      params["ascending"] = ascending.toString();
     }
 
     final response = await state.get("/api/v1/admin/reg-request", queryParameters: params);
@@ -78,8 +94,8 @@ class RegisterRequest extends PublicInfo {
 
     final response = await state.post(
       "/api/v1/register",
+      queryParameters: info.personalInfoQuery(),
       headers: headers,
-      body: json.encode(info.personalInfoJson()),
       authorize: false,
     );
 
@@ -92,7 +108,7 @@ class RegisterRequest extends PublicInfo {
     required String path,
   }) async {
     final headers = {"content-type": "application/json"};
-    final data = objects.map((o) => o.id);
+    final data = List<Map<String, int>>.from(objects.map((o) => {"id": o.id}));
 
     final response = await state.post(path, headers: headers, body: json.encode(data));
     return response.statusCode == 204;

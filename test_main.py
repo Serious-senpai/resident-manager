@@ -131,7 +131,7 @@ def test_register_main_flow() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/register",
-            json={
+            params={
                 "name": name,
                 "room": room,
                 "birthday": birthday.isoformat(),

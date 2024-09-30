@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, TypeVar
+from typing import Any, List, Literal, Optional, TypeVar
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
+from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 
@@ -39,6 +40,8 @@ class Resident(PublicInfo, HashedAuthorization):
         name: Optional[str] = None,
         room: Optional[int] = None,
         username: Optional[str] = None,
+        order_by: Literal["resident_id", "name", "room", "username"] = "resident_id",
+        ascending: bool = True,
     ) -> List[Resident]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
@@ -65,7 +68,11 @@ class Resident(PublicInfo, HashedAuthorization):
                 if len(where) > 0:
                     query.append("WHERE " + " AND ".join(where))
 
-                query.append("ORDER BY resident_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
+                if order_by not in {"resident_id", "name", "room", "username"}:
+                    order_by = "resident_id"
+
+                asc_desc = "ASC" if ascending else "DESC"
+                query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
 
                 await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
 
@@ -73,11 +80,11 @@ class Resident(PublicInfo, HashedAuthorization):
                 return [cls.from_row(row) for row in rows]
 
     @classmethod
-    async def delete_many(cls, ids: List[int]) -> None:
-        if len(ids) == 0:
+    async def delete_many(cls, objects: List[Snowflake]) -> None:
+        if len(objects) == 0:
             return
 
         async with Database.instance.pool.acquire() as connection:
-            temp_fmt = ", ".join("?" for _ in ids)
+            temp_fmt = ", ".join("?" for _ in objects)
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *ids)
+                await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *[o.id for o in objects])

@@ -75,12 +75,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 return await cursor.fetchval()
 
     @classmethod
-    async def accept_many(cls, ids: List[int]) -> None:
-        if len(ids) == 0:
+    async def accept_many(cls, objects: List[Snowflake]) -> None:
+        if len(objects) == 0:
             return
 
         async with Database.instance.pool.acquire() as connection:
-            mapping = [(generate_id(), id) for id in ids]
+            mapping = [(generate_id(), o.id) for o in objects]
             temp_fmt = ", ".join("(?, ?)" for _ in mapping)
             temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
 
@@ -98,15 +98,15 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 )
 
     @classmethod
-    async def reject_many(cls, ids: List[int]) -> None:
-        if len(ids) == 0:
+    async def reject_many(cls, objects: List[Snowflake]) -> None:
+        if len(objects) == 0:
             return
 
         async with Database.instance.pool.acquire() as connection:
-            temp_fmt = ", ".join("?" for _ in ids)
+            temp_fmt = ", ".join("?" for _ in objects)
 
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *ids)
+                await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *[o.id for o in objects])
 
     @overload
     @classmethod
@@ -221,6 +221,8 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         name: Optional[str] = None,
         room: Optional[int] = None,
         username: Optional[str] = None,
+        order_by: Literal["request_id", "name", "room", "username"] = "request_id",
+        ascending: bool = True,
     ) -> List[RegisterRequest]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
@@ -247,7 +249,11 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 if len(where) > 0:
                     query.append("WHERE " + " AND ".join(where))
 
-                query.append("ORDER BY request_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
+                if order_by not in {"request_id", "name", "room", "username"}:
+                    order_by = "request_id"
+
+                asc_desc = "ASC" if ascending else "DESC"
+                query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
 
                 await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
 
