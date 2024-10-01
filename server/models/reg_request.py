@@ -225,37 +225,40 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         order_by: Literal["request_id", "name", "room", "username"] = "request_id",
         ascending: bool = True,
     ) -> List[RegisterRequest]:
+        where: List[str] = []
+        params: List[Any] = []
+
+        if id is not None:
+            where.append("request_id = ?")
+            params.append(id)
+
+        if name is not None and len(name) > 0:
+            where.append("CHARINDEX(?, name) > 0")
+            params.append(name)
+
+        if room is not None:
+            where.append("room = ?")
+            params.append(room)
+
+        if username is not None:
+            if len(username) == 0:
+                return []
+
+            where.append("username = ?")
+            params.append(username)
+
+        query = ["SELECT * FROM register_queue"]
+        if len(where) > 0:
+            query.append("WHERE " + " AND ".join(where))
+
+        if order_by not in {"request_id", "name", "room", "username"}:
+            order_by = "request_id"
+
+        asc_desc = "ASC" if ascending else "DESC"
+        query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
+
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                where: List[str] = []
-                params: List[Any] = []
-
-                if id is not None:
-                    where.append("request_id = ?")
-                    params.append(id)
-
-                if name is not None and len(name) > 0:
-                    where.append("CHARINDEX(?, name) > 0")
-                    params.append(name)
-
-                if room is not None:
-                    where.append("room = ?")
-                    params.append(room)
-
-                if username is not None and len(username) > 0:
-                    where.append("username = ?")
-                    params.append(username)
-
-                query = ["SELECT * FROM register_queue"]
-                if len(where) > 0:
-                    query.append("WHERE " + " AND ".join(where))
-
-                if order_by not in {"request_id", "name", "room", "username"}:
-                    order_by = "request_id"
-
-                asc_desc = "ASC" if ascending else "DESC"
-                query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
-
                 await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
 
                 rows = await cursor.fetchall()
