@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-import re
 from datetime import datetime
 from typing import Any, List, Literal, Optional, overload
 

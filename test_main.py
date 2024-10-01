@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import random
 import string
 from datetime import datetime, timezone

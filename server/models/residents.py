@@ -8,7 +8,6 @@ from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..utils import (
-    validate_name,
     validate_room,
     validate_username,
 )
