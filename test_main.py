@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import itertools
 import random
 import string
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from nacl.encoding import Base64Encoder
@@ -68,52 +70,26 @@ def test_docs() -> None:
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_admin_login_ok() -> None:
+admin_usernames = ["admin", random_string(50)]
+admin_passwords = [DEFAULT_ADMIN_PASSWORD, random_string(50)]
+
+
+@pytest.mark.parametrize("username_i", range(len(admin_usernames)))
+@pytest.mark.parametrize("password_i", range(len(admin_passwords)))
+def test_admin_login(username_i: int, password_i: int) -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/admin/login",
             headers=generate_auth_headers(
-                username="admin",
-                password=DEFAULT_ADMIN_PASSWORD,
+                username=admin_usernames[username_i],
+                password=admin_passwords[password_i],
             ).model_dump(),
         )
-        assert response.status_code == status.HTTP_204_NO_CONTENT
 
-
-def test_admin_login_incorrect_password() -> None:
-    with TestClient(app) as client:
-        response = client.post(
-            "/api/v1/admin/login",
-            headers=generate_auth_headers(
-                username="admin",
-                password=random_string(50),
-            ).model_dump(),
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_admin_login_incorrect_username() -> None:
-    with TestClient(app) as client:
-        response = client.post(
-            "/api/v1/admin/login",
-            headers=generate_auth_headers(
-                username=random_string(20),
-                password=DEFAULT_ADMIN_PASSWORD,
-            ).model_dump(),
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_admin_login_incorrect_username_password() -> None:
-    with TestClient(app) as client:
-        response = client.post(
-            "/api/v1/admin/login",
-            headers=generate_auth_headers(
-                username=random_string(20),
-                password=random_string(50),
-            ).model_dump(),
-        )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        if username_i == 0 and password_i == 0:
+            assert response.status_code == status.HTTP_204_NO_CONTENT
+        else:
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_register_main_flow() -> None:
