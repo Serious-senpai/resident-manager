@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import secrets
 import string
 from datetime import datetime, timedelta, timezone
@@ -17,6 +18,12 @@ __all__ = (
     "from_epoch",
     "snowflake_time",
     "generate_id",
+    "validate_name",
+    "validate_room",
+    "validate_phone",
+    "validate_email",
+    "validate_username",
+    "validate_password",
 )
 
 
@@ -81,3 +88,27 @@ class __IDGenerator:
 
 
 generate_id = __IDGenerator.generate_id
+
+
+def validate_name(name: str) -> bool:
+    return len(name) > 0 and len(name) < 256
+
+
+def validate_room(room: int) -> bool:
+    return room >= 0 and room < 32768
+
+
+def validate_phone(phone: str) -> bool:
+    return phone.isdigit() and len(phone) < 16
+
+
+def validate_email(email: str) -> bool:
+    return re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?", email) is not None and len(email) < 256
+
+
+def validate_username(username: str) -> bool:
+    return len(username) > 0 and len(username) < 256
+
+
+def validate_password(password: str) -> bool:
+    return len(password) >= 8 and len(password) < 256

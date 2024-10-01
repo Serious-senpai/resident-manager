@@ -11,7 +11,16 @@ from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..errors import BadRequest, UsernameConflictError
-from ..utils import generate_id, hash_password
+from ..utils import (
+    generate_id,
+    hash_password,
+    validate_name,
+    validate_room,
+    validate_phone,
+    validate_email,
+    validate_username,
+    validate_password,
+)
 
 
 __all__ = ("RegisterRequest",)
@@ -152,30 +161,20 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         raise_http_exception: bool = True,
     ) -> Optional[RegisterRequest]:
         # Validate data
-        if phone is not None and len(phone) == 0:
+        if phone is None or len(phone) == 0:
             phone = None
 
-        if email is not None and len(email) == 0:
+        if email is None or len(email) == 0:
             email = None
 
         if (
-            len(name) == 0
-            or len(name) > 255
-            or room < 0
-            or room > 32767
-            or (phone is not None and (len(phone) > 15 or not phone.isdigit()))
-            or (email is not None and len(email) > 255)
-            or len(username) == 0
-            or len(username) > 255
-            or len(password) < 8
-            or len(password) > 255
+            not validate_name(name)
+            or not validate_room(room)
+            or (phone is not None and not validate_phone(phone))
+            or (email is not None and not validate_email(email))
+            or not validate_username(username)
+            or not validate_password(password)
         ):
-            if raise_http_exception:
-                raise BadRequest
-
-            return None
-
-        if email is not None and re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?", email) is None:
             if raise_http_exception:
                 raise BadRequest
 
@@ -232,16 +231,22 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             where.append("request_id = ?")
             params.append(id)
 
-        if name is not None and len(name) > 0:
+        if name is not None:
+            if not validate_name(name):
+                return []
+
             where.append("CHARINDEX(?, name) > 0")
             params.append(name)
 
         if room is not None:
+            if not validate_room(room):
+                return []
+
             where.append("room = ?")
             params.append(room)
 
         if username is not None:
-            if len(username) == 0:
+            if not validate_username(username):
                 return []
 
             where.append("username = ?")

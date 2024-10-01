@@ -7,6 +7,11 @@ from .info import PublicInfo
 from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
+from ..utils import (
+    validate_name,
+    validate_room,
+    validate_username,
+)
 
 
 __all__ = ("Resident",)
@@ -50,16 +55,22 @@ class Resident(PublicInfo, HashedAuthorization):
             where.append("resident_id = ?")
             params.append(id)
 
-        if name is not None and len(name) > 0:
+        if name is not None:
+            if len(name) == 0 or len(name) > 255:
+                return []
+
             where.append("CHARINDEX(?, name) > 0")
             params.append(name)
 
         if room is not None:
+            if not validate_room(room):
+                return []
+
             where.append("room = ?")
             params.append(room)
 
         if username is not None:
-            if len(username) == 0:
+            if not validate_username(username):
                 return []
 
             where.append("username = ?")
