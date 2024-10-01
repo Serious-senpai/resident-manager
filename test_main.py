@@ -193,46 +193,49 @@ def test_register_main_flow() -> None:
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-def test_register_incorrect_input() -> None:
-    names = [f"test-{random_string(random.randint(1,69))}", "", f"test-{random_string(random.randint(256,10**4+7))}"]
-    rooms = [random.randint(0, 32767), random.randint(-10**9-7, -1), random.randint(32768, 10**9+7)]
-    now = datetime.now(timezone.utc)
-    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
-    phones = [random_numstring(random.randint(1,15)), random_numstring(random.randint(16,10**4+7)), random_string(random.randint(1,10**4+7))]
-    emails = [f"{random_string(random.randint(1,69))}@{random_string(random.randint(1,69))}.com", random_string(random.randint(1,10**4+7))]
-    usernames = [random_string(random.randint(1,255)), "", random_string(random.randint(256,10**4+7))]
-    passwords = [random_string(random.randint(8,255)), random_string(random.randint(1,7)), random_string(random.randint(256,10**4+7))]
-    subtest = 0
-    for name, room, phone, email, username, password in itertools.product(names, rooms, phones, emails, usernames, passwords):
-        if (subtest>0):
-            print(subtest)
-            with TestClient(app) as client:
-                response = client.post(
-                    "/api/v1/register",
-                    params={
-                        "name": name,
-                        "room": room,
-                        "birthday": birthday.isoformat(),
-                        "phone": phone,
-                        "email": email,
-                    },
-                    headers=generate_auth_headers(username=username, password=password).model_dump(),
-                )
-                assert response.status_code == 400
+resident_names = [f"test-{random_string(random.randint(1,69))}", "", f"test-{random_string(random.randint(256,10**4+7))}"]
+resident_rooms = [random.randint(0, 32767), random.randint(-10**9-7, -1), random.randint(32768, 10**9+7)]
+resident_phones = [random_numstring(random.randint(1,15)), random_numstring(random.randint(16,10**4+7)), random_string(random.randint(1,10**4+7))]
+resident_emails = [f"{random_string(random.randint(1,69))}@{random_string(random.randint(1,69))}.com", random_string(random.randint(1,10**4+7))]
+resident_usernames = [random_string(random.randint(1,255)), "", random_string(random.randint(256,10**4+7))]
+resident_passwords = [random_string(random.randint(8,255)), random_string(random.randint(1,7)), random_string(random.randint(256,10**4+7))]
 
-                response = client.get(
-                    "/api/v1/admin/reg-request",
-                    params={"offset": 0, "username": username, "room": room},
-                    headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
-                )
-                assert response.status_code == status.HTTP_200_OK
-                data = response.json()
+@pytest.mark.parametrize("name_i", range(len(resident_names)))
+@pytest.mark.parametrize("room_i", range(len(resident_rooms)))
+@pytest.mark.parametrize("phone_i", range(len(resident_phones)))
+@pytest.mark.parametrize("email_i", range(len(resident_emails)))
+@pytest.mark.parametrize("username_i", range(len(resident_usernames)))
+@pytest.mark.parametrize("password_i", range(len(resident_passwords)))
+def test_register_fail(name_i: int, room_i: int, phone_i: int, email_i: int, username_i: int, password_i: int) -> None:
+    if (name_i!=0 or room_i!=0 or phone_i!=0 or email_i!=0 or username_i!=0 or password_i!=0):
+        now = datetime.now(timezone.utc)
+        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+        with TestClient(app) as client:
+            response = client.post(
+                "/api/v1/register",
+                params={
+                    "name": resident_names[name_i],
+                    "room": resident_rooms[room_i],
+                    "birthday": birthday.isoformat(),
+                    "phone": resident_phones[phone_i],
+                    "email": resident_emails[email_i],
+                },
+                headers=generate_auth_headers(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
+            )
+            assert response.status_code == 400
 
-                assert len(data) == 0
+            response = client.get(
+                "/api/v1/admin/reg-request",
+                params={"offset": 0, "username": resident_usernames[username_i], "room": resident_rooms[room_i]},
+                headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+            )
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
 
-                response = client.post(
-                    "/api/v1/login",
-                    headers=generate_auth_headers(username=username, password=password).model_dump(),
-                )
-                assert response.status_code == status.HTTP_404_NOT_FOUND
-        subtest+=1
+            assert len(data) == 0
+
+            response = client.post(
+                "/api/v1/login",
+                headers=generate_auth_headers(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
+            )
+            assert response.status_code == status.HTTP_404_NOT_FOUND
