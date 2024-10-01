@@ -88,3 +88,10 @@ class Resident(PublicInfo, HashedAuthorization):
             temp_fmt = ", ".join("?" for _ in objects)
             async with connection.cursor() as cursor:
                 await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *[o.id for o in objects])
+
+    @staticmethod
+    async def count() -> int:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT COUNT(*) FROM residents")
+                return await cursor.fetchval()

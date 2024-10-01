@@ -168,6 +168,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             or len(username) == 0
             or len(username) > 255
             or len(password) < 8
+            or len(password) > 255
         ):
             if raise_http_exception:
                 raise BadRequest

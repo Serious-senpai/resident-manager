@@ -58,6 +58,12 @@ class PublicInfo extends PersonalInfo with Snowflake {
   @override
   final int id;
 
+  /// The username for the registration request, this data is only available from the admin endpoint.
+  String? username;
+
+  /// The hashed password for the registration request, this data is only available from the admin endpoint.
+  String? hashedPassword;
+
   /// Constructs a [PublicInfo] object with the given [id], [name], [room], [birthday], [phone], and [email].
   PublicInfo({
     required this.id,
@@ -66,6 +72,8 @@ class PublicInfo extends PersonalInfo with Snowflake {
     super.birthday,
     super.phone,
     super.email,
+    this.username,
+    this.hashedPassword,
   });
 
   /// Constructs a [PublicInfo] object from a JSON object.
@@ -77,5 +85,7 @@ class PublicInfo extends PersonalInfo with Snowflake {
           birthday: data["birthday"] == null ? null : DateTime.parse(data["birthday"] as String),
           phone: data["phone"] as String?,
           email: data["email"] as String?,
+          username: data["username"] as String?,
+          hashedPassword: data["hashed_password"] as String?,
         );
 }

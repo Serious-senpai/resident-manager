@@ -99,6 +99,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         orderBy: orderBy,
         ascending: ascending,
       );
+
       refresh();
       return true;
     } catch (_) {

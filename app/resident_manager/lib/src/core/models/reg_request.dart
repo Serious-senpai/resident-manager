@@ -8,12 +8,6 @@ import "../state.dart";
 
 /// Represents a registration request.
 class RegisterRequest extends PublicInfo {
-  /// The username for the registration request, this data is only available from the admin endpoint.
-  String? username;
-
-  /// The hashed password for the registration request, this data is only available from the admin endpoint.
-  String? hashedPassword;
-
   /// Constructs a [RegisterRequest] object with the given [id], [name], [room], [birthday], [phone], [email], [username],
   /// and [hashedPassword].
   RegisterRequest({
@@ -23,15 +17,12 @@ class RegisterRequest extends PublicInfo {
     super.birthday,
     super.phone,
     super.email,
-    this.username,
-    this.hashedPassword,
+    super.username,
+    super.hashedPassword,
   });
 
   /// Constructs a [RegisterRequest] object from a JSON object.
-  RegisterRequest.fromJson(dynamic data) : super.fromJson(data) {
-    username = data["username"] as String?;
-    hashedPassword = data["hashed_password"] as String?;
-  }
+  RegisterRequest.fromJson(super.data) : super.fromJson();
 
   /// Queries the server for registration requests.
   ///
