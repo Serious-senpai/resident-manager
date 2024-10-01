@@ -236,6 +236,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                             controller: _nameSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
+                                              icon: const Icon(Icons.badge_outlined),
                                               label: Text(AppLocale.Fullname.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
@@ -249,6 +250,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                             controller: _roomSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
+                                              icon: const Icon(Icons.room_outlined),
                                               label: Text(AppLocale.Room.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
@@ -262,6 +264,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                             controller: _usernameSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
+                                              icon: const Icon(Icons.person_outline),
                                               label: Text(AppLocale.Username.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
@@ -271,26 +274,31 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           ),
                                           const SizedBox.square(dimension: 10),
                                           Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
-                                              TextButton.icon(
-                                                icon: const Icon(Icons.done_outlined),
-                                                label: Text(AppLocale.Search.getString(context)),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                  offset = 0;
-                                                },
+                                              Expanded(
+                                                child: TextButton.icon(
+                                                  icon: const Icon(Icons.done_outlined),
+                                                  label: Text(AppLocale.Search.getString(context)),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    offset = 0;
+                                                  },
+                                                ),
                                               ),
-                                              TextButton.icon(
-                                                icon: const Icon(Icons.clear_outlined),
-                                                label: Text(AppLocale.ClearAll.getString(context)),
-                                                onPressed: () {
-                                                  _nameSearch.clear();
-                                                  _roomSearch.clear();
-                                                  _usernameSearch.clear();
+                                              Expanded(
+                                                child: TextButton.icon(
+                                                  icon: const Icon(Icons.clear_outlined),
+                                                  label: Text(AppLocale.ClearAll.getString(context)),
+                                                  onPressed: () {
+                                                    _nameSearch.clear();
+                                                    _roomSearch.clear();
+                                                    _usernameSearch.clear();
 
-                                                  Navigator.pop(context);
-                                                  offset = 0;
-                                                },
+                                                    Navigator.pop(context);
+                                                    offset = 0;
+                                                  },
+                                                ),
                                               ),
                                             ],
                                           ),
