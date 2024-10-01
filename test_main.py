@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import random
 import string
 from datetime import datetime, timezone
@@ -16,6 +17,9 @@ from server import DEFAULT_ADMIN_PASSWORD, Authorization, check_password
 
 def random_string(length: int) -> str:
     return "".join(random.choices(string.ascii_letters, k=length))
+
+def random_numstring(length: int) -> str:
+    return "".join(random.choices(string.digits, k=length))
 
 
 def assert_match(
@@ -188,3 +192,47 @@ def test_register_main_flow() -> None:
             headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+def test_register_incorrect_input() -> None:
+    names = [f"test-{random_string(random.randint(1,69))}", "", f"test-{random_string(random.randint(256,10**4+7))}"]
+    rooms = [random.randint(0, 32767), random.randint(-10**9-7, -1), random.randint(32768, 10**9+7)]
+    now = datetime.now(timezone.utc)
+    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+    phones = [random_numstring(random.randint(1,15)), random_numstring(random.randint(16,10**4+7)), random_string(random.randint(1,10**4+7))]
+    emails = [f"{random_string(random.randint(1,69))}@{random_string(random.randint(1,69))}.com", random_string(random.randint(1,10**4+7))]
+    usernames = [random_string(random.randint(1,255)), "", random_string(random.randint(256,10**4+7))]
+    passwords = [random_string(random.randint(8,255)), random_string(random.randint(1,7)), random_string(random.randint(256,10**4+7))]
+    subtest = 0
+    for name, room, phone, email, username, password in itertools.product(names, rooms, phones, emails, usernames, passwords):
+        if (subtest>0):
+            print(subtest)
+            with TestClient(app) as client:
+                response = client.post(
+                    "/api/v1/register",
+                    params={
+                        "name": name,
+                        "room": room,
+                        "birthday": birthday.isoformat(),
+                        "phone": phone,
+                        "email": email,
+                    },
+                    headers=generate_auth_headers(username=username, password=password).model_dump(),
+                )
+                assert response.status_code == 400
+
+                response = client.get(
+                    "/api/v1/admin/reg-request",
+                    params={"offset": 0, "username": username, "room": room},
+                    headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+                )
+                assert response.status_code == status.HTTP_200_OK
+                data = response.json()
+
+                assert len(data) == 0
+
+                response = client.post(
+                    "/api/v1/login",
+                    headers=generate_auth_headers(username=username, password=password).model_dump(),
+                )
+                assert response.status_code == status.HTTP_404_NOT_FOUND
+        subtest+=1
