@@ -116,7 +116,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                     if (orderBy == newOrderBy) {
                       text += ascending ? " ▴" : " ▾";
                     } else {
-                      text += " ↕";
+                      text += " ▴▾";
                     }
                   }
 

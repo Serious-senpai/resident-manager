@@ -32,7 +32,10 @@ class _Authorization extends PublicAuthorization {
     };
   }
 
-  Future<bool> validate({required ApplicationState state}) async {
+  Future<bool> validate({
+    required ApplicationState state,
+    required bool remember,
+  }) async {
     final response = await state.post(
       isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
       headers: constructHeaders(),
@@ -41,8 +44,7 @@ class _Authorization extends PublicAuthorization {
 
     final result = response.statusCode < 400;
 
-    // Do not cache admin data
-    if (result && !isAdmin) {
+    if (result && remember) {
       final data = json.decode(utf8.decode(response.bodyBytes));
       resident = Resident.fromJson(data);
 
@@ -98,7 +100,8 @@ class _Authorization extends PublicAuthorization {
       },
     );
 
-    if (auth != null && await auth.validate(state: state)) {
+    // For the authorization data to exist in the file, `remember` must have been set to `true`.
+    if (auth != null && await auth.validate(state: state, remember: true)) {
       return auth;
     }
 
@@ -132,9 +135,14 @@ class ApplicationState {
     };
   }
 
-  Future<bool> authorize({required String username, required String password, required bool isAdmin}) async {
+  Future<bool> authorize({
+    required String username,
+    required String password,
+    required bool isAdmin,
+    required bool remember,
+  }) async {
     final auth = _Authorization(username: username, password: password, isAdmin: isAdmin);
-    final result = await auth.validate(state: this);
+    final result = await auth.validate(state: this, remember: remember);
     _authorization = result ? auth : null;
 
     return result;

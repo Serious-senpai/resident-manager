@@ -25,6 +25,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
   final _username = TextEditingController();
   final _password = TextEditingController();
+  bool _remember = false;
 
   Future<void> _login(bool isAdmin) async {
     await _actionLock.run(
@@ -40,7 +41,12 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
         var authorized = false;
         try {
-          authorized = await state.authorize(username: username, password: _password.text, isAdmin: isAdmin);
+          authorized = await state.authorize(
+            username: username,
+            password: _password.text,
+            isAdmin: isAdmin,
+            remember: _remember,
+          );
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
             _notification = TranslatedText(
@@ -118,8 +124,24 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                 obscureText: true,
               ),
               const SizedBox.square(dimension: 5),
-              _notification,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Checkbox.adaptive(
+                    value: _remember,
+                    onChanged: (state) {
+                      if (state != null) {
+                        _remember = state;
+                      }
+
+                      refresh();
+                    },
+                  ),
+                  Text(AppLocale.RememberMe.getString(context)),
+                ],
+              ),
               const SizedBox.square(dimension: 5),
+              _notification,
               Container(
                 padding: const EdgeInsets.all(5),
                 width: double.infinity,

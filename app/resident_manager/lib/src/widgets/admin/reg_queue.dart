@@ -162,7 +162,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                     if (orderBy == newOrderBy) {
                       text += ascending ? " ▴" : " ▾";
                     } else {
-                      text += " ↕";
+                      text += " ▴▾";
                     }
                   }
 
