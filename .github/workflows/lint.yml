@@ -82,5 +82,10 @@ jobs:
           flutter --version
           flutter doctor -v
 
+      - name: Install dependencies
+        working-directory: app/resident_manager
+        run: flutter pub get
+
       - name: Run flutter analyze
+        working-directory: app/resident_manager
         run: flutter analyze
