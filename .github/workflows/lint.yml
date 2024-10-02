@@ -62,3 +62,25 @@ jobs:
 
       - name: Run flake8
         run: flake8 .
+
+  flutter:
+    name: Run flutter analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Run flutter analyze
+        run: flutter analyze
