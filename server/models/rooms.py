@@ -86,3 +86,65 @@ class Room(pydantic.BaseModel):
 
                 rows = await cursor.fetchall()
                 return [cls.from_row(row) for row in rows]
+
+    @staticmethod
+    async def update_many(rooms: List[Room]) -> None:
+        """This function is a coroutine.
+
+        Update room information in the database.
+
+        Parameters
+        -----
+        rooms: `List[Room]`
+            A list of room information objects to update.
+        """
+        if len(rooms) == 0:
+            return
+
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                params = [
+                    (
+                        room.room,
+                        int(100 * room.area), room.motorbike, room.car,
+                        room.room, int(100 * room.area), room.motorbike, room.car,
+                    ) for room in rooms
+                ]
+
+                # https://github.com/aio-libs/aioodbc/issues/423
+                cursor._impl.fast_executemany = True
+                await cursor.executemany(
+                    """
+                    IF EXISTS (SELECT * FROM rooms WHERE room = ?)
+                        UPDATE rooms
+                        SET area = ?, motorbike = ?, car = ?
+                        WHERE room = ?
+                    ELSE
+                        INSERT INTO rooms
+                        VALUES (?, ?, ?, ?)
+                    """,
+                    params,
+                )
+
+    @staticmethod
+    async def delete_many(rooms: List[int]) -> None:
+        """This function is a coroutine.
+
+        Delete room information from the database.
+
+        Parameters
+        -----
+        rooms: `List[int]`
+            A list of room numbers to delete.
+        """
+        if len(rooms) == 0:
+            return
+
+        async with Database.instance.pool.acquire() as connection:
+            temp_fmt = ", ".join("?" for _ in rooms)
+
+            async with connection.cursor() as cursor:
+                await cursor.executemany(
+                    f"DELETE FROM rooms WHERE room IN {temp_fmt}",
+                    *rooms,
+                )

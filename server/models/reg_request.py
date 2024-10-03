@@ -4,6 +4,8 @@ import itertools
 from datetime import datetime
 from typing import Any, List, Literal, Optional, overload
 
+import pyodbc  # type: ignore
+
 from .auth import HashedAuthorization
 from .info import PublicInfo
 from .snowflake import Snowflake
@@ -42,38 +44,6 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             username=row[6],
             hashed_password=row[7],
         )
-
-    async def accept(self) -> Snowflake:
-        """This function is a coroutine.
-
-        Accept the registration request, create a new resident record in the database
-        and remove this request from the database.
-
-        Returns
-        -----
-        `Snowflake`
-            The newly registered resident as a `Snowflake` object.
-        """
-        async with Database.instance.pool.acquire() as connection:
-            id = generate_id()
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    """
-                    DELETE FROM register_queue
-                    OUTPUT ?, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
-                    INTO residents
-                    WHERE request_id = ?
-                    """,
-                    id,
-                    self.id,
-                )
-
-        return Snowflake(id=id)
-
-    async def decline(self) -> None:
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("DELETE FROM register_queue WHERE request_id = ?", self.id)
 
     @staticmethod
     async def count() -> int:
@@ -202,9 +172,14 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     username,
                     hashed_password,
                 )
-                row = await cursor.fetchone()
-                if row is not None:
-                    return cls.from_row(row)
+
+                try:
+                    row = await cursor.fetchone()
+                    if row is not None:
+                        return cls.from_row(row)
+
+                except pyodbc.ProgrammingError:
+                    pass
 
         if raise_http_exception:
             raise UsernameConflictError
