@@ -227,3 +227,84 @@ def test_register_fail(
             headers=generate_auth_headers(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize("pass_i", range(13))
+@pytest.mark.parametrize("fail_i", range(13))
+def test_register_username_taken(pass_i: int, fail_i: int) -> None:
+    taken_username = []
+    for iterations in range(1, pass_i + 2):
+        name = f"test-{random_string(random.randint(1, 69))}"
+        room = random.randint(0, 32767)
+        now = datetime.now(timezone.utc)
+        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+        phone = random_numstring(random.randint(1, 15))
+        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+        username = random_string(random.randint(1, 255))
+        password = random_string(random.randint(8, 255))
+        taken_username.append((username, room))
+        response = get_client.post(
+            "/api/v1/register",
+            params={
+                "name": name,
+                "room": room,
+                "birthday": birthday.isoformat(),
+                "phone": phone,
+                "email": email,
+            },
+            headers=generate_auth_headers(username=username, password=password).model_dump(),
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    for iterations in range(1, fail_i + 2):
+        name = f"test-{random_string(random.randint(1, 69))}"
+        room = random.randint(0, 32767)
+        now = datetime.now(timezone.utc)
+        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+        phone = random_numstring(random.randint(1, 15))
+        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+        username = random_string(random.randint(1, 255))
+        password = random_string(random.randint(256, 10**4 + 7))
+
+        response = get_client.post(
+            "/api/v1/register",
+            params={
+                "name": name,
+                "room": room,
+                "birthday": birthday.isoformat(),
+                "phone": phone,
+                "email": email,
+            },
+            headers=generate_auth_headers(username=username, password=password).model_dump(),
+        )
+        assert response.status_code == 400
+
+    for x in taken_username:
+        name = f"test-{random_string(random.randint(1, 69))}"
+        room = random.randint(0, 32767)
+        now = datetime.now(timezone.utc)
+        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+        phone = random_numstring(random.randint(1, 15))
+        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+        username = x[0]
+        password = random_string(random.randint(8, 255))
+
+        response = get_client.post(
+            "/api/v1/register",
+            params={
+                "name": name,
+                "room": room,
+                "birthday": birthday.isoformat(),
+                "phone": phone,
+                "email": email,
+            },
+            headers=generate_auth_headers(username=username, password=password).model_dump(),
+        )
+        assert response.status_code == 409
+
+        response = get_client.get(
+            "/api/v1/admin/reg-request/reject",
+            params={"offset": 0, "username": x[0], "room": x[1]},
+            headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        )
+        assert response.status_code == status.HTTP_200_OK
