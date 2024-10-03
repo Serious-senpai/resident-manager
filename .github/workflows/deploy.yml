@@ -10,6 +10,7 @@ on:
       - main
     paths-ignore:
       - "**.md"
+      - "app/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -5,6 +5,8 @@ on:
     branches:
       - main
 
+  pull_request_target:
+
 permissions:
   contents: read
 
@@ -27,6 +29,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # IMPORTANT: Change settings in Actions/General to "Require approval for all outside collaborators".
+          # Before approving workflow from public forks, triple check the code.
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
