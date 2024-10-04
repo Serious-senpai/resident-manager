@@ -11,9 +11,48 @@ permissions:
   contents: read
 
 jobs:
+  checkout:
+    name: Checkout repository
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.pr-info-output.outputs.number }}
+      sha: ${{ steps.pr-info-output.outputs.sha }}
+
+    steps:
+      - name: Checkout repository
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/checkout@v4
+
+      - name: Get pull request HEAD SHA
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: pull-request-info
+          path: /tmp/
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Save info to output
+        id: pr-info-output
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: cat /tmp/pr.txt > $GITHUB_OUTPUT
+
+      - name: Checkout pull request directory
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr-info-output.outputs.sha }}
+
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository
+          path: .
+
   python:
     name: Test web application
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    needs: checkout
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,29 +67,10 @@ jobs:
       PORT: 8000
 
     steps:
-      - name: Checkout repository
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@v4
-
-      - name: Get pull request HEAD SHA
-        if: ${{ github.event_name == 'workflow_run' }}
+      - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: pr-sha
-          path: /tmp/
-          github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Print pull request HEAD SHA
-        id: pr-sha-step
-        if: ${{ github.event_name == 'workflow_run' }}
-        run: echo "sha=$(cat /tmp/pr.txt)" > $GITHUB_OUTPUT
-
-      - name: Checkout pull request directory
-        if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.pr-sha-step.outputs.sha }}
+          name: repository
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -85,7 +105,7 @@ jobs:
 
   flutter:
     name: Test client application
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    needs: checkout
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -96,29 +116,10 @@ jobs:
       PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
 
     steps:
-      - name: Checkout repository
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@v4
-
-      - name: Get pull request HEAD SHA
-        if: ${{ github.event_name == 'workflow_run' }}
+      - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: pr-sha
-          path: /tmp/
-          github-token: ${{ github.token }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Print pull request HEAD SHA
-        id: pr-sha-step
-        if: ${{ github.event_name == 'workflow_run' }}
-        run: echo "sha=$(cat /tmp/pr.txt)" > $GITHUB_OUTPUT
-
-      - name: Checkout pull request directory
-        if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.pr-sha-step.outputs.sha }}
+          name: repository
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -134,3 +135,34 @@ jobs:
       - name: Run tests
         working-directory: app/resident_manager
         run: flutter test
+
+  notification:
+    name: Comment in pull request
+    needs: [checkout, python, flutter]
+    if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create comment
+        uses: actions/github-script@v7
+        with:
+          retries: 3
+          script: |
+            const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            const sha = "${{ needs.checkout.outputs.sha}}".substr(0, 7);
+            let body = null;
+            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' }})
+            {
+              body = `🎉 [All tests](${url}) of `${sha}` passed successfully.`;
+            }
+            else
+            {
+              body = `❌ [One or more tests](${url}) of `${sha}` failed.`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ needs.checkout.outputs.number }},
+              body: body,
+            });
