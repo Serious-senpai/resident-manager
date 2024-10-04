@@ -1,0 +1,25 @@
+name: Trigger PR sensitive workflows
+
+on: pull_request  # Require approval
+# IMPORTANT: Change settings in Actions/General to "Require approval for all outside collaborators".
+# Before approving workflow from public forks, triple check the code.
+
+permissions:
+  contents: read
+
+jobs:
+  pr-info:
+    name: Get pull request info
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Save pull request info
+        run: |
+          echo "number=${{ github.event.pull_request.number}}" > pr.txt
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> pr.txt
+
+      - name: Upload pull request info
+        uses: actions/upload-artifact@v4
+        with:
+          name: pull-request-info
+          path: pr.txt
