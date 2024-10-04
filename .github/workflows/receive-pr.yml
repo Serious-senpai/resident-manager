@@ -8,16 +8,18 @@ permissions:
   contents: read
 
 jobs:
-  pr-sha:
-    name: Get pull request SHA
+  pr-info:
+    name: Get pull request info
     runs-on: ubuntu-latest
 
     steps:
-      - name: Save pull request HEAD SHA
-        run: echo ${{ github.event.pull_request.head.sha }} > pr.txt
+      - name: Save pull request info
+        run: |
+          echo "number=${{ github.event.pull_request.number}}" > pr.txt
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> pr.txt
 
-      - name: Upload pull request HEAD SHA
+      - name: Upload pull request info
         uses: actions/upload-artifact@v4
         with:
-          name: pr-sha
+          name: pull-request-info
           path: pr.txt
