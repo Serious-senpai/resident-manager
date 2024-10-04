@@ -9,6 +9,7 @@ on:
 permissions:
   actions: read
   contents: read
+  pull-requests: write
 
 jobs:
   checkout:
@@ -153,11 +154,11 @@ jobs:
             let body = null;
             if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' }})
             {
-              body = `🎉 [All tests](${url}) of `${sha}` passed successfully.`;
+              body = `🎉 [All tests](${url}) of \`${sha}\` passed successfully.`;
             }
             else
             {
-              body = `❌ [One or more tests](${url}) of `${sha}` failed.`;
+              body = `❌ [One or more tests](${url}) of \`${sha}\` failed.`;
             }
 
             await github.rest.issues.createComment({
