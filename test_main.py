@@ -195,6 +195,7 @@ def test_register_fail(
     username_i: int,
     password_i: int,
 ) -> None:
+    raise RuntimeError
     if (name_i != 0 or room_i != 0 or phone_i != 0 or email_i != 0 or username_i != 0 or password_i != 0):
         now = datetime.now(timezone.utc)
         birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
