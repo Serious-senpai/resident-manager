@@ -231,7 +231,7 @@ def test_register_fail(
 
 @pytest.mark.parametrize("pass_i", range(13))
 @pytest.mark.parametrize("fail_i", range(13))
-def test_register_username_taken(pass_i: int, fail_i: int) -> None:
+def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: int) -> None:
     taken_username = []
     for iterations in range(1, pass_i + 2):
         name = f"test-{random_string(random.randint(1, 69))}"
