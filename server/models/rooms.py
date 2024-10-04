@@ -32,10 +32,29 @@ class Room(pydantic.BaseModel):
         )
 
     @staticmethod
-    async def count() -> int:
+    async def count(
+        *,
+        room: Optional[int] = None,
+        floor: Optional[int] = None,
+    ) -> int:
+        where: List[str] = []
+        params: List[Any] = []
+
+        if room is not None:
+            where.append("room = ?")
+            params.append(room)
+
+        if floor is not None:
+            where.append("room / 100 = ?")
+            params.append(floor)
+
+        query = ["SELECT COUNT(*) FROM rooms"]
+        if len(where) > 0:
+            query.append("WHERE " + " AND ".join(where))
+
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT COUNT(*) FROM rooms")
+                await cursor.execute("\n".join(query), *params)
                 return await cursor.fetchval()
 
     @classmethod

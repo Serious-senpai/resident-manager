@@ -35,15 +35,14 @@ class Room {
       return result;
     }
 
-    final params = {"offset": offset.toString()};
-    if (room != null) {
-      params["room"] = room.toString();
-    }
-    if (floor != null) {
-      params["floor"] = floor.toString();
-    }
-
-    final response = await state.get("/api/v1/admin/rooms", queryParameters: params);
+    final response = await state.get(
+      "/api/v1/admin/rooms",
+      queryParameters: {
+        "offset": offset.toString(),
+        if (room != null) "room": room.toString(),
+        if (floor != null) "floor": floor.toString(),
+      },
+    );
 
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)) as List;
@@ -54,8 +53,18 @@ class Room {
   }
 
   /// Count the number of rooms.
-  static Future<int?> count({required ApplicationState state}) async {
-    final response = await state.get("/api/v1/admin/rooms/count");
+  static Future<int?> count({
+    required ApplicationState state,
+    int? room,
+    int? floor,
+  }) async {
+    final response = await state.get(
+      "/api/v1/admin/rooms/count",
+      queryParameters: {
+        if (room != null) "room": room.toString(),
+        if (floor != null) "floor": floor.toString(),
+      },
+    );
     if (response.statusCode == 200) {
       return json.decode(utf8.decode(response.bodyBytes));
     }

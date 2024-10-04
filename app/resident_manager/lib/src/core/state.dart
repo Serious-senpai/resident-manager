@@ -45,9 +45,6 @@ class _Authorization extends PublicAuthorization {
     final result = response.statusCode < 400;
 
     if (result && remember) {
-      final data = json.decode(utf8.decode(response.bodyBytes));
-      resident = Resident.fromJson(data);
-
       await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
     } else {
       await removeAuthData();

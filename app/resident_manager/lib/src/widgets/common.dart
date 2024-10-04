@@ -108,6 +108,19 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                       ApplicationRoute.adminResidentsPage,
                     ),
             ),
+            ListTile(
+              leading: const Icon(Icons.room_outlined),
+              title: Text(
+                AppLocale.RoomsList.getString(context),
+                style: currentRoute == ApplicationRoute.adminRoomsPage ? const TextStyle(color: Colors.blue) : null,
+              ),
+              onTap: () => currentRoute == ApplicationRoute.adminRoomsPage
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(
+                      context,
+                      ApplicationRoute.adminRoomsPage,
+                    ),
+            ),
           ],
         );
       } else {

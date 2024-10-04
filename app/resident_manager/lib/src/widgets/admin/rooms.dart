@@ -10,26 +10,23 @@ import "../state.dart";
 import "../../utils.dart";
 import "../../core/config.dart";
 import "../../core/translations.dart";
-import "../../core/models/residents.dart";
+import "../../core/models/rooms.dart";
 
-class ResidentsPage extends StateAwareWidget {
-  const ResidentsPage({super.key, required super.state});
+class RoomsPage extends StateAwareWidget {
+  const RoomsPage({super.key, required super.state});
 
   @override
-  ResidentsPageState createState() => ResidentsPageState();
+  RoomsPageState createState() => RoomsPageState();
 }
 
-class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
-  List<Resident> _residents = [];
+class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+  List<Room> _rooms = [];
 
   Future<bool>? _queryFuture;
   Future<bool>? _countFuture;
 
-  final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
-  final _usernameSearch = TextEditingController();
-  String? orderBy;
-  bool ascending = true;
+  final _floorSearch = TextEditingController();
 
   int _offset = 0;
   int _offsetLimit = 0;
@@ -41,18 +38,15 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
     refresh();
   }
 
-  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
+  bool get searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
 
   Future<bool> query() async {
     try {
-      _residents = await Resident.query(
+      _rooms = await Room.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
-        orderBy: orderBy,
-        ascending: ascending,
+        floor: int.tryParse(_floorSearch.text),
       );
 
       refresh();
@@ -65,11 +59,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
   Future<bool> count() async {
     try {
-      final value = await Resident.count(
+      final value = await Room.count(
         state: state,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
+        floor: int.tryParse(_floorSearch.text),
       );
       if (value == null) {
         _offsetLimit = offset;
@@ -103,7 +96,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),
         ),
-        title: Text(AppLocale.ResidentsList.getString(context)),
+        title: Text(AppLocale.RoomsList.getString(context)),
       ),
       body: FutureBuilder(
         future: _queryFuture,
@@ -129,33 +122,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell header(String text, [String? newOrderBy]) {
-                  if (newOrderBy != null) {
-                    if (orderBy == newOrderBy) {
-                      text += ascending ? " ▴" : " ▾";
-                    } else {
-                      text += " ▴▾";
-                    }
-                  }
-
+                TableCell header(String text) {
                   return TableCell(
                     child: Padding(
                       padding: const EdgeInsets.all(5),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (newOrderBy != null) {
-                            if (newOrderBy == orderBy) {
-                              ascending = !ascending;
-                            } else {
-                              ascending = true;
-                            }
-
-                            orderBy = newOrderBy;
-                            offset = 0;
-                          }
-                        },
-                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ),
+                      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   );
                 }
@@ -171,26 +142,24 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      header(AppLocale.Fullname.getString(context), "name"),
-                      header(AppLocale.Room.getString(context), "room"),
-                      header(AppLocale.DateOfBirth.getString(context)),
-                      header(AppLocale.Phone.getString(context)),
-                      header(AppLocale.Email.getString(context)),
-                      header(AppLocale.CreationTime.getString(context), "resident_id"),
+                      header(AppLocale.Room.getString(context)),
+                      header(AppLocale.Floor.getString(context)),
+                      header(AppLocale.Area1.getString(context)),
+                      header(AppLocale.MotorbikesCount.getString(context)),
+                      header(AppLocale.CarsCount.getString(context)),
                     ],
                   ),
                 ];
 
-                for (final resident in _residents) {
+                for (final room in _rooms) {
                   rows.add(
                     TableRow(
                       children: [
-                        row(resident.name),
-                        row(resident.room.toString()),
-                        row(resident.birthday?.toLocal().formatDate() ?? "---"),
-                        row(resident.phone ?? "---"),
-                        row(resident.email ?? "---"),
-                        row(resident.createdAt.toLocal().toString()),
+                        row(room.room.toString()),
+                        row(room.floor.toString()),
+                        row(room.area.toString()),
+                        row(room.motorbike.toString()),
+                        row(room.car.toString()),
                       ],
                     ),
                   );
@@ -251,20 +220,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                         children: [
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _nameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.badge_outlined),
-                                              label: Text(AppLocale.Fullname.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => nameValidator(context, required: false, value: value),
-                                          ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
                                             controller: _roomSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
@@ -279,11 +234,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           ),
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _usernameSearch,
+                                            controller: _floorSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outline),
-                                              label: Text(AppLocale.Username.getString(context)),
+                                              icon: const Icon(Icons.apartment_outlined),
+                                              label: Text(AppLocale.Floor.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
                                               Navigator.pop(context);
@@ -309,9 +264,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                   icon: const Icon(Icons.clear_outlined),
                                                   label: Text(AppLocale.ClearAll.getString(context)),
                                                   onPressed: () {
-                                                    _nameSearch.clear();
                                                     _roomSearch.clear();
-                                                    _usernameSearch.clear();
+                                                    _floorSearch.clear();
 
                                                     Navigator.pop(context);
                                                     offset = 0;

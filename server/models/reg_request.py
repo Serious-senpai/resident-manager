@@ -46,10 +46,48 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         )
 
     @staticmethod
-    async def count() -> int:
+    async def count(
+        *,
+        id: Optional[int] = None,
+        name: Optional[str] = None,
+        room: Optional[int] = None,
+        username: Optional[str] = None,
+    ) -> int:
+        where: List[str] = []
+        params: List[Any] = []
+
+        if id is not None:
+            where.append("request_id = ?")
+            params.append(id)
+
+        if name is not None:
+            if not validate_name(name):
+                return 0
+
+            where.append("CHARINDEX(?, name) > 0")
+            params.append(name)
+
+        if room is not None:
+            if not validate_room(room):
+                return 0
+
+            where.append("room = ?")
+            params.append(room)
+
+        if username is not None:
+            if not validate_username(username):
+                return 0
+
+            where.append("username = ?")
+            params.append(username)
+
+        query = ["SELECT COUNT(*) FROM register_queue"]
+        if len(where) > 0:
+            query.append("WHERE " + " AND ".join(where))
+
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT COUNT(*) FROM register_queue")
+                await cursor.execute("\n".join(query), *params)
                 return await cursor.fetchval()
 
     @classmethod

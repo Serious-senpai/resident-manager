@@ -44,27 +44,18 @@ class Resident extends PublicInfo {
       return result;
     }
 
-    final params = {"offset": offset.toString()};
-    if (id != null) {
-      params["id"] = id.toString();
-    }
-    if (name != null && name.isNotEmpty) {
-      params["name"] = name;
-    }
-    if (room != null) {
-      params["room"] = room.toString();
-    }
-    if (username != null && username.isNotEmpty) {
-      params["username"] = username;
-    }
-    if (orderBy != null && orderBy.isNotEmpty) {
-      params["order_by"] = orderBy;
-    }
-    if (ascending != null) {
-      params["ascending"] = ascending.toString();
-    }
-
-    final response = await state.get("/api/v1/admin/residents", queryParameters: params);
+    final response = await state.get(
+      "/api/v1/admin/residents",
+      queryParameters: {
+        "offset": offset.toString(),
+        if (id != null) "id": id.toString(),
+        if (name != null && name.isNotEmpty) "name": name,
+        if (room != null) "room": room.toString(),
+        if (username != null && username.isNotEmpty) "username": username,
+        if (orderBy != null && orderBy.isNotEmpty) "order_by": orderBy,
+        if (ascending != null) "ascending": ascending.toString(),
+      },
+    );
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)) as List;
       result.addAll(data.map(Resident.fromJson));
@@ -74,8 +65,22 @@ class Resident extends PublicInfo {
   }
 
   /// Count the number of residents.
-  static Future<int?> count({required ApplicationState state}) async {
-    final response = await state.get("/api/v1/admin/residents/count");
+  static Future<int?> count({
+    required ApplicationState state,
+    int? id,
+    String? name,
+    int? room,
+    String? username,
+  }) async {
+    final response = await state.get(
+      "/api/v1/admin/residents/count",
+      queryParameters: {
+        if (id != null) "id": id.toString(),
+        if (name != null && name.isNotEmpty) "name": name,
+        if (room != null) "room": room.toString(),
+        if (username != null && username.isNotEmpty) "username": username,
+      },
+    );
     if (response.statusCode == 200) {
       return json.decode(utf8.decode(response.bodyBytes));
     }

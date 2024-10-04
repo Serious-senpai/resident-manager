@@ -27,7 +27,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   List<RegisterRequest> _requests = [];
 
   Future<bool>? _queryFuture;
-  Future<int?>? _countFuture;
+  Future<bool>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
   final _selectedRequests = <RegisterRequest>{};
@@ -88,7 +88,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     );
   }
 
-  Future<bool> queryRegistrationRequests() async {
+  Future<bool> query() async {
     try {
       _requests = await RegisterRequest.query(
         state: state,
@@ -108,21 +108,37 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     }
   }
 
+  Future<bool> count() async {
+    try {
+      final value = await RegisterRequest.count(
+        state: state,
+        name: _nameSearch.text,
+        room: int.tryParse(_roomSearch.text),
+        username: _usernameSearch.text,
+      );
+      if (value == null) {
+        _offsetLimit = offset;
+        return false;
+      }
+
+      _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      return true;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+        _offsetLimit = offset;
+        return false;
+      }
+
+      rethrow;
+    }
+  }
+
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= queryRegistrationRequests();
-    _countFuture ??= RegisterRequest.count(state: state).then(
-      (value) {
-        if (value != null) {
-          _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-        } else {
-          _offsetLimit = offset;
-        }
-
-        return _offsetLimit;
-      },
-    );
+    _queryFuture ??= query();
+    _countFuture ??= count();
 
     return Scaffold(
       key: scaffoldKey,
