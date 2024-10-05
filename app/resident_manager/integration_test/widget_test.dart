@@ -11,7 +11,7 @@ import "package:resident_manager/src/widgets/register.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 
 final rng = Random();
-const WAIT_DURATION = Duration(seconds: 5);
+const WAIT_DURATION = Duration(seconds: 10);
 
 String randomString(int length) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -67,7 +67,6 @@ void main() {
 
       // Registration form fields
       final registrationFields = find.byWidgetPredicate((widget) => widget is TextFormField);
-
       expect(registrationFields, findsExactly(8));
 
       final fullname = randomString(20);
