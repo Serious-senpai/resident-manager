@@ -4,8 +4,8 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:fluttertoast/fluttertoast.dart";
 
-import "core/config.dart";
-import "core/translations.dart";
+import "config.dart";
+import "translations.dart";
 
 Future<bool> showToastSafe({
   required String msg,

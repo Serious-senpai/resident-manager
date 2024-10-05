@@ -120,6 +120,8 @@ class ApplicationState {
   PublicAuthorization? get authorization => _authorization;
 
   ApplicationState({Client? client}) : http = HTTPClient(client: client ?? Client()) {
+    print("Using base API URL $baseUrl"); // ignore: avoid_print
+
     localization.init(
       mapLocales: [
         const MapLocale("en", AppLocale.EN),

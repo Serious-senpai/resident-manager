@@ -7,10 +7,10 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../../config.dart";
+import "../../translations.dart";
 import "../../utils.dart";
-import "../../core/config.dart";
-import "../../core/translations.dart";
-import "../../core/models/rooms.dart";
+import "../../models/rooms.dart";
 
 class RoomsPage extends StateAwareWidget {
   const RoomsPage({super.key, required super.state});

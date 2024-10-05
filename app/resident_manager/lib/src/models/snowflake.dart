@@ -1,4 +1,4 @@
-import "../../utils.dart";
+import "../utils.dart";
 
 mixin Snowflake {
   /// The model's unique ID.

@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "src/routes.dart";
-import "src/core/state.dart";
-import "src/core/translations.dart";
+import "src/state.dart";
+import "src/translations.dart";
 import "src/widgets/state.dart";
 import "src/widgets/common.dart";
 import "src/widgets/home.dart";

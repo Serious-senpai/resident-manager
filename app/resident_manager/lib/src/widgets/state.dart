@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 
-import "../core/state.dart";
+import "../state.dart";
 
 abstract class StateAwareWidget extends StatefulWidget {
   final ApplicationState state;

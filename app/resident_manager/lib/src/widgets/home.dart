@@ -3,7 +3,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
-import "../core/translations.dart";
+import "../translations.dart";
 
 class HomePage extends StateAwareWidget {
   const HomePage({super.key, required super.state});

@@ -9,12 +9,12 @@ import "package:flutter_localization/flutter_localization.dart";
 import "../common.dart";
 import "../state.dart";
 import "../utils.dart";
+import "../../config.dart";
+import "../../state.dart";
+import "../../translations.dart";
 import "../../utils.dart";
-import "../../core/config.dart";
-import "../../core/state.dart";
-import "../../core/translations.dart";
-import "../../core/models/reg_request.dart";
-import "../../core/models/snowflake.dart";
+import "../../models/reg_request.dart";
+import "../../models/snowflake.dart";
 
 class RegisterQueuePage extends StateAwareWidget {
   const RegisterQueuePage({super.key, required super.state});

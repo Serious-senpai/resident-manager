@@ -4,8 +4,8 @@ import "package:meta/meta.dart";
 
 import "state.dart";
 import "../routes.dart";
-import "../core/state.dart";
-import "../core/translations.dart";
+import "../state.dart";
+import "../translations.dart";
 
 abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> {
   ApplicationState get state => widget.state;
