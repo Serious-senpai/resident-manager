@@ -56,8 +56,9 @@ class _Authorization extends PublicAuthorization {
   Future<void> removeAuthData() async {
     await _withLoginFile(
       (file) async {
-        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
-        if (file.existsSync()) {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
           await file.delete();
         }
       },
@@ -81,8 +82,9 @@ class _Authorization extends PublicAuthorization {
   static Future<_Authorization?> prepare({required ApplicationState state}) async {
     final auth = await _withLoginFile(
       (file) async {
-        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
-        if (file.existsSync()) {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
           final data = json.decode(await file.readAsString());
           final username = data["username"];
           final password = data["password"];

@@ -113,9 +113,6 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
 
-    env:
-      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
-
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -137,9 +134,61 @@ jobs:
         working-directory: app/resident_manager
         run: flutter test
 
+  flutter-integration:
+    name: Integration test client application
+    needs: checkout
+    runs-on: ubuntu-latest
+
+    env:
+      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+      VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
+      PORT: 8000
+
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install ODBC driver 18
+        run: |
+          chmod +x scripts/odbc.sh
+          scripts/odbc.sh
+
+      - name: Run integration tests
+        working-directory: app/resident_manager
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port $PORT &
+          server_pid=$!
+
+          xvfb-run flutter test integration_test
+
+          kill $server_pid
+
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter]
+    needs: [checkout, python, flutter, flutter-integration]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
@@ -152,7 +201,7 @@ jobs:
             const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const sha = "${{ needs.checkout.outputs.sha}}".substr(0, 7);
             let body = null;
-            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' }})
+            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' && needs.flutter-integration.result == 'success' }})
             {
               body = `🎉 [All tests](${url}) of \`${sha}\` passed successfully.`;
             }

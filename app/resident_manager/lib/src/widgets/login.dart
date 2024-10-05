@@ -57,9 +57,9 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
             refresh();
             return;
-          } else {
-            rethrow;
           }
+
+          rethrow;
         }
 
         if (authorized) {
