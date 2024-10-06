@@ -324,7 +324,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                               ),
                             );
 
-                            if (!submitted) {
+                            if (submitted == null) {
                               // Dialog dismissed. Restore field values
                               _roomSearch.text = roomSearch;
                               _floorSearch.text = floorSearch;

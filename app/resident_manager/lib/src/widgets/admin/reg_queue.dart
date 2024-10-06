@@ -455,7 +455,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                               ),
                             );
 
-                            if (!submitted) {
+                            if (submitted == null) {
                               // Dialog dismissed. Restore field values
                               _nameSearch.text = nameSearch;
                               _roomSearch.text = roomSearch;

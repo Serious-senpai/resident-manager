@@ -370,7 +370,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                               ),
                             );
 
-                            if (!submitted) {
+                            if (submitted == null) {
                               // Dialog dismissed. Restore field values
                               _nameSearch.text = nameSearch;
                               _roomSearch.text = roomSearch;
