@@ -103,6 +103,7 @@ jobs:
         with:
           name: coverage-python-${{ matrix.python-version }}
           path: .coverage.python-${{ matrix.python-version }}
+          include-hidden-files: true
 
   flutter:
     name: Client application test
@@ -181,7 +182,7 @@ jobs:
 
       - name: Start API server
         run: |
-          coverage run -m uvicorn main:app --host 0.0.0.0 --port $PORT &
+          uvicorn main:app --host 0.0.0.0 --port $PORT &
           echo $! > /tmp/serverpid.txt
 
       - name: Run integration tests
@@ -190,7 +191,9 @@ jobs:
         run: xvfb-run flutter test integration_test
 
       - name: Stop API server
-        run: kill $(cat /tmp/serverpid.txt)
+        run: |
+          kill $(cat /tmp/serverpid.txt)
+          sleep 5
 
       - name: Collect coverage data
         run: coverage combine
@@ -206,6 +209,7 @@ jobs:
         with:
           name: coverage-flutter-integration
           path: .coverage.flutter-integration
+          include-hidden-files: true
 
   python-coverage:
     name: Combine coverage reports

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+
+try:
+    import coverage  # dev-dependency only
+except ImportError:
+    pass
+
 try:
     import uvloop  # type: ignore
 except ImportError:
@@ -14,17 +21,24 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from server import api_v1, Database
+from server import api_v1, CI, Database
 
 
 class ApplicationLifespan(AbstractAsyncContextManager):
 
-    __slots__ = ("app",)
+    __slots__ = ("app", "cov")
     if TYPE_CHECKING:
         app: Final[FastAPI]
+        cov: Optional[coverage.Coverage]
 
     def __init__(self, app: FastAPI) -> None:
         self.app = app
+
+        self.cov = None
+        if CI:
+            self.cov = coverage.Coverage(data_suffix=True, config_file=True)
+            self.cov.start()
+            print("Measuring code coverage...", file=sys.stderr)
 
     async def __aenter__(self) -> None:
         await Database.instance.prepare()
@@ -36,6 +50,10 @@ class ApplicationLifespan(AbstractAsyncContextManager):
         exc_tb: Optional[TracebackType],
     ) -> bool:
         await Database.instance.close()
+        if self.cov is not None:
+            self.cov.stop()
+            self.cov.save()
+
         return True
 
 
