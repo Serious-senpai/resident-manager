@@ -89,20 +89,20 @@ jobs:
       - name: Run tests
         run: coverage run -m pytest -v .
 
-      - name: Combine coverage reports
+      - name: Collect coverage data
         run: coverage combine
 
       - name: Report coverage
         run: coverage report -m
 
-      - name: Generate HTML coverage report
-        run: coverage html -d htmlcov
+      - name: Rename coverage report
+        run: mv .coverage .coverage.python-${{ matrix.python-version }}
 
-      - name: Upload HTML coverage report
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-html-${{ matrix.python-version }}
-          path: htmlcov
+          name: coverage-python-${{ matrix.python-version }}
+          path: .coverage.python-${{ matrix.python-version }}
 
   flutter:
     name: Client application test
@@ -172,7 +172,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r dev-requirements.txt
 
       - name: Install ODBC driver 18
         run: |
@@ -181,7 +181,7 @@ jobs:
 
       - name: Start API server
         run: |
-          uvicorn main:app --host 0.0.0.0 --port $PORT &
+          coverage run -m uvicorn main:app --host 0.0.0.0 --port $PORT &
           echo $! > /tmp/serverpid.txt
 
       - name: Run integration tests
@@ -191,6 +191,57 @@ jobs:
 
       - name: Stop API server
         run: kill $(cat /tmp/serverpid.txt)
+
+      - name: Collect coverage data
+        run: coverage combine
+
+      - name: Report coverage
+        run: coverage report -m
+
+      - name: Rename coverage report
+        run: mv .coverage .coverage.flutter-integration
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-flutter-integration
+          path: .coverage.flutter-integration
+
+  python-coverage:
+    name: Combine coverage reports
+    needs: [python, flutter-integration]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: .
+          merge-multiple: true
+
+      - name: Install dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Combine coverage reports
+        run: coverage combine
+
+      - name: Report coverage
+        run: coverage report -m
+
+      - name: Generate HTML coverage report
+        run: coverage html -d htmlcov
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
 
   notification:
     name: Comment in pull request
