@@ -78,6 +78,7 @@ void main() {
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));
+      await tester.pumpAndSettle();
 
       expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
     },
@@ -209,6 +210,7 @@ void main() {
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));
+      await tester.pumpAndSettle();
 
       expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
     },
