@@ -109,12 +109,13 @@ class _Authorization extends PublicAuthorization {
 }
 
 class ApplicationState {
-  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
+  static final baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
 
   final HTTPClient http;
 
-  final FlutterLocalization localization = FlutterLocalization.instance;
-  final List<void Function(Locale?)> _onTranslationCallbacks = <void Function(Locale?)>[];
+  final localization = FlutterLocalization.instance;
+  final _onTranslationCallbacks = <void Function(Locale?)>[];
+  final extras = <Object, Object?>{};
 
   _Authorization? _authorization;
   PublicAuthorization? get authorization => _authorization;

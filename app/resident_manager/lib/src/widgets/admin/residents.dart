@@ -11,6 +11,7 @@ import "../../config.dart";
 import "../../translations.dart";
 import "../../utils.dart";
 import "../../models/residents.dart";
+import "../../models/rooms.dart";
 
 class ResidentsPage extends StateAwareWidget {
   const ResidentsPage({super.key, required super.state});
@@ -57,9 +58,13 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
       refresh();
       return true;
-    } catch (_) {
-      await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-      return false;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+        return false;
+      }
+
+      rethrow;
     }
   }
 
@@ -87,6 +92,17 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
       rethrow;
     }
+  }
+
+  @override
+  void initState() {
+    final room = state.extras["room-search"] as Room?;
+    if (room != null) {
+      _roomSearch.text = room.room.toString();
+      state.extras["room-search"] = null;
+    }
+
+    super.initState();
   }
 
   @override
@@ -129,7 +145,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell header(String text, [String? newOrderBy]) {
+                TableCell headerCeil(String text, [String? newOrderBy]) {
                   if (newOrderBy != null) {
                     if (orderBy == newOrderBy) {
                       text += ascending ? " ▴" : " ▾";
@@ -160,23 +176,16 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   );
                 }
 
-                TableCell row(String text) => TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(text),
-                      ),
-                    );
-
                 final rows = [
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      header(AppLocale.Fullname.getString(context), "name"),
-                      header(AppLocale.Room.getString(context), "room"),
-                      header(AppLocale.DateOfBirth.getString(context)),
-                      header(AppLocale.Phone.getString(context)),
-                      header(AppLocale.Email.getString(context)),
-                      header(AppLocale.CreationTime.getString(context), "resident_id"),
+                      headerCeil(AppLocale.Fullname.getString(context), "name"),
+                      headerCeil(AppLocale.Room.getString(context), "room"),
+                      headerCeil(AppLocale.DateOfBirth.getString(context)),
+                      headerCeil(AppLocale.Phone.getString(context)),
+                      headerCeil(AppLocale.Email.getString(context)),
+                      headerCeil(AppLocale.CreationTime.getString(context), "resident_id"),
                     ],
                   ),
                 ];
@@ -185,12 +194,42 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   rows.add(
                     TableRow(
                       children: [
-                        row(resident.name),
-                        row(resident.room.toString()),
-                        row(resident.birthday?.toLocal().formatDate() ?? "---"),
-                        row(resident.phone ?? "---"),
-                        row(resident.email ?? "---"),
-                        row(resident.createdAt.toLocal().toString()),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.name),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.room.toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.birthday?.toLocal().formatDate() ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.phone ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.email ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.createdAt.toLocal().toString()),
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -239,7 +278,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                             style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
-                            await showDialog(
+                            final nameSearch = _nameSearch.text;
+                            final roomSearch = _roomSearch.text;
+                            final usernameSearch = _usernameSearch.text;
+                            final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
                                 title: Text(AppLocale.Search.getString(context)),
@@ -258,7 +300,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                               label: Text(AppLocale.Fullname.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                             validator: (value) => nameValidator(context, required: false, value: value),
@@ -272,7 +314,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                               label: Text(AppLocale.Room.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                             validator: (value) => roomValidator(context, required: false, value: value),
@@ -286,7 +328,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                               label: Text(AppLocale.Username.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                           ),
@@ -299,7 +341,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                   icon: const Icon(Icons.done_outlined),
                                                   label: Text(AppLocale.Search.getString(context)),
                                                   onPressed: () {
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -313,7 +355,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                     _roomSearch.clear();
                                                     _usernameSearch.clear();
 
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -327,6 +369,13 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                 ],
                               ),
                             );
+
+                            if (!submitted) {
+                              // Dialog dismissed. Restore field values
+                              _nameSearch.text = nameSearch;
+                              _roomSearch.text = roomSearch;
+                              _usernameSearch.text = usernameSearch;
+                            }
                           },
                         ),
                       ],

@@ -7,7 +7,9 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../config.dart";
+import "../../routes.dart";
 import "../../translations.dart";
 import "../../utils.dart";
 import "../../models/rooms.dart";
@@ -51,9 +53,13 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
 
       refresh();
       return true;
-    } catch (_) {
-      await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-      return false;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+        return false;
+      }
+
+      rethrow;
     }
   }
 
@@ -122,7 +128,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell header(String text) {
+                TableCell headerCeil(String text) {
                   return TableCell(
                     child: Padding(
                       padding: const EdgeInsets.all(5),
@@ -131,22 +137,16 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                   );
                 }
 
-                TableCell row(String text) => TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(text),
-                      ),
-                    );
-
                 final rows = [
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      header(AppLocale.Room.getString(context)),
-                      header(AppLocale.Floor.getString(context)),
-                      header(AppLocale.Area1.getString(context)),
-                      header(AppLocale.MotorbikesCount.getString(context)),
-                      header(AppLocale.CarsCount.getString(context)),
+                      headerCeil(AppLocale.Room.getString(context)),
+                      headerCeil(AppLocale.Floor.getString(context)),
+                      headerCeil(AppLocale.Area1.getString(context)),
+                      headerCeil(AppLocale.MotorbikesCount.getString(context)),
+                      headerCeil(AppLocale.CarsCount.getString(context)),
+                      headerCeil(AppLocale.ResidentsCount.getString(context)),
                     ],
                   ),
                 ];
@@ -155,11 +155,51 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                   rows.add(
                     TableRow(
                       children: [
-                        row(room.room.toString()),
-                        row(room.floor.toString()),
-                        row(room.area.toString()),
-                        row(room.motorbike.toString()),
-                        row(room.car.toString()),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.room.toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.floor.toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.area?.toString() ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.motorbike?.toString() ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.car?.toString() ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: HoverContainer(
+                            onHover: Colors.grey.shade200,
+                            child: GestureDetector(
+                              onTap: () async {
+                                state.extras["room-search"] = room;
+                                await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Text("🔎 ${room.residents.toString()}"),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -208,7 +248,9 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                             style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
-                            await showDialog(
+                            final roomSearch = _roomSearch.text;
+                            final floorSearch = _floorSearch.text;
+                            final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
                                 title: Text(AppLocale.Search.getString(context)),
@@ -227,7 +269,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                               label: Text(AppLocale.Room.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                             validator: (value) => roomValidator(context, required: false, value: value),
@@ -241,7 +283,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                               label: Text(AppLocale.Floor.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                           ),
@@ -254,7 +296,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                                   icon: const Icon(Icons.done_outlined),
                                                   label: Text(AppLocale.Search.getString(context)),
                                                   onPressed: () {
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -267,7 +309,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                                     _roomSearch.clear();
                                                     _floorSearch.clear();
 
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -281,6 +323,12 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                 ],
                               ),
                             );
+
+                            if (!submitted) {
+                              // Dialog dismissed. Restore field values
+                              _roomSearch.text = roomSearch;
+                              _floorSearch.text = floorSearch;
+                            }
                           },
                         ),
                       ],

@@ -2,24 +2,41 @@ import "dart:convert";
 
 import "../state.dart";
 
-class Room {
+class RoomData {
   final int room;
   final double area;
   final int motorbike;
   final int car;
+
+  RoomData({
+    required this.room,
+    required this.area,
+    required this.motorbike,
+    required this.car,
+  });
+}
+
+class Room {
+  final int room;
+  final double? area;
+  final int? motorbike;
+  final int? car;
+  final int residents;
 
   Room({
     required this.room,
     required this.area,
     required this.motorbike,
     required this.car,
+    required this.residents,
   });
 
   Room.fromJson(dynamic data)
       : room = data["room"],
         area = data["area"],
         motorbike = data["motorbike"],
-        car = data["car"];
+        car = data["car"],
+        residents = data["residents"];
 
   int get floor => room ~/ 100;
 

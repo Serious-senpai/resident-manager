@@ -139,7 +139,7 @@ class Resident(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT COUNT(*) FROM residents"]
+        query = ["SELECT COUNT(resident_id) FROM residents"]
         if len(where) > 0:
             query.append("WHERE " + " AND ".join(where))
 

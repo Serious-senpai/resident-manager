@@ -63,7 +63,7 @@ class Database:
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'residents' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'residents' AND type = 'U')
                     CREATE TABLE residents (
                         resident_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -76,7 +76,7 @@ class Database:
                     )
                 """)
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'register_queue' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'register_queue' AND type = 'U')
                     CREATE TABLE register_queue (
                         request_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -90,7 +90,7 @@ class Database:
                 """)
                 await cursor.execute(
                     """
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'config' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'config' AND type = 'U')
                     BEGIN
                         CREATE TABLE config (
                             name NVARCHAR(255) PRIMARY KEY,
@@ -106,7 +106,7 @@ class Database:
 
                 # Fee lower, upper = [VND] * 100
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'fee' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'fee' AND type = 'U')
                     CREATE TABLE fee (
                         fee_id BIGINT PRIMARY KEY,
                         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
@@ -121,7 +121,7 @@ class Database:
 
                 # Room area = [area in m2] * 100
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'rooms' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'rooms' AND type = 'U')
                     CREATE TABLE rooms (
                         room SMALLINT PRIMARY KEY,
                         area INT NOT NULL,
@@ -132,7 +132,7 @@ class Database:
 
                 # Payment amount = [VND] * 100
                 await cursor.execute("""
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'payments' AND type = 'U')
+                    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'payments' AND type = 'U')
                     CREATE TABLE payments (
                         payment_id BIGINT PRIMARY KEY,
                         room SMALLINT NOT NULL,

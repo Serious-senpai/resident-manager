@@ -49,6 +49,7 @@ class AppLocale {
   static const String Area1 = "Area1";
   static const String MotorbikesCount = "MotorbikesCount";
   static const String CarsCount = "CarsCount";
+  static const String ResidentsCount = "ResidentsCount";
   static const String ClearAll = "ClearAll";
   static const String RememberMe = "RememberMe";
   static const String Floor = "Floor";
@@ -107,6 +108,7 @@ class AppLocale {
     Area1: "Area",
     MotorbikesCount: "Motorbikes count",
     CarsCount: "Cars count",
+    ResidentsCount: "Residents count",
     ClearAll: "Clear all",
     RememberMe: "Remember me",
     Floor: "Floor",
@@ -166,6 +168,7 @@ class AppLocale {
     Area1: "Diện tích",
     MotorbikesCount: "Số lượng xe máy",
     CarsCount: "Số lượng ô tô",
+    ResidentsCount: "Số lượng cư dân",
     ClearAll: "Xóa tất cả",
     RememberMe: "Ghi nhớ thông tin đăng nhập",
     Floor: "Tầng",

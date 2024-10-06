@@ -7,8 +7,11 @@ import "package:resident_manager/main.dart";
 import "package:resident_manager/src/config.dart";
 import "package:resident_manager/src/state.dart";
 import "package:resident_manager/src/widgets/home.dart";
+import "package:resident_manager/src/widgets/login.dart";
 import "package:resident_manager/src/widgets/register.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
+import "package:resident_manager/src/widgets/admin/residents.dart";
+import "package:resident_manager/src/widgets/admin/rooms.dart";
 
 final rng = Random();
 const WAIT_DURATION = Duration(seconds: 10);
@@ -31,6 +34,7 @@ void main() {
     (tester) async {
       final state = ApplicationState();
       await state.prepare();
+      await state.deauthorize(); // Start integration test without existing authorization data
 
       await tester.pumpWidget(MainApplication(state: state));
       await tester.pumpAndSettle();
@@ -47,6 +51,35 @@ void main() {
       await tester.pumpAndSettle(WAIT_DURATION);
 
       expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Open residents list
+      await tester.tap(find.byIcon(Icons.people_outlined));
+      await tester.pumpAndSettle(WAIT_DURATION);
+
+      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Open rooms list
+      await tester.tap(find.byIcon(Icons.room_outlined));
+      await tester.pumpAndSettle(WAIT_DURATION);
+
+      expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Logout
+      await tester.tap(find.byIcon(Icons.logout_outlined));
+
+      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
     },
   );
 
@@ -55,6 +88,7 @@ void main() {
     (tester) async {
       final state = ApplicationState();
       await state.prepare();
+      await state.deauthorize(); // Start integration test without existing authorization data
 
       await tester.pumpWidget(MainApplication(state: state));
       await tester.pumpAndSettle();
@@ -76,6 +110,7 @@ void main() {
       final username = randomString(12);
       final password = randomString(12);
 
+      // Fill in registration fields
       await tester.enterText(registrationFields.at(0), fullname);
       await tester.enterText(registrationFields.at(1), room.toString());
       // Skip birthday
@@ -123,9 +158,10 @@ void main() {
       );
       expect(searchFields, findsExactly(3));
 
-      await tester.enterText(registrationFields.at(0), fullname);
-      await tester.enterText(registrationFields.at(1), room.toString());
-      await tester.enterText(registrationFields.at(2), username);
+      // Fill in search fields
+      await tester.enterText(searchFields.at(0), fullname);
+      await tester.enterText(searchFields.at(1), room.toString());
+      await tester.enterText(searchFields.at(2), username);
       await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
       await tester.pumpAndSettle(WAIT_DURATION);
 
@@ -151,7 +187,9 @@ void main() {
       await tester.tap(find.byIcon(Icons.logout_outlined));
       await tester.pumpAndSettle();
 
-      // Login as the newly created user
+      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+
+      // Login as the newly created resident user
       final loginFields = find.byWidgetPredicate((widget) => widget is TextField);
       expect(loginFields, findsExactly(2));
 
@@ -164,6 +202,15 @@ void main() {
 
       // Reach the home page
       expect(find.byWidgetPredicate((widget) => widget is HomePage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Logout
+      await tester.tap(find.byIcon(Icons.logout_outlined));
+
+      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
     },
   );
 }

@@ -7,7 +7,7 @@ from fastapi import status
 from ......apps import api_v1
 from ......database import Database
 from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import AuthorizationHeader, Room
+from ......models import AuthorizationHeader, RoomData
 
 
 __all__ = ("admin_rooms_delete",)
@@ -27,4 +27,4 @@ async def admin_rooms_delete(
     rooms: List[int],
 ) -> None:
     await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    await Room.delete_many(rooms)
+    await RoomData.delete_many(rooms)

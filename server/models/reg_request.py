@@ -81,7 +81,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT COUNT(*) FROM register_queue"]
+        query = ["SELECT COUNT(request_id) FROM register_queue"]
         if len(where) > 0:
             query.append("WHERE " + " AND ".join(where))
 
@@ -193,9 +193,9 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 await cursor.execute(
                     """
                     IF NOT EXISTS (
-                        SELECT username FROM residents WHERE username = ?
+                        SELECT 1 FROM residents WHERE username = ?
                         UNION
-                        SELECT username FROM register_queue WHERE username = ?
+                        SELECT 1 FROM register_queue WHERE username = ?
                     )
                     INSERT INTO register_queue OUTPUT INSERTED.* VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,

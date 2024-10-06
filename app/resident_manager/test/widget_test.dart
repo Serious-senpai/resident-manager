@@ -18,7 +18,7 @@ void main() {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
     const MethodChannel("plugins.flutter.io/path_provider"),
     (MethodCall methodCall) async {
-      return ".test";
+      return "/tmp";
     },
   );
 

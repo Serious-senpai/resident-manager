@@ -102,9 +102,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
       refresh();
       return true;
-    } catch (_) {
-      await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-      return false;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+        return false;
+      }
+
+      rethrow;
     }
   }
 
@@ -173,7 +177,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell header(String text, [String? newOrderBy]) {
+                TableCell headerCeil(String text, [String? newOrderBy]) {
                   if (newOrderBy != null) {
                     if (orderBy == newOrderBy) {
                       text += ascending ? " ▴" : " ▾";
@@ -204,13 +208,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   );
                 }
 
-                TableCell row(String text) => TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(text),
-                      ),
-                    );
-
                 final rows = [
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
@@ -231,13 +228,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                           },
                         ),
                       ),
-                      header(AppLocale.Fullname.getString(context), "name"),
-                      header(AppLocale.Room.getString(context), "room"),
-                      header(AppLocale.DateOfBirth.getString(context)),
-                      header(AppLocale.Phone.getString(context)),
-                      header(AppLocale.Email.getString(context)),
-                      header(AppLocale.CreationTime.getString(context), "request_id"),
-                      header(AppLocale.Username.getString(context), "username"),
+                      headerCeil(AppLocale.Fullname.getString(context), "name"),
+                      headerCeil(AppLocale.Room.getString(context), "room"),
+                      headerCeil(AppLocale.DateOfBirth.getString(context)),
+                      headerCeil(AppLocale.Phone.getString(context)),
+                      headerCeil(AppLocale.Email.getString(context)),
+                      headerCeil(AppLocale.CreationTime.getString(context), "request_id"),
+                      headerCeil(AppLocale.Username.getString(context), "username"),
                     ],
                   ),
                 ];
@@ -260,13 +257,48 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             refresh();
                           },
                         ),
-                        row(request.name),
-                        row(request.room.toString()),
-                        row(request.birthday?.toLocal().formatDate() ?? "---"),
-                        row(request.phone ?? "---"),
-                        row(request.email ?? "---"),
-                        row(request.createdAt.toLocal().toString()),
-                        row(request.username ?? "---"),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.name),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.room.toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.birthday?.toLocal().formatDate() ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.phone ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.email ?? "---"),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.createdAt.toLocal().toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(request.username ?? "---"),
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -331,7 +363,10 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
-                            await showDialog(
+                            final nameSearch = _nameSearch.text;
+                            final roomSearch = _roomSearch.text;
+                            final usernameSearch = _usernameSearch.text;
+                            final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
                                 title: Text(AppLocale.Search.getString(context)),
@@ -350,7 +385,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                               label: Text(AppLocale.Fullname.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                             validator: (value) => nameValidator(context, required: false, value: value),
@@ -364,7 +399,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                               label: Text(AppLocale.Room.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                             validator: (value) => roomValidator(context, required: false, value: value),
@@ -378,7 +413,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                               label: Text(AppLocale.Username.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
-                                              Navigator.pop(context);
+                                              Navigator.pop(context, true);
                                               offset = 0;
                                             },
                                           ),
@@ -391,7 +426,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                                   icon: const Icon(Icons.done_outlined),
                                                   label: Text(AppLocale.Search.getString(context)),
                                                   onPressed: () {
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -405,7 +440,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                                     _roomSearch.clear();
                                                     _usernameSearch.clear();
 
-                                                    Navigator.pop(context);
+                                                    Navigator.pop(context, true);
                                                     offset = 0;
                                                   },
                                                 ),
@@ -419,6 +454,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                 ],
                               ),
                             );
+
+                            if (!submitted) {
+                              // Dialog dismissed. Restore field values
+                              _nameSearch.text = nameSearch;
+                              _roomSearch.text = roomSearch;
+                              _usernameSearch.text = usernameSearch;
+                            }
                           },
                         ),
                       ],
