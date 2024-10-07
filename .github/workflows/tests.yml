@@ -258,12 +258,13 @@ jobs:
 
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter, flutter-integration]
+    needs: [checkout, python, flutter, flutter-integration, python-coverage]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Download coverage report
+        if: ${{ needs.python-coverage.result == 'success' }}
         uses: actions/download-artifact@v4
         with:
           name: coverage-txt
@@ -280,16 +281,19 @@ jobs:
             {
               body = `🎉 [All tests](${url}) of \`${sha}\` passed successfully.`;
 
-              var fs = require("fs");
-              await fs.readFile(
-                "textcov.txt",
-                "utf-8",
-                async function(error, data) {
-                  if (error) throw error;
-                  var wrapped = `\`\`\`${data}\`\`\``;
-                  body += `\n<details>\n<summary>Coverage report</summary>\n${wrapped}\n</details>`;
-                }
-              );
+              if (${{ needs.python-coverage.result == 'success' }})
+              {
+                var fs = require("fs");
+                await fs.readFile(
+                  "textcov.txt",
+                  "utf-8",
+                  async function(error, data) {
+                    if (error) throw error;
+                    var wrapped = `\`\`\`${data}\`\`\``;
+                    body += `\n<details>\n<summary>Coverage report</summary>\n${wrapped}\n</details>`;
+                  }
+                );
+              }
             }
             else
             {
