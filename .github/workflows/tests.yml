@@ -14,7 +14,7 @@ permissions:
 jobs:
   checkout:
     name: Checkout repository
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       number: ${{ steps.pr-info-output.outputs.number }}
