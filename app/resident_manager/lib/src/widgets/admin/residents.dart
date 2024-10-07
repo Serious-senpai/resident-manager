@@ -186,6 +186,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                       headerCeil(AppLocale.Phone.getString(context)),
                       headerCeil(AppLocale.Email.getString(context)),
                       headerCeil(AppLocale.CreationTime.getString(context), "resident_id"),
+                      headerCeil(AppLocale.Username.getString(context), "username"),
                     ],
                   ),
                 ];
@@ -228,6 +229,12 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                           child: Padding(
                             padding: const EdgeInsets.all(5),
                             child: Text(resident.createdAt.toLocal().toString()),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(resident.username ?? "---"),
                           ),
                         ),
                       ],
