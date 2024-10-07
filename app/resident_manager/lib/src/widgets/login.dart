@@ -9,8 +9,8 @@ import "common.dart";
 import "state.dart";
 import "utils.dart";
 import "../routes.dart";
+import "../translations.dart";
 import "../utils.dart";
-import "../core/translations.dart";
 
 class LoginPage extends StateAwareWidget {
   const LoginPage({super.key, required super.state});
@@ -57,9 +57,9 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
             refresh();
             return;
-          } else {
-            rethrow;
           }
+
+          rethrow;
         }
 
         if (authorized) {

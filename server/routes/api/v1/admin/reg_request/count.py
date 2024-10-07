@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import status
 
 from ......apps import api_v1
@@ -19,6 +21,12 @@ __all__ = ("admin_reg_request_count",)
     responses=register_error(AuthenticationRequired, PasswordDecryptionError),
     status_code=status.HTTP_200_OK,
 )
-async def admin_reg_request_count(headers: AuthorizationHeader) -> int:
+async def admin_reg_request_count(
+    headers: AuthorizationHeader,
+    id: Optional[int] = None,
+    name: Optional[str] = None,
+    room: Optional[int] = None,
+    username: Optional[str] = None,
+) -> int:
     await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    return await RegisterRequest.count()
+    return await RegisterRequest.count(id=id, name=name, room=room, username=username)

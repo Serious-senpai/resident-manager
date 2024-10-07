@@ -4,8 +4,8 @@ import "package:meta/meta.dart";
 
 import "state.dart";
 import "../routes.dart";
-import "../core/state.dart";
-import "../core/translations.dart";
+import "../state.dart";
+import "../translations.dart";
 
 abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> {
   ApplicationState get state => widget.state;
@@ -106,6 +106,19 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
                   : Navigator.pushReplacementNamed(
                       context,
                       ApplicationRoute.adminResidentsPage,
+                    ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.room_outlined),
+              title: Text(
+                AppLocale.RoomsList.getString(context),
+                style: currentRoute == ApplicationRoute.adminRoomsPage ? const TextStyle(color: Colors.blue) : null,
+              ),
+              onTap: () => currentRoute == ApplicationRoute.adminRoomsPage
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(
+                      context,
+                      ApplicationRoute.adminRoomsPage,
                     ),
             ),
           ],

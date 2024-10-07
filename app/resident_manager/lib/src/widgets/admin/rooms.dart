@@ -7,30 +7,28 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../config.dart";
+import "../../routes.dart";
 import "../../translations.dart";
 import "../../utils.dart";
-import "../../models/residents.dart";
 import "../../models/rooms.dart";
 
-class ResidentsPage extends StateAwareWidget {
-  const ResidentsPage({super.key, required super.state});
+class RoomsPage extends StateAwareWidget {
+  const RoomsPage({super.key, required super.state});
 
   @override
-  ResidentsPageState createState() => ResidentsPageState();
+  RoomsPageState createState() => RoomsPageState();
 }
 
-class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
-  List<Resident> _residents = [];
+class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+  List<Room> _rooms = [];
 
   Future<bool>? _queryFuture;
   Future<bool>? _countFuture;
 
-  final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
-  final _usernameSearch = TextEditingController();
-  String? orderBy;
-  bool ascending = true;
+  final _floorSearch = TextEditingController();
 
   int _offset = 0;
   int _offsetLimit = 0;
@@ -42,18 +40,15 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
     refresh();
   }
 
-  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
+  bool get searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
 
   Future<bool> query() async {
     try {
-      _residents = await Resident.query(
+      _rooms = await Room.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
-        orderBy: orderBy,
-        ascending: ascending,
+        floor: int.tryParse(_floorSearch.text),
       );
 
       refresh();
@@ -70,11 +65,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
   Future<bool> count() async {
     try {
-      final value = await Resident.count(
+      final value = await Room.count(
         state: state,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
+        floor: int.tryParse(_floorSearch.text),
       );
       if (value == null) {
         _offsetLimit = offset;
@@ -95,17 +89,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
   }
 
   @override
-  void initState() {
-    final room = state.extras["room-search"] as Room?;
-    if (room != null) {
-      _roomSearch.text = room.room.toString();
-      state.extras["room-search"] = null;
-    }
-
-    super.initState();
-  }
-
-  @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     _queryFuture ??= query();
@@ -119,7 +102,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),
         ),
-        title: Text(AppLocale.ResidentsList.getString(context)),
+        title: Text(AppLocale.RoomsList.getString(context)),
       ),
       body: FutureBuilder(
         future: _queryFuture,
@@ -145,33 +128,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell headerCeil(String text, [String? newOrderBy]) {
-                  if (newOrderBy != null) {
-                    if (orderBy == newOrderBy) {
-                      text += ascending ? " ▴" : " ▾";
-                    } else {
-                      text += " ▴▾";
-                    }
-                  }
-
+                TableCell headerCeil(String text) {
                   return TableCell(
                     child: Padding(
                       padding: const EdgeInsets.all(5),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (newOrderBy != null) {
-                            if (newOrderBy == orderBy) {
-                              ascending = !ascending;
-                            } else {
-                              ascending = true;
-                            }
-
-                            orderBy = newOrderBy;
-                            offset = 0;
-                          }
-                        },
-                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ),
+                      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   );
                 }
@@ -180,54 +141,63 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      headerCeil(AppLocale.Fullname.getString(context), "name"),
-                      headerCeil(AppLocale.Room.getString(context), "room"),
-                      headerCeil(AppLocale.DateOfBirth.getString(context)),
-                      headerCeil(AppLocale.Phone.getString(context)),
-                      headerCeil(AppLocale.Email.getString(context)),
-                      headerCeil(AppLocale.CreationTime.getString(context), "resident_id"),
+                      headerCeil(AppLocale.Room.getString(context)),
+                      headerCeil(AppLocale.Floor.getString(context)),
+                      headerCeil(AppLocale.Area1.getString(context)),
+                      headerCeil(AppLocale.MotorbikesCount.getString(context)),
+                      headerCeil(AppLocale.CarsCount.getString(context)),
+                      headerCeil(AppLocale.ResidentsCount.getString(context)),
                     ],
                   ),
                 ];
 
-                for (final resident in _residents) {
+                for (final room in _rooms) {
                   rows.add(
                     TableRow(
                       children: [
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(resident.name),
+                            child: Text(room.room.toString()),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(resident.room.toString()),
+                            child: Text(room.floor.toString()),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(resident.birthday?.toLocal().formatDate() ?? "---"),
+                            child: Text(room.area?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(resident.phone ?? "---"),
+                            child: Text(room.motorbike?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(resident.email ?? "---"),
+                            child: Text(room.car?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.createdAt.toLocal().toString()),
+                          child: HoverContainer(
+                            onHover: Colors.grey.shade200,
+                            child: GestureDetector(
+                              onTap: () async {
+                                state.extras["room-search"] = room;
+                                await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Text("🔎 ${room.residents.toString()}"),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -278,9 +248,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                             style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
-                            final nameSearch = _nameSearch.text;
                             final roomSearch = _roomSearch.text;
-                            final usernameSearch = _usernameSearch.text;
+                            final floorSearch = _floorSearch.text;
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
@@ -291,20 +260,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                     child: Form(
                                       child: Column(
                                         children: [
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _nameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.badge_outlined),
-                                              label: Text(AppLocale.Fullname.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => nameValidator(context, required: false, value: value),
-                                          ),
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                             controller: _roomSearch,
@@ -321,11 +276,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           ),
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _usernameSearch,
+                                            controller: _floorSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outline),
-                                              label: Text(AppLocale.Username.getString(context)),
+                                              icon: const Icon(Icons.apartment_outlined),
+                                              label: Text(AppLocale.Floor.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
                                               Navigator.pop(context, true);
@@ -351,9 +306,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                   icon: const Icon(Icons.clear_outlined),
                                                   label: Text(AppLocale.ClearAll.getString(context)),
                                                   onPressed: () {
-                                                    _nameSearch.clear();
                                                     _roomSearch.clear();
-                                                    _usernameSearch.clear();
+                                                    _floorSearch.clear();
 
                                                     Navigator.pop(context, true);
                                                     offset = 0;
@@ -372,9 +326,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
                             if (submitted == null) {
                               // Dialog dismissed. Restore field values
-                              _nameSearch.text = nameSearch;
                               _roomSearch.text = roomSearch;
-                              _usernameSearch.text = usernameSearch;
+                              _floorSearch.text = floorSearch;
                             }
                           },
                         ),
