@@ -133,6 +133,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.lock_outlined));
       await tester.pumpAndSettle();
 
+      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+
       // Login as administrator
       final adminLoginFields = find.byWidgetPredicate((widget) => widget is TextField);
       expect(adminLoginFields, findsExactly(2));
@@ -203,6 +205,73 @@ void main() {
 
       // Reach the home page
       expect(find.byWidgetPredicate((widget) => widget is HomePage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Logout
+      await tester.tap(find.byIcon(Icons.logout_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+
+      // Login as administrator
+      final adminLoginFields2 = find.byWidgetPredicate((widget) => widget is TextField);
+      expect(adminLoginFields2, findsExactly(2));
+
+      await tester.enterText(adminLoginFields2.at(0), DEFAULT_ADMIN_USERNAME);
+      await tester.enterText(adminLoginFields2.at(1), DEFAULT_ADMIN_PASSWORD);
+
+      // Press the "Login as administrator" button
+      await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
+      await tester.pumpAndSettle(WAIT_DURATION);
+
+      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // View resident list
+      await tester.tap(find.byIcon(Icons.people_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
+
+      // Open search interface
+      await tester.tap(find.byIcon(Icons.search_outlined));
+      await tester.pumpAndSettle();
+
+      final searchDialog2 = find.byWidgetPredicate((widget) => widget is SimpleDialog);
+      expect(searchDialog2, findsOneWidget);
+
+      final searchFields2 = find.descendant(
+        of: searchDialog2,
+        matching: find.byWidgetPredicate((widget) => widget is TextFormField),
+      );
+      expect(searchFields2, findsExactly(3));
+
+      // Fill in search fields
+      await tester.enterText(searchFields2.at(0), fullname);
+      await tester.enterText(searchFields2.at(1), room.toString());
+      await tester.enterText(searchFields2.at(2), username);
+      await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
+      await tester.pumpAndSettle(WAIT_DURATION);
+
+      // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
+      final checkboxes2 = find.byWidgetPredicate((widget) => widget is Checkbox);
+      expect(checkboxes2, findsExactly(2));
+
+      // Toggle 3 times
+      await tester.tap(checkboxes2.first);
+      await tester.tap(checkboxes2.last);
+      await tester.tap(checkboxes2.first);
+      await tester.pumpAndSettle();
+
+      // Delete the created account
+      await tester.tap(find.byIcon(Icons.delete_outlined));
+      await tester.pumpAndSettle(WAIT_DURATION);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));

@@ -147,6 +147,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                       headerCeil(AppLocale.MotorbikesCount.getString(context)),
                       headerCeil(AppLocale.CarsCount.getString(context)),
                       headerCeil(AppLocale.ResidentsCount.getString(context)),
+                      headerCeil(AppLocale.Search.getString(context)),
                     ],
                   ),
                 ];
@@ -186,6 +187,12 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                           ),
                         ),
                         TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Text(room.residents.toString()),
+                          ),
+                        ),
+                        TableCell(
                           child: HoverContainer(
                             onHover: Colors.grey.shade200,
                             child: GestureDetector(
@@ -193,9 +200,9 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                 state.extras["room-search"] = room;
                                 await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
                               },
-                              child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Text("🔎 ${room.residents.toString()}"),
+                              child: const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: Text("→"),
                               ),
                             ),
                           ),

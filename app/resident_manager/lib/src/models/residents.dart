@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "info.dart";
+import "snowflake.dart";
 import "../state.dart";
 
 /// Represents a resident.
@@ -27,6 +28,17 @@ class Resident extends PublicInfo {
         "phone": phone,
         "email": email,
       };
+
+  static Future<bool> delete({
+    required ApplicationState state,
+    required Iterable<Snowflake> objects,
+  }) async {
+    final headers = {"content-type": "application/json"};
+    final data = List<Map<String, int>>.from(objects.map((o) => {"id": o.id}));
+
+    final response = await state.post("/api/v1/admin/residents/delete", headers: headers, body: json.encode(data));
+    return response.statusCode == 204;
+  }
 
   static Future<List<Resident>> query({
     required ApplicationState state,

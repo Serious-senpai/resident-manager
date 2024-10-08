@@ -30,7 +30,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   Future<bool>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
-  final _selectedRequests = <RegisterRequest>{};
+  final _selected = <RegisterRequest>{};
   final _actionLock = Lock();
 
   final _nameSearch = TextEditingController();
@@ -63,7 +63,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
         var success = false;
         try {
-          success = await coro(state: state, objects: _selectedRequests);
+          success = await coro(state: state, objects: _selected);
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
             await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -74,7 +74,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
         if (success) {
           _notification = const SizedBox.square(dimension: 0);
-          _selectedRequests.clear();
+          _selected.clear();
           offset = 0;
         } else {
           _notification = TranslatedText(
@@ -214,13 +214,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                     children: [
                       TableCell(
                         child: Checkbox.adaptive(
-                          value: _selectedRequests.containsAll(_requests),
+                          value: _selected.containsAll(_requests),
                           onChanged: (state) {
                             if (state != null) {
                               if (state) {
-                                _selectedRequests.addAll(_requests);
+                                _selected.addAll(_requests);
                               } else {
-                                _selectedRequests.removeAll(_requests);
+                                _selected.removeAll(_requests);
                               }
                             }
 
@@ -244,13 +244,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                     TableRow(
                       children: [
                         Checkbox.adaptive(
-                          value: _selectedRequests.contains(request),
+                          value: _selected.contains(request),
                           onChanged: (state) {
                             if (state != null) {
                               if (state) {
-                                _selectedRequests.add(request);
+                                _selected.add(request);
                               } else {
-                                _selectedRequests.remove(request);
+                                _selected.remove(request);
                               }
                             }
 
@@ -311,13 +311,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                       children: [
                         TextButton.icon(
                           icon: const Icon(Icons.done_outlined),
-                          label: Text("${AppLocale.Approve.getString(context)} (${_selectedRequests.length})"),
-                          onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.approve),
+                          label: Text("${AppLocale.Approve.getString(context)} (${_selected.length})"),
+                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.approve),
                         ),
                         TextButton.icon(
                           icon: const Icon(Icons.close_outlined),
-                          label: Text("${AppLocale.Reject.getString(context)} (${_selectedRequests.length})"),
-                          onPressed: _actionLock.locked ? null : () => _approveOrReject(RegisterRequest.reject),
+                          label: Text("${AppLocale.Reject.getString(context)} (${_selected.length})"),
+                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.reject),
                         ),
                       ],
                     ),

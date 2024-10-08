@@ -2,11 +2,13 @@ import "dart:async";
 import "dart:io";
 import "dart:math";
 
+import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../config.dart";
 import "../../translations.dart";
 import "../../utils.dart";
@@ -25,6 +27,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
   Future<bool>? _queryFuture;
   Future<bool>? _countFuture;
+  Widget _notification = const SizedBox.square(dimension: 0);
+
+  final _selected = <Resident>{};
+  final _actionLock = Lock();
 
   final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
@@ -92,6 +98,43 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
       rethrow;
     }
+  }
+
+  Future<void> _deleteAccounts() async {
+    await _actionLock.run(
+      () async {
+        _notification = TranslatedText(
+          (ctx) => AppLocale.Loading.getString(ctx),
+          state: state,
+          style: const TextStyle(color: Colors.blue),
+        );
+        refresh();
+
+        var success = false;
+        try {
+          success = await Resident.delete(state: state, objects: _selected);
+        } catch (e) {
+          if (e is SocketException || e is TimeoutException) {
+            await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          } else {
+            rethrow;
+          }
+        }
+
+        if (success) {
+          _notification = const SizedBox.square(dimension: 0);
+          _selected.clear();
+          offset = 0;
+        } else {
+          _notification = TranslatedText(
+            (ctx) => AppLocale.UnknownError.getString(ctx),
+            state: state,
+            style: const TextStyle(color: Colors.red),
+          );
+          refresh();
+        }
+      },
+    );
   }
 
   @override
@@ -180,6 +223,22 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
+                      TableCell(
+                        child: Checkbox.adaptive(
+                          value: _selected.containsAll(_residents),
+                          onChanged: (state) {
+                            if (state != null) {
+                              if (state) {
+                                _selected.addAll(_residents);
+                              } else {
+                                _selected.removeAll(_residents);
+                              }
+                            }
+
+                            refresh();
+                          },
+                        ),
+                      ),
                       headerCeil(AppLocale.Fullname.getString(context), "name"),
                       headerCeil(AppLocale.Room.getString(context), "room"),
                       headerCeil(AppLocale.DateOfBirth.getString(context)),
@@ -187,6 +246,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                       headerCeil(AppLocale.Email.getString(context)),
                       headerCeil(AppLocale.CreationTime.getString(context), "resident_id"),
                       headerCeil(AppLocale.Username.getString(context), "username"),
+                      headerCeil(AppLocale.Option.getString(context)),
                     ],
                   ),
                 ];
@@ -195,6 +255,20 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                   rows.add(
                     TableRow(
                       children: [
+                        Checkbox.adaptive(
+                          value: _selected.contains(resident),
+                          onChanged: (state) {
+                            if (state != null) {
+                              if (state) {
+                                _selected.add(resident);
+                              } else {
+                                _selected.remove(resident);
+                              }
+                            }
+
+                            refresh();
+                          },
+                        ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
@@ -237,6 +311,22 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                             child: Text(resident.username ?? "---"),
                           ),
                         ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  color: Colors.red,
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: () {
+                                    // TODO: Implement this
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                       ],
                     ),
                   );
@@ -244,6 +334,17 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
                 return Column(
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.delete_outlined),
+                          label: Text("${AppLocale.DeleteAccount.getString(context)} (${_selected.length})"),
+                          onPressed: _actionLock.locked || _selected.isEmpty ? null : _deleteAccounts,
+                        ),
+                      ],
+                    ),
+                    const SizedBox.square(dimension: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -387,6 +488,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                         ),
                       ],
                     ),
+                    const SizedBox.square(dimension: 5),
+                    _notification,
                     const SizedBox.square(dimension: 5),
                     Expanded(
                       child: SingleChildScrollView(
