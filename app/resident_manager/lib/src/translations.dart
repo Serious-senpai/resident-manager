@@ -58,6 +58,7 @@ class AppLocale {
   static const String Cancel = "Cancel";
   static const String Option = "Option";
   static const String DeleteAccount = "DeleteAccount";
+  static const String Welcome = "Welcome";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -119,6 +120,7 @@ class AppLocale {
     Cancel: "Cancel",
     Option: "Option",
     DeleteAccount: "Delete account",
+    Welcome: "Welcome",
   };
 
   static const Map<String, dynamic> VI = {
@@ -181,5 +183,6 @@ class AppLocale {
     Cancel: "Hủy bỏ",
     Option: "Tùy chọn",
     DeleteAccount: "Xóa tài khoản",
+    Welcome: "Chào mừng",
   };
 }
