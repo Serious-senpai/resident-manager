@@ -88,6 +88,8 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
     }
   }
 
+  final _horizontalController = ScrollController();
+
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -342,14 +344,19 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                     ),
                     const SizedBox.square(dimension: 5),
                     Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                      child: Scrollbar(
+                        controller: _horizontalController,
+                        thumbVisibility: true,
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Container(
-                            width: max(mediaQuery.size.width, 1000),
-                            padding: const EdgeInsets.all(5),
-                            child: Table(children: rows),
+                          controller: _horizontalController,
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Container(
+                              width: max(mediaQuery.size.width, 1000),
+                              padding: const EdgeInsets.all(5),
+                              child: Table(children: rows),
+                            ),
                           ),
                         ),
                       ),

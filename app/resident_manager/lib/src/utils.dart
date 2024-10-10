@@ -7,6 +7,15 @@ import "package:fluttertoast/fluttertoast.dart";
 import "config.dart";
 import "translations.dart";
 
+/// Screen width breakpoints from https://getbootstrap.com/docs/5.0/layout/breakpoints/
+class ScreenWidth {
+  static const SMALL = 576;
+  static const MEDIUM = 768;
+  static const LARGE = 992;
+  static const EXTRA_LARGE = 1200;
+  static const EXTRA_EXTRA_LARGE = 1400;
+}
+
 Future<bool> showToastSafe({
   required String msg,
   Toast? toastLength,

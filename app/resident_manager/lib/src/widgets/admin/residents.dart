@@ -148,6 +148,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
     super.initState();
   }
 
+  final _horizontalController = ScrollController();
+
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -432,7 +434,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                             controller: _usernameSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outline),
+                                              icon: const Icon(Icons.person_outlined),
                                               label: Text(AppLocale.Username.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
@@ -492,14 +494,19 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                     _notification,
                     const SizedBox.square(dimension: 5),
                     Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                      child: Scrollbar(
+                        controller: _horizontalController,
+                        thumbVisibility: true,
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Container(
-                            width: max(mediaQuery.size.width, 1000),
-                            padding: const EdgeInsets.all(5),
-                            child: Table(children: rows),
+                          controller: _horizontalController,
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Container(
+                              width: max(mediaQuery.size.width, 1000),
+                              padding: const EdgeInsets.all(5),
+                              child: Table(children: rows),
+                            ),
                           ),
                         ),
                       ),
