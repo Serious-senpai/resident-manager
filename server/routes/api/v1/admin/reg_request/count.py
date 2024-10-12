@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import status
+from fastapi import Response, status
 
 from ......apps import api_v1
-from ......database import Database
-from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import AuthorizationHeader, RegisterRequest
+from ......models import Authorization, AuthorizationHeader, RegisterRequest, Result
 
 
 __all__ = ("admin_reg_request_count",)
@@ -18,15 +16,36 @@ __all__ = ("admin_reg_request_count",)
     name="Registration requests count",
     description="Return number of registration requests",
     tags=["admin"],
-    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Number of registration requests",
+            "model": Result[int],
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect authorization data",
+            "model": Result[None],
+        },
+    },
     status_code=status.HTTP_200_OK,
 )
 async def admin_reg_request_count(
     headers: AuthorizationHeader,
+    response: Response,
     id: Optional[int] = None,
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-) -> int:
-    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    return await RegisterRequest.count(id=id, name=name, room=room, username=username)
+) -> Result[Optional[int]]:
+    auth = await Authorization.verify_admin_headers(headers)
+    if auth is not None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return auth
+
+    return Result(
+        data=await RegisterRequest.count(
+            id=id,
+            name=name,
+            room=room,
+            username=username,
+        ),
+    )

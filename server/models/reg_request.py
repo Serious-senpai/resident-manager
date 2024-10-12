@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import itertools
 from datetime import datetime
-from typing import Any, List, Literal, Optional, overload
+from typing import Any, List, Literal, Optional
 
 import pyodbc  # type: ignore
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
+from .results import Result
 from .snowflake import Snowflake
 from ..config import DB_PAGINATION_QUERY
 from ..database import Database
-from ..errors import BadRequest, UsernameConflictError
 from ..utils import (
     generate_id,
     hash_password,
@@ -124,10 +124,10 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             async with connection.cursor() as cursor:
                 await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *[o.id for o in objects])
 
-    @overload
     @classmethod
     async def create(
         cls,
+        *,
         name: str,
         room: int,
         birthday: Optional[datetime],
@@ -135,38 +135,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         email: Optional[str],
         username: str,
         password: str,
-        *,
-        raise_http_exception: Literal[False],
-    ) -> Optional[RegisterRequest]: ...
-
-    @overload
-    @classmethod
-    async def create(
-        cls,
-        name: str,
-        room: int,
-        birthday: Optional[datetime],
-        phone: Optional[str],
-        email: Optional[str],
-        username: str,
-        password: str,
-        *,
-        raise_http_exception: Literal[True] = True,
-    ) -> RegisterRequest: ...
-
-    @classmethod
-    async def create(
-        cls,
-        name: str,
-        room: int,
-        birthday: Optional[datetime],
-        phone: Optional[str],
-        email: Optional[str],
-        username: str,
-        password: str,
-        *,
-        raise_http_exception: bool = True,
-    ) -> Optional[RegisterRequest]:
+    ) -> Result[Optional[RegisterRequest]]:
         # Validate data
         if phone is None or len(phone) == 0:
             phone = None
@@ -174,18 +143,23 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         if email is None or len(email) == 0:
             email = None
 
-        if (
-            not validate_name(name)
-            or not validate_room(room)
-            or (phone is not None and not validate_phone(phone))
-            or (email is not None and not validate_email(email))
-            or not validate_username(username)
-            or not validate_password(password)
-        ):
-            if raise_http_exception:
-                raise BadRequest
+        if not validate_name(name):
+            return Result(code=101, data=None)
 
-            return None
+        if not validate_room(room):
+            return Result(code=102, data=None)
+
+        if phone is not None and not validate_phone(phone):
+            return Result(code=103, data=None)
+
+        if email is not None and not validate_email(email):
+            return Result(code=104, data=None)
+
+        if not validate_username(username):
+            return Result(code=105, data=None)
+
+        if not validate_password(password):
+            return Result(code=106, data=None)
 
         hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
@@ -214,15 +188,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 try:
                     row = await cursor.fetchone()
                     if row is not None:
-                        return cls.from_row(row)
+                        return Result(data=cls.from_row(row))
 
                 except pyodbc.ProgrammingError:
                     pass
 
-        if raise_http_exception:
-            raise UsernameConflictError
-
-        return None
+        return Result(code=107, data=None)
 
     @classmethod
     async def query(

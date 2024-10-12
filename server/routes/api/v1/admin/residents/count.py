@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import status
+from fastapi import Response, status
 
 from ......apps import api_v1
-from ......database import Database
-from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import AuthorizationHeader, Resident
+from ......models import Authorization, AuthorizationHeader, Resident, Result
 
 
 __all__ = ("admin_residents_count",)
@@ -15,18 +13,31 @@ __all__ = ("admin_residents_count",)
 
 @api_v1.get(
     "/admin/residents/count",
-    name="Registration requests count",
-    description="Return number of registration requests",
+    name="Residents count",
+    description="Return number of residents",
     tags=["admin"],
-    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
-    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Return number of residents",
+            "model": Result[int],
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect authorization data",
+            "model": Result[None],
+        },
+    },
 )
 async def admin_residents_count(
     headers: AuthorizationHeader,
+    response: Response,
     id: Optional[int] = None,
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-) -> int:
-    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
-    return await Resident.count(id=id, name=name, room=room, username=username)
+) -> Result[Optional[int]]:
+    auth = await Authorization.verify_admin_headers(headers)
+    if auth is not None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return auth
+
+    return Result(data=await Resident.count(id=id, name=name, room=room, username=username))

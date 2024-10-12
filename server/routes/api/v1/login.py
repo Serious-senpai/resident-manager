@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from fastapi import status
+from typing import Optional, cast
+
+from fastapi import Response, status
 
 from ....apps import api_v1
-from ....models import AuthorizationHeader, PublicInfo, Resident
-from ....errors import AuthenticationRequired, PasswordDecryptionError, UserNotFound, register_error
-from ....utils import check_password
+from ....models import AuthorizationHeader, PublicInfo, Resident, Result
 
 
 __all__ = ("login",)
@@ -16,16 +16,25 @@ __all__ = ("login",)
     name="Residents login",
     description="Verify authorization data, return resident information on success.",
     tags=["resident"],
-    responses=register_error(AuthenticationRequired, PasswordDecryptionError, UserNotFound),
-    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Successfully logged in",
+            "model": Result[PublicInfo],
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect authorization data",
+            "model": Result[None],
+        },
+    },
 )
-async def login(headers: AuthorizationHeader) -> PublicInfo:
-    residents = await Resident.query(username=headers.username)
-    if len(residents) == 0:
-        raise UserNotFound
+async def login(
+    headers: AuthorizationHeader,
+    response: Response,
+) -> Result[Optional[PublicInfo]]:
+    result = await Resident.authorize(headers)
 
-    resident = residents[0]
-    if not check_password(headers.decrypt_password(), hashed=resident.hashed_password):
-        raise AuthenticationRequired
+    if result.data is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return cast(Result[None], result)
 
-    return resident.to_public_info()
+    return Result(data=result.data.to_public_info())

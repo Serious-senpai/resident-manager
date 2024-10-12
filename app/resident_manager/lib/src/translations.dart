@@ -42,7 +42,6 @@ class AppLocale {
   static const String RetypePasswordDoesNotMatch = "RetypePasswordDoesNotMatch";
   static const String Approve = "Approve";
   static const String Reject = "Reject";
-  static const String UnknownError = "UnknownError";
   static const String Search = "Search";
   static const String Searching = "Searching";
   static const String ResidentsList = "ResidentsList";
@@ -62,6 +61,21 @@ class AppLocale {
   static const String PersonalInfo = "PersonalInfo";
   static const String Settings = "Settings";
   static const String ComingSoon = "ComingSoon";
+
+  // Error codes
+  static const String Error0 = "Error0";
+  static const String Error101 = "Error101";
+  static const String Error102 = "Error102";
+  static const String Error103 = "Error103";
+  static const String Error104 = "Error104";
+  static const String Error105 = "Error105";
+  static const String Error106 = "Error106";
+  static const String Error107 = "Error107";
+  static const String Error201 = "Error201";
+  static const String Error202 = "Error202";
+  static const String Error203 = "Error203";
+  static const String Error204 = "Error204";
+  static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
     Login: "Login",
@@ -107,7 +121,6 @@ class AppLocale {
     RetypePasswordDoesNotMatch: "Retyped password does not match",
     Approve: "Approve",
     Reject: "Reject",
-    UnknownError: "Unknown error",
     Search: "Search",
     Searching: "Searching",
     ResidentsList: "Residents list",
@@ -127,6 +140,21 @@ class AppLocale {
     PersonalInfo: "Personal information",
     Settings: "Settings",
     ComingSoon: "Coming soon",
+
+    // Error codes
+    Error0: "Operation completed successfully.",
+    Error101: "The provided name for registration is invalid.",
+    Error102: "The provided room number for registration is invalid.",
+    Error103: "The provided phone number for registration is invalid.",
+    Error104: "The provided email address for registration is invalid.",
+    Error105: "The provided username for registration is invalid.",
+    Error106: "The provided password for registration is invalid.",
+    Error107: "The registration username has already been taken.",
+    Error201: "The login username does not exist.",
+    Error202: "The provided login password is incorrect.",
+    Error203: "The administrator authentication data is incorrect.",
+    Error204: "Unable to decrypt the provided password.",
+    ErrorUnknown: "An unknown error occurred.",
   };
 
   static const Map<String, dynamic> VI = {
@@ -173,7 +201,6 @@ class AppLocale {
     RetypePasswordDoesNotMatch: "Mật khẩu nhập lại không khớp",
     Approve: "Phê duyệt",
     Reject: "Từ chối",
-    UnknownError: "Lỗi không xác định",
     Search: "Tìm kiếm",
     Searching: "Đang tìm kiếm",
     ResidentsList: "Danh sách cư dân",
@@ -193,5 +220,51 @@ class AppLocale {
     PersonalInfo: "Thông tin cá nhân",
     Settings: "Cài đặt",
     ComingSoon: "Sắp ra mắt",
+
+    // Error codes
+    Error0: "Thao tác thành công.",
+    Error101: "Tên đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error102: "Số phòng đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error103: "Số điện thoại đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error104: "Địa chỉ email đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error105: "Tên đăng nhập đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error106: "Mật khẩu đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    Error107: "Tên đăng nhập đã được sử dụng. Vui lòng chọn tên khác.",
+    Error201: "Tên đăng nhập không tồn tại. Vui lòng kiểm tra lại.",
+    Error202: "Mật khẩu đăng nhập không chính xác. Vui lòng kiểm tra lại.",
+    Error203: "Dữ liệu xác thực quản trị viên không chính xác. Vui lòng kiểm tra lại.",
+    Error204: "Không thể giải mã mật khẩu. Vui lòng thử lại.",
+    ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
+
+  static String errorMessage(int code) {
+    switch (code) {
+      case 0:
+        return Error0;
+      case 101:
+        return Error101;
+      case 102:
+        return Error102;
+      case 103:
+        return Error103;
+      case 104:
+        return Error104;
+      case 105:
+        return Error105;
+      case 106:
+        return Error106;
+      case 107:
+        return Error107;
+      case 201:
+        return Error201;
+      case 202:
+        return Error202;
+      case 203:
+        return Error203;
+      case 204:
+        return Error204;
+      default:
+        return ErrorUnknown;
+    }
+  }
 }

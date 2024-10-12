@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Optional, cast
 
-from fastapi import Query, status
+from fastapi import Query, Response, status
 
 from ....apps import api_v1
-from ....errors import BadRequest, UsernameConflictError, register_error
-from ....models import AuthorizationHeader, PersonalInfo, PublicInfo, RegisterRequest
+from ....models import (
+    AuthorizationHeader,
+    PersonalInfo,
+    PublicInfo,
+    RegisterRequest,
+    Result,
+)
 
 
 __all__ = ("register",)
@@ -17,21 +22,39 @@ __all__ = ("register",)
     name="Residents registration",
     description="Register a resident account to be created.",
     tags=["resident"],
-    responses=register_error(BadRequest, UsernameConflictError),
-    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Successfully created a registration request",
+            "model": Result[PublicInfo],
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Failed to create a registration request",
+            "model": Result[None],
+        },
+    },
 )
 async def register(
     headers: AuthorizationHeader,
+    response: Response,
     data: Annotated[PersonalInfo, Query()],
-) -> PublicInfo:
-    request = await RegisterRequest.create(
+) -> Result[Optional[PublicInfo]]:
+    password = headers.decrypt_password()
+    if password.data is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return cast(Result[None], password)
+
+    result = await RegisterRequest.create(
         name=data.name,
         room=data.room,
         birthday=data.birthday,
         phone=data.phone,
         email=data.email,
         username=headers.username,
-        password=headers.decrypt_password(),
+        password=password.data,
     )
 
-    return request.to_public_info()
+    if result.data is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return cast(Result[None], result)
+
+    return Result(data=result.data.to_public_info())

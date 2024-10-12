@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import status
+from fastapi import Response, status
 
 from ......apps import api_v1
-from ......database import Database
-from ......errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from ......models import AuthorizationHeader, RoomData
+from ......models import Authorization, AuthorizationHeader, Result, RoomData
 
 
 __all__ = ("admin_rooms_update",)
@@ -19,12 +17,26 @@ __all__ = ("admin_rooms_update",)
     description="Update room information",
     tags=["admin"],
     response_model=None,
-    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Operation completed successfully",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect authorization data",
+            "model": Result[None],
+        },
+    },
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_rooms_update(
     headers: AuthorizationHeader,
+    response: Response,
     rooms: List[RoomData],
-) -> None:
-    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
+) -> Optional[Result[None]]:
+    auth = await Authorization.verify_admin_headers(headers)
+    if auth is not None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return auth
+
     await RoomData.update_many(rooms)
+    return None

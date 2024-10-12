@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from fastapi import status
+from typing import Optional
+
+from fastapi import Response, status
 
 from .....apps import api_v1
-from .....errors import AuthenticationRequired, PasswordDecryptionError, register_error
-from .....database import Database
-from .....models import AuthorizationHeader
+from .....models import Authorization, AuthorizationHeader, Result
 
 
 __all__ = ("admin_login",)
@@ -17,8 +17,23 @@ __all__ = ("admin_login",)
     description="Verify administrator authorization data.",
     tags=["admin"],
     response_model=None,
-    responses=register_error(AuthenticationRequired, PasswordDecryptionError),
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Successfully logged in",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect authorization data",
+            "model": Result[None],
+        },
+    },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_login(headers: AuthorizationHeader) -> None:
-    await Database.instance.verify_admin(headers.username, headers.decrypt_password())
+async def admin_login(
+    headers: AuthorizationHeader,
+    response: Response,
+) -> Optional[Result[None]]:
+    result = await Authorization.verify_admin_headers(headers)
+    if result is not None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+
+    return result

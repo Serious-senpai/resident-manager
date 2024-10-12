@@ -127,7 +127,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
           offset = 0;
         } else {
           _notification = TranslatedText(
-            (ctx) => AppLocale.UnknownError.getString(ctx),
+            (ctx) => AppLocale.ErrorUnknown.getString(ctx),
             state: state,
             style: const TextStyle(color: Colors.red),
           );
