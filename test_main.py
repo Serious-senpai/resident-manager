@@ -105,7 +105,7 @@ def test_admin_login(client: TestClient, username_i: int, password_i: int) -> No
 
         data = response.json()
         assert data["code"] == 203
-        assert data["data"] == None
+        assert data["data"] is None
 
 
 def test_register_main_flow(client: TestClient) -> None:
