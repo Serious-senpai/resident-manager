@@ -286,8 +286,8 @@ jobs:
                 const fs = require("fs/promises");
                 const data = await fs.readFile("textcov.txt", { encoding: "utf8" });
 
-                const wrapped = `\`\`\`${data}\`\`\``;
-                body += `\n<details>\n<summary>Coverage report</summary>\n${wrapped}\n</details>`;
+                const wrapped = `\`\`\`\n${data}\`\`\``;
+                body += `\n<details>\n<summary>Coverage report</summary>\n\n${wrapped}\n\n</details>`;
               }
             }
             else
