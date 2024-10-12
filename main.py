@@ -73,6 +73,12 @@ async def root() -> RedirectResponse:
     return RedirectResponse("/api/v1/docs")
 
 
+@app.get("/loop", include_in_schema=False)
+async def loop() -> str:
+    """Return current asyncio event loop"""
+    return str(asyncio.get_event_loop())
+
+
 @app.get("/docs", include_in_schema=False)
 async def docs() -> RedirectResponse:
     """Redirect to API documentation"""
