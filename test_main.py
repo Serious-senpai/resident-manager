@@ -242,7 +242,6 @@ def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: in
         email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
         username = random_string(random.randint(1, 255))
         password = random_string(random.randint(8, 255))
-        taken_username.append((username, room))
         response = get_client.post(
             "/api/v1/register",
             params={
@@ -255,6 +254,8 @@ def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: in
             headers=generate_auth_headers(username=username, password=password).model_dump(),
         )
         assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        taken_username.append((username, data["id"]))
 
     for iterations in range(1, fail_i + 2):
         name = f"test-{random_string(random.randint(1, 69))}"
@@ -279,14 +280,13 @@ def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: in
         )
         assert response.status_code == 400
 
-    for x in taken_username:
+    for username, _ in taken_username:
         name = f"test-{random_string(random.randint(1, 69))}"
         room = random.randint(0, 32767)
         now = datetime.now(timezone.utc)
         birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
         phone = random_numstring(random.randint(1, 15))
         email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
-        username = x[0]
         password = random_string(random.randint(8, 255))
 
         response = get_client.post(
@@ -302,9 +302,9 @@ def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: in
         )
         assert response.status_code == 409
 
-        response = get_client.post(
-            "/api/v1/admin/reg-request/reject",
-            params={"offset": 0, "username": x[0], "room": x[1]},
-            headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
-        )
-        assert response.status_code == status.HTTP_200_OK
+    response = get_client.post(
+        "/api/v1/admin/reg-request/reject",
+        json=[{"id": id} for _, id in taken_username],
+        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
