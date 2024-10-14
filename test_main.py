@@ -302,7 +302,7 @@ def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: in
         )
         assert response.status_code == 409
 
-        response = get_client.get(
+        response = get_client.post(
             "/api/v1/admin/reg-request/reject",
             params={"offset": 0, "username": x[0], "room": x[1]},
             headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
