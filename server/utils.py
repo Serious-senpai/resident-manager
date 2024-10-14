@@ -3,8 +3,10 @@ from __future__ import annotations
 import re
 import secrets
 import string
+import struct
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
+from random import randbytes
 from typing import ClassVar, Optional
 
 from .config import EPOCH, SALT_LENGTH
@@ -82,8 +84,8 @@ class __IDGenerator:
     @classmethod
     def generate_id(cls) -> int:
         now = int(1000 * since_epoch().total_seconds())
-        result = (now << 14) | cls.counter
-        cls.counter = (cls.counter + 1) & 0x1FFF
+        result = (now << 16) | cls.counter
+        cls.counter = (cls.counter + 1) & struct.unpack("H", randbytes(2))[0]
         return result
 
 
