@@ -30,6 +30,7 @@ jobs:
 
     runs-on: ubuntu-latest
     outputs:
+      comment_id: ${{ steps.comment.outputs.comment_id }}
       number: ${{ steps.pr-info-output.outputs.number }}
       sha: ${{ steps.pr-info-output.outputs.sha }}
 
@@ -63,6 +64,26 @@ jobs:
         with:
           name: repository
           path: .
+
+      - name: Create comment
+        id: comment
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/github-script@v7
+        with:
+          retries: 3
+          script: |
+            const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            const sha = "${{ steps.pr-info-output.outputs.sha }}".substr(0, 7);
+            const body = "🔄 [Testing workflow #${{ github.run_attempt }}](${url}) of \`${sha}\` is running";
+
+            const response = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.pr-info-output.outputs.number }},
+              body: body,
+            });
+
+            core.setOutput("comment_id", response.data.id);
 
   python:
     name: Web application test
@@ -282,35 +303,45 @@ jobs:
         with:
           name: coverage-txt
 
-      - name: Create comment
+      - name: Update initial comment
         uses: actions/github-script@v7
         with:
           retries: 3
           script: |
+            const fs = require("fs/promises");
             const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
-            const sha = "${{ needs.checkout.outputs.sha}}".substr(0, 7);
+            const sha = "${{ needs.checkout.outputs.sha }}".substr(0, 7);
+
             let body = null;
-            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' && needs.flutter-integration.result == 'success' }})
-            {
-              body = `🎉 [All tests](${url}) of \`${sha}\` passed successfully.`;
+            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' && needs.flutter-integration.result == 'success' }}) {
+              body = `🎉 [All tests #${{ github.run_attempt }}](${url}) of \`${sha}\` passed successfully.`;
 
               if (${{ needs.python-coverage.result == 'success' }})
               {
-                const fs = require("fs/promises");
                 const data = await fs.readFile("textcov.txt", { encoding: "utf8" });
 
                 const wrapped = `\`\`\`\n${data}\`\`\``;
                 body += `\n<details>\n<summary>Coverage report</summary>\n\n${wrapped}\n\n</details>`;
               }
-            }
-            else
-            {
-              body = `❌ [One or more tests](${url}) of \`${sha}\` failed.`;
+            } else {
+              body = `❌ [One or more tests #${{ github.run_attempt }}](${url}) of \`${sha}\` failed.`;
             }
 
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ needs.checkout.outputs.number }},
-              body: body,
-            });
+            try {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: ${{ needs.checkout.outputs.comment_id }},
+                body: body,
+              });
+            } catch (error) {
+              core.warning(error);
+              core.warning("Unable to update initial comment, creating a new one.");
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: ${{ needs.checkout.outputs.number }},
+                body: body,
+              });
+            }
