@@ -82,7 +82,8 @@ class __IDGenerator:
     @classmethod
     def generate_id(cls) -> int:
         now = int(1000 * since_epoch().total_seconds())
-        result = (now << 16) | struct.unpack("H", randbytes(2))[0]
+        tail = struct.unpack("I", randbytes(4))[0] & 0x00FFFFFF
+        result = (now << (8 * 3)) | tail
         return result
 
 

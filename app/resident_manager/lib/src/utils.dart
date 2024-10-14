@@ -59,7 +59,7 @@ DateTime fromEpoch(Duration dt) {
 }
 
 DateTime snowflakeTime(int id) {
-  return fromEpoch(Duration(milliseconds: id >> 16));
+  return fromEpoch(Duration(milliseconds: id >> 24));
 }
 
 extension DateFormat on DateTime {
