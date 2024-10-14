@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 
 __all__ = (
+    "CI",
     "ODBC_CONNECTION_STRING",
     "VNPAY_TMN_CODE",
     "VNPAY_SECRET_KEY",
@@ -18,6 +19,7 @@ __all__ = (
 )
 
 
+CI = bool("CI" in os.environ)
 ODBC_CONNECTION_STRING = os.environ["ODBC_CONNECTION_STRING"]
 VNPAY_TMN_CODE = os.environ["VNPAY_TMN_CODE"]
 VNPAY_SECRET_KEY = os.environ["VNPAY_SECRET_KEY"]

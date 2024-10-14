@@ -2,7 +2,6 @@ import "dart:async";
 import "dart:io";
 import "dart:math";
 
-import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -10,34 +9,26 @@ import "../common.dart";
 import "../state.dart";
 import "../utils.dart";
 import "../../config.dart";
-import "../../state.dart";
+import "../../routes.dart";
 import "../../translations.dart";
 import "../../utils.dart";
-import "../../models/reg_request.dart";
-import "../../models/snowflake.dart";
+import "../../models/rooms.dart";
 
-class RegisterQueuePage extends StateAwareWidget {
-  const RegisterQueuePage({super.key, required super.state});
+class RoomsPage extends StateAwareWidget {
+  const RoomsPage({super.key, required super.state});
 
   @override
-  RegisterQueuePageState createState() => RegisterQueuePageState();
+  RoomsPageState createState() => RoomsPageState();
 }
 
-class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
-  List<RegisterRequest> _requests = [];
+class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+  List<Room> _rooms = [];
 
   Future<bool>? _queryFuture;
   Future<bool>? _countFuture;
-  Widget _notification = const SizedBox.square(dimension: 0);
 
-  final _selected = <RegisterRequest>{};
-  final _actionLock = Lock();
-
-  final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
-  final _usernameSearch = TextEditingController();
-  String? orderBy;
-  bool ascending = true;
+  final _floorSearch = TextEditingController();
 
   int _offset = 0;
   int _offsetLimit = 0;
@@ -49,55 +40,15 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     refresh();
   }
 
-  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
-
-  Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
-    await _actionLock.run(
-      () async {
-        _notification = TranslatedText(
-          (ctx) => AppLocale.Loading.getString(ctx),
-          state: state,
-          style: const TextStyle(color: Colors.blue),
-        );
-        refresh();
-
-        var success = false;
-        try {
-          success = await coro(state: state, objects: _selected);
-        } catch (e) {
-          if (e is SocketException || e is TimeoutException) {
-            await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-          } else {
-            rethrow;
-          }
-        }
-
-        if (success) {
-          _notification = const SizedBox.square(dimension: 0);
-          _selected.clear();
-          offset = 0;
-        } else {
-          _notification = TranslatedText(
-            (ctx) => AppLocale.UnknownError.getString(ctx),
-            state: state,
-            style: const TextStyle(color: Colors.red),
-          );
-          refresh();
-        }
-      },
-    );
-  }
+  bool get searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
 
   Future<bool> query() async {
     try {
-      _requests = await RegisterRequest.query(
+      _rooms = await Room.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
-        orderBy: orderBy,
-        ascending: ascending,
+        floor: int.tryParse(_floorSearch.text),
       );
 
       refresh();
@@ -114,11 +65,10 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
   Future<bool> count() async {
     try {
-      final value = await RegisterRequest.count(
+      final value = await Room.count(
         state: state,
-        name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
+        floor: int.tryParse(_floorSearch.text),
       );
       if (value == null) {
         _offsetLimit = offset;
@@ -149,11 +99,12 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        backgroundColor: Colors.blue,
         leading: IconButton(
           onPressed: openDrawer,
           icon: const Icon(Icons.menu_outlined),
         ),
-        title: Text(AppLocale.RegisterQueue.getString(context)),
+        title: Text(AppLocale.RoomsList.getString(context)),
       ),
       body: FutureBuilder(
         future: _queryFuture,
@@ -179,33 +130,11 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
             case ConnectionState.done:
               final success = snapshot.data ?? false;
               if (success) {
-                TableCell headerCeil(String text, [String? newOrderBy]) {
-                  if (newOrderBy != null) {
-                    if (orderBy == newOrderBy) {
-                      text += ascending ? " ▴" : " ▾";
-                    } else {
-                      text += " ▴▾";
-                    }
-                  }
-
+                TableCell headerCeil(String text) {
                   return TableCell(
                     child: Padding(
                       padding: const EdgeInsets.all(5),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (newOrderBy != null) {
-                            if (newOrderBy == orderBy) {
-                              ascending = !ascending;
-                            } else {
-                              ascending = true;
-                            }
-
-                            orderBy = newOrderBy;
-                            offset = 0;
-                          }
-                        },
-                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ),
+                      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   );
                 }
@@ -214,91 +143,70 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                   TableRow(
                     decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
                     children: [
-                      TableCell(
-                        child: Checkbox.adaptive(
-                          value: _selected.containsAll(_requests),
-                          onChanged: (state) {
-                            if (state != null) {
-                              if (state) {
-                                _selected.addAll(_requests);
-                              } else {
-                                _selected.removeAll(_requests);
-                              }
-                            }
-
-                            refresh();
-                          },
-                        ),
-                      ),
-                      headerCeil(AppLocale.Fullname.getString(context), "name"),
-                      headerCeil(AppLocale.Room.getString(context), "room"),
-                      headerCeil(AppLocale.DateOfBirth.getString(context)),
-                      headerCeil(AppLocale.Phone.getString(context)),
-                      headerCeil(AppLocale.Email.getString(context)),
-                      headerCeil(AppLocale.CreationTime.getString(context), "request_id"),
-                      headerCeil(AppLocale.Username.getString(context), "username"),
+                      headerCeil(AppLocale.Room.getString(context)),
+                      headerCeil(AppLocale.Floor.getString(context)),
+                      headerCeil(AppLocale.Area1.getString(context)),
+                      headerCeil(AppLocale.MotorbikesCount.getString(context)),
+                      headerCeil(AppLocale.CarsCount.getString(context)),
+                      headerCeil(AppLocale.ResidentsCount.getString(context)),
+                      headerCeil(AppLocale.Search.getString(context)),
                     ],
                   ),
                 ];
 
-                for (final request in _requests) {
+                for (final room in _rooms) {
                   rows.add(
                     TableRow(
                       children: [
-                        Checkbox.adaptive(
-                          value: _selected.contains(request),
-                          onChanged: (state) {
-                            if (state != null) {
-                              if (state) {
-                                _selected.add(request);
-                              } else {
-                                _selected.remove(request);
-                              }
-                            }
-
-                            refresh();
-                          },
-                        ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.name),
+                            child: Text(room.room.toString()),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.room.toString()),
+                            child: Text(room.floor.toString()),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.birthday?.toLocal().formatDate() ?? "---"),
+                            child: Text(room.area?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.phone ?? "---"),
+                            child: Text(room.motorbike?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.email ?? "---"),
+                            child: Text(room.car?.toString() ?? "---"),
                           ),
                         ),
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.createdAt.toLocal().toString()),
+                            child: Text(room.residents.toString()),
                           ),
                         ),
                         TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(request.username ?? "---"),
+                          child: HoverContainer(
+                            onHover: Colors.grey.shade200,
+                            child: GestureDetector(
+                              onTap: () async {
+                                state.extras["room-search"] = room;
+                                await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: Text("→"),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -308,22 +216,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
                 return Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.done_outlined),
-                          label: Text("${AppLocale.Approve.getString(context)} (${_selected.length})"),
-                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.approve),
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.close_outlined),
-                          label: Text("${AppLocale.Reject.getString(context)} (${_selected.length})"),
-                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.reject),
-                        ),
-                      ],
-                    ),
-                    const SizedBox.square(dimension: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -365,9 +257,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
-                            final nameSearch = _nameSearch.text;
                             final roomSearch = _roomSearch.text;
-                            final usernameSearch = _usernameSearch.text;
+                            final floorSearch = _floorSearch.text;
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
@@ -378,20 +269,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                     child: Form(
                                       child: Column(
                                         children: [
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _nameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.badge_outlined),
-                                              label: Text(AppLocale.Fullname.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => nameValidator(context, required: false, value: value),
-                                          ),
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
                                             controller: _roomSearch,
@@ -408,11 +285,11 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                           ),
                                           TextFormField(
                                             autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _usernameSearch,
+                                            controller: _floorSearch,
                                             decoration: InputDecoration(
                                               contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outlined),
-                                              label: Text(AppLocale.Username.getString(context)),
+                                              icon: const Icon(Icons.apartment_outlined),
+                                              label: Text(AppLocale.Floor.getString(context)),
                                             ),
                                             onFieldSubmitted: (_) {
                                               Navigator.pop(context, true);
@@ -438,9 +315,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                                   icon: const Icon(Icons.clear_outlined),
                                                   label: Text(AppLocale.ClearAll.getString(context)),
                                                   onPressed: () {
-                                                    _nameSearch.clear();
                                                     _roomSearch.clear();
-                                                    _usernameSearch.clear();
+                                                    _floorSearch.clear();
 
                                                     Navigator.pop(context, true);
                                                     offset = 0;
@@ -459,16 +335,13 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
                             if (submitted == null) {
                               // Dialog dismissed. Restore field values
-                              _nameSearch.text = nameSearch;
                               _roomSearch.text = roomSearch;
-                              _usernameSearch.text = usernameSearch;
+                              _floorSearch.text = floorSearch;
                             }
                           },
                         ),
                       ],
                     ),
-                    const SizedBox.square(dimension: 5),
-                    _notification,
                     const SizedBox.square(dimension: 5),
                     Expanded(
                       child: Scrollbar(

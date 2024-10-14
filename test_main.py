@@ -165,7 +165,7 @@ def test_register_main_flow(get_client: TestClient) -> None:
     assert_match(data, name=name, room=room, birthday=birthday, phone=phone, email=email)
 
     response = get_client.post(
-        "/api/v1/admin/delete",
+        "/api/v1/admin/residents/delete",
         json=[data],
         headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )

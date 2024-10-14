@@ -43,14 +43,16 @@ class _Authorization extends PublicAuthorization {
     );
 
     final result = response.statusCode < 400;
+    if (result) {
+      if (!isAdmin) {
+        resident = Resident.fromJson(json.decode(utf8.decode(response.bodyBytes)));
+      }
 
-    if (result && remember) {
-      final data = json.decode(utf8.decode(response.bodyBytes));
-      resident = Resident.fromJson(data);
-
-      await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
-    } else {
-      await removeAuthData();
+      if (remember) {
+        await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
+      } else {
+        await removeAuthData();
+      }
     }
 
     return result;
@@ -59,8 +61,9 @@ class _Authorization extends PublicAuthorization {
   Future<void> removeAuthData() async {
     await _withLoginFile(
       (file) async {
-        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
-        if (file.existsSync()) {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
           await file.delete();
         }
       },
@@ -84,8 +87,9 @@ class _Authorization extends PublicAuthorization {
   static Future<_Authorization?> prepare({required ApplicationState state}) async {
     final auth = await _withLoginFile(
       (file) async {
-        // Do not change to `await file.exists()`: https://github.com/flutter/flutter/issues/75249
-        if (file.existsSync()) {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
           final data = json.decode(await file.readAsString());
           final username = data["username"];
           final password = data["password"];
@@ -110,17 +114,20 @@ class _Authorization extends PublicAuthorization {
 }
 
 class ApplicationState {
-  static final Uri baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
+  static final baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
 
   final HTTPClient http;
 
-  final FlutterLocalization localization = FlutterLocalization.instance;
-  final List<void Function(Locale?)> _onTranslationCallbacks = <void Function(Locale?)>[];
+  final localization = FlutterLocalization.instance;
+  final _onTranslationCallbacks = <void Function(Locale?)>[];
+  final extras = <Object, Object?>{};
 
   _Authorization? _authorization;
   PublicAuthorization? get authorization => _authorization;
 
   ApplicationState({Client? client}) : http = HTTPClient(client: client ?? Client()) {
+    print("Using base API URL $baseUrl"); // ignore: avoid_print
+
     localization.init(
       mapLocales: [
         const MapLocale("en", AppLocale.EN),

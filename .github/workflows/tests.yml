@@ -14,7 +14,16 @@ permissions:
 jobs:
   checkout:
     name: Checkout repository
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    if: |
+      (
+        github.event_name == 'push' &&
+        github.actor != 'dependabot[bot]'
+      ) || (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.actor != 'dependabot[bot]'
+      )
+
     runs-on: ubuntu-latest
     outputs:
       number: ${{ steps.pr-info-output.outputs.number }}
@@ -52,7 +61,7 @@ jobs:
           path: .
 
   python:
-    name: Test web application
+    name: Web application test
     needs: checkout
     runs-on: ubuntu-latest
     strategy:
@@ -89,32 +98,30 @@ jobs:
       - name: Run tests
         run: coverage run -m pytest -v .
 
-      - name: Combine coverage reports
+      - name: Collect coverage data
         run: coverage combine
 
       - name: Report coverage
         run: coverage report -m
 
-      - name: Generate HTML coverage report
-        run: coverage html -d htmlcov
+      - name: Rename coverage report
+        run: mv .coverage .coverage.python-${{ matrix.python-version }}
 
-      - name: Upload HTML coverage report
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-html-${{ matrix.python-version }}
-          path: htmlcov
+          name: coverage-python-${{ matrix.python-version }}
+          path: .coverage.python-${{ matrix.python-version }}
+          include-hidden-files: true
 
   flutter:
-    name: Test client application
+    name: Client application test
     needs: checkout
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-
-    env:
-      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
 
     steps:
       - name: Download repository
@@ -137,13 +144,140 @@ jobs:
         working-directory: app/resident_manager
         run: flutter test
 
+  flutter-integration:
+    name: Client integration test
+    needs: checkout
+    runs-on: ubuntu-latest
+
+    env:
+      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+      VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
+      PORT: 8000
+
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.3
+          channel: stable
+
+      - name: Install extra apt dependencies
+        run: sudo apt-get install -y ninja-build libgtk-3-dev
+
+      - name: View Flutter status
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Install ODBC driver 18
+        run: |
+          chmod +x scripts/odbc.sh
+          scripts/odbc.sh
+
+      - name: Start API server
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port $PORT &
+          echo $! > /tmp/serverpid.txt
+
+      - name: Run integration tests
+        timeout-minutes: 30
+        working-directory: app/resident_manager
+        run: xvfb-run flutter test integration_test
+
+      - name: Stop API server
+        run: |
+          kill $(cat /tmp/serverpid.txt)
+          sleep 5
+
+      - name: Collect coverage data
+        run: coverage combine
+
+      - name: Report coverage
+        run: coverage report -m
+
+      - name: Rename coverage report
+        run: mv .coverage .coverage.flutter-integration
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-flutter-integration
+          path: .coverage.flutter-integration
+          include-hidden-files: true
+
+  python-coverage:
+    name: Combine coverage reports
+    needs: [python, flutter-integration]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: .
+          merge-multiple: true
+
+      - name: Install dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Combine coverage reports
+        run: coverage combine
+
+      - name: Report coverage
+        run: coverage report -m
+
+      - name: Save coverage report
+        run: coverage report -m > textcov.txt
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-txt
+          path: textcov.txt
+
+      - name: Generate HTML coverage report
+        run: coverage html -d htmlcov
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter]
+    needs: [checkout, python, flutter, flutter-integration, python-coverage]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download coverage report
+        if: ${{ needs.python-coverage.result == 'success' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-txt
+
       - name: Create comment
         uses: actions/github-script@v7
         with:
@@ -152,9 +286,18 @@ jobs:
             const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const sha = "${{ needs.checkout.outputs.sha}}".substr(0, 7);
             let body = null;
-            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' }})
+            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' && needs.flutter-integration.result == 'success' }})
             {
               body = `🎉 [All tests](${url}) of \`${sha}\` passed successfully.`;
+
+              if (${{ needs.python-coverage.result == 'success' }})
+              {
+                const fs = require("fs/promises");
+                const data = await fs.readFile("textcov.txt", { encoding: "utf8" });
+
+                const wrapped = `\`\`\`\n${data}\`\`\``;
+                body += `\n<details>\n<summary>Coverage report</summary>\n\n${wrapped}\n\n</details>`;
+              }
             }
             else
             {

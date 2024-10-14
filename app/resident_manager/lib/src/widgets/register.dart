@@ -8,11 +8,11 @@ import "package:flutter_localization/flutter_localization.dart";
 import "common.dart";
 import "state.dart";
 import "utils.dart";
+import "../translations.dart";
 import "../utils.dart";
-import "../core/translations.dart";
-import "../core/models/auth.dart";
-import "../core/models/info.dart";
-import "../core/models/reg_request.dart";
+import "../models/auth.dart";
+import "../models/info.dart";
+import "../models/reg_request.dart";
 
 class RegisterPage extends StateAwareWidget {
   const RegisterPage({super.key, required super.state});

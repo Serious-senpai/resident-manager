@@ -58,10 +58,10 @@ class PublicInfo extends PersonalInfo with Snowflake {
   @override
   final int id;
 
-  /// The username for the registration request, this data is only available from the admin endpoint.
+  /// The username information, this data is only available from the admin endpoint.
   String? username;
 
-  /// The hashed password for the registration request, this data is only available from the admin endpoint.
+  /// The hashed password information, this data is only available from the admin endpoint.
   String? hashedPassword;
 
   /// Constructs a [PublicInfo] object with the given [id], [name], [room], [birthday], [phone], and [email].
