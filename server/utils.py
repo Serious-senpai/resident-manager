@@ -79,13 +79,10 @@ def snowflake_time(id: int) -> datetime:
 
 class __IDGenerator:
 
-    counter: ClassVar[int] = 0
-
     @classmethod
     def generate_id(cls) -> int:
         now = int(1000 * since_epoch().total_seconds())
-        result = (now << 16) | cls.counter
-        cls.counter = (cls.counter + 1) & struct.unpack("H", randbytes(2))[0]
+        result = (now << 16) | struct.unpack("H", randbytes(2))[0]
         return result
 
 
