@@ -6,10 +6,6 @@ on:
     workflows: Trigger PR sensitive workflows
     types: completed
 
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 permissions:
   actions: read
   contents: read
@@ -74,7 +70,7 @@ jobs:
           script: |
             const url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const sha = "${{ steps.pr-info-output.outputs.sha }}".substr(0, 7);
-            const body = "🔄 [Testing workflow #${{ github.run_attempt }}](${url}) of \`${sha}\` is running";
+            const body = `🔄 [Testing workflow #${{ github.run_attempt }}](${url}) of \`${sha}\` is running`;
 
             const response = await github.rest.issues.createComment({
               owner: context.repo.owner,
