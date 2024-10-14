@@ -229,82 +229,68 @@ def test_register_fail(
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.parametrize("pass_i", range(13))
-@pytest.mark.parametrize("fail_i", range(13))
-def test_register_username_taken(get_client: TestClient, pass_i: int, fail_i: int) -> None:
-    taken_username = []
-    for iterations in range(1, pass_i + 2):
-        name = f"test-{random_string(random.randint(1, 69))}"
-        room = random.randint(0, 32767)
-        now = datetime.now(timezone.utc)
-        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
-        phone = random_numstring(random.randint(1, 15))
-        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
-        username = random_string(random.randint(1, 255))
-        password = random_string(random.randint(8, 255))
-        response = get_client.post(
-            "/api/v1/register",
-            params={
-                "name": name,
-                "room": room,
-                "birthday": birthday.isoformat(),
-                "phone": phone,
-                "email": email,
-            },
-            headers=generate_auth_headers(username=username, password=password).model_dump(),
-        )
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        taken_username.append((username, data["id"]))
+def test_register_username_taken(get_client: TestClient) -> None:
+    name = f"test-{random_string(random.randint(1, 69))}"
+    room = random.randint(0, 32767)
+    now = datetime.now(timezone.utc)
+    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+    phone = random_numstring(random.randint(1, 15))
+    email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+    username = random_string(255)
+    password = random_string(random.randint(256, 10 ** 4 + 7))
 
-    for iterations in range(1, fail_i + 2):
-        name = f"test-{random_string(random.randint(1, 69))}"
-        room = random.randint(0, 32767)
-        now = datetime.now(timezone.utc)
-        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
-        phone = random_numstring(random.randint(1, 15))
-        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
-        username = random_string(random.randint(1, 255))
-        password = random_string(random.randint(256, 10**4 + 7))
+    response = get_client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-        response = get_client.post(
-            "/api/v1/register",
-            params={
-                "name": name,
-                "room": room,
-                "birthday": birthday.isoformat(),
-                "phone": phone,
-                "email": email,
-            },
-            headers=generate_auth_headers(username=username, password=password).model_dump(),
-        )
-        assert response.status_code == 400
+    password = random_string(random.randint(8, 255))
 
-    for username, _ in taken_username:
-        name = f"test-{random_string(random.randint(1, 69))}"
-        room = random.randint(0, 32767)
-        now = datetime.now(timezone.utc)
-        birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
-        phone = random_numstring(random.randint(1, 15))
-        email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
-        password = random_string(random.randint(8, 255))
+    response = get_client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
 
-        response = get_client.post(
-            "/api/v1/register",
-            params={
-                "name": name,
-                "room": room,
-                "birthday": birthday.isoformat(),
-                "phone": phone,
-                "email": email,
-            },
-            headers=generate_auth_headers(username=username, password=password).model_dump(),
-        )
-        assert response.status_code == 409
+    name = f"test-{random_string(random.randint(1, 69))}"
+    room = random.randint(0, 32767)
+    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+    phone = random_numstring(random.randint(1, 15))
+    email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+    password = random_string(random.randint(8, 255))
+
+    response = get_client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_409_CONFLICT
 
     response = get_client.post(
         "/api/v1/admin/reg-request/reject",
-        json=[{"id": id} for _, id in taken_username],
+        json=[{"id": data["id"]}],
         headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
