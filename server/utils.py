@@ -3,9 +3,11 @@ from __future__ import annotations
 import re
 import secrets
 import string
+import struct
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
-from typing import ClassVar, Optional
+from random import randbytes
+from typing import Optional
 
 from .config import EPOCH, SALT_LENGTH
 
@@ -77,13 +79,11 @@ def snowflake_time(id: int) -> datetime:
 
 class __IDGenerator:
 
-    counter: ClassVar[int] = 0
-
     @classmethod
     def generate_id(cls) -> int:
         now = int(1000 * since_epoch().total_seconds())
-        result = (now << 14) | cls.counter
-        cls.counter = (cls.counter + 1) & 0x1FFF
+        tail = struct.unpack("I", randbytes(4))[0] & 0x00FFFFFF
+        result = (now << (8 * 3)) | tail
         return result
 
 

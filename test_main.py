@@ -274,3 +274,77 @@ def test_register_fail(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["code"] == 201
+
+
+def test_register_username_taken(client: TestClient) -> None:
+    name = f"test-{random_string(random.randint(1, 69))}"
+    room = random.randint(0, 32767)
+    now = datetime.now(timezone.utc)
+    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+    phone = random_numstring(random.randint(1, 15))
+    email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+    username = random_string(255)
+    password = random_string(random.randint(256, 10 ** 4 + 7))
+
+    response = client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["code"] == 106
+
+    password = random_string(random.randint(8, 255))
+
+    response = client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert data["code"] == 0
+    data = data["data"]
+
+    name = f"test-{random_string(random.randint(1, 69))}"
+    room = random.randint(0, 32767)
+    birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
+    phone = random_numstring(random.randint(1, 15))
+    email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
+    password = random_string(random.randint(8, 255))
+
+    response = client.post(
+        "/api/v1/register",
+        params={
+            "name": name,
+            "room": room,
+            "birthday": birthday.isoformat(),
+            "phone": phone,
+            "email": email,
+        },
+        headers=generate_auth_headers(username=username, password=password).model_dump(),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    d = response.json()
+    assert d["code"] == 107
+
+    response = client.post(
+        "/api/v1/admin/reg-request/reject",
+        json=[{"id": data["id"]}],
+        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
