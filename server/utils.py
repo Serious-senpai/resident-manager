@@ -7,7 +7,7 @@ import struct
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from random import randbytes
-from typing import ClassVar, Optional
+from typing import Optional
 
 from .config import EPOCH, SALT_LENGTH
 
