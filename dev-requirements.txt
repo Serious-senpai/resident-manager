@@ -24,7 +24,7 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.1
 mccabe==0.7.0
 mdurl==0.1.2
-mypy==1.11.2
+mypy==1.12.0
 mypy-extensions==1.0.0
 packaging==24.1
 pluggy==1.5.0
