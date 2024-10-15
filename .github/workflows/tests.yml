@@ -34,6 +34,8 @@ jobs:
       - name: Checkout repository
         if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Get pull request HEAD SHA
         if: ${{ github.event_name == 'workflow_run' }}
@@ -54,6 +56,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr-info-output.outputs.sha }}
+          submodules: recursive
 
       - name: Upload repository
         uses: actions/upload-artifact@v4
@@ -248,6 +251,13 @@ jobs:
     needs: checkout
     runs-on: ubuntu-latest
 
+    env:
+      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
+      VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
+      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
+      PORT: 8000
+
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -257,13 +267,10 @@ jobs:
       - name: Install extra apt dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev git
-
-      - name: Clone wrk repository
-        run: git clone https://github.com/wg/wrk wrk
+          sudo apt-get install -y build-essential libssl-dev
 
       - name: Build wrk
-        working-directory: wrk
+        working-directory: extern/wrk
         run: |
           sudo make
           sudo cp wrk /usr/local/bin
@@ -283,13 +290,13 @@ jobs:
 
       - name: Start API server
         run: |
-          uvicorn main:app --host 0.0.0.0 --port 8000 --log-level warning &
+          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
           echo $! > /tmp/serverpid.txt
 
       - name: Measure performance
         run: |
           sleep 5
-          wrk http://localhost:8000
+          wrk http://localhost:$PORT
 
       - name: Stop API server
         run: |
