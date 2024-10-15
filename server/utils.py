@@ -74,7 +74,7 @@ def from_epoch(dt: timedelta) -> datetime:
 
 def snowflake_time(id: int) -> datetime:
     """Get the creation date of a snowflake ID."""
-    return from_epoch(timedelta(milliseconds=id >> 14))
+    return from_epoch(timedelta(milliseconds=id >> (8 * 3)))
 
 
 class __IDGenerator:
