@@ -283,13 +283,13 @@ jobs:
 
       - name: Start API server
         run: |
-          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
+          uvicorn main:app --host 0.0.0.0 --port 8000 --log-level warning &
           echo $! > /tmp/serverpid.txt
 
       - name: Measure performance
         run: |
           sleep 5
-          wrk http://localhost:$PORT
+          wrk http://localhost:8000
 
       - name: Stop API server
         run: |
