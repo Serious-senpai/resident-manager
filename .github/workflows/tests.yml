@@ -214,7 +214,7 @@ jobs:
 
       - name: Start API server
         run: |
-          uvicorn main:app --host 0.0.0.0 --port $PORT &
+          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
           echo $! > /tmp/serverpid.txt
 
       - name: Run integration tests
@@ -242,6 +242,59 @@ jobs:
           name: coverage-flutter-integration
           path: .coverage.flutter-integration
           include-hidden-files: true
+
+  stress-test:
+    name: Server performance test
+    needs: checkout
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repository
+
+      - name: Install extra apt dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev git
+
+      - name: Clone wrk repository
+        run: git clone https://github.com/wg/wrk wrk
+
+      - name: Build wrk
+        working-directory: wrk
+        run: |
+          sudo make
+          sudo cp wrk /usr/local/bin
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r dev-requirements.txt
+
+      - name: Install ODBC driver 18
+        run: |
+          chmod +x scripts/odbc.sh
+          scripts/odbc.sh
+
+      - name: Start API server
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
+          echo $! > /tmp/serverpid.txt
+
+      - name: Measure performance
+        run: |
+          sleep 5
+          wrk http://localhost:$PORT
+
+      - name: Stop API server
+        run: |
+          kill $(cat /tmp/serverpid.txt)
+          sleep 5
 
   python-coverage:
     name: Combine coverage reports
