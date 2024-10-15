@@ -74,7 +74,6 @@ class AppLocale {
   static const String Error201 = "Error201";
   static const String Error202 = "Error202";
   static const String Error203 = "Error203";
-  static const String Error204 = "Error204";
   static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
@@ -153,7 +152,6 @@ class AppLocale {
     Error201: "The login username does not exist.",
     Error202: "The provided login password is incorrect.",
     Error203: "The administrator authentication data is incorrect.",
-    Error204: "Unable to decrypt the provided password.",
     ErrorUnknown: "An unknown error occurred.",
   };
 
@@ -233,7 +231,6 @@ class AppLocale {
     Error201: "Tên đăng nhập không tồn tại. Vui lòng kiểm tra lại.",
     Error202: "Mật khẩu đăng nhập không chính xác. Vui lòng kiểm tra lại.",
     Error203: "Dữ liệu xác thực quản trị viên không chính xác. Vui lòng kiểm tra lại.",
-    Error204: "Không thể giải mã mật khẩu. Vui lòng thử lại.",
     ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
 
@@ -261,8 +258,6 @@ class AppLocale {
         return Error202;
       case 203:
         return Error203;
-      case 204:
-        return Error204;
       default:
         return ErrorUnknown;
     }

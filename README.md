@@ -27,4 +27,3 @@ message into a specific language.
 | 201 | Login username does not exist |
 | 202 | Incorrect login password |
 | 203 | Incorrect administrator authentication data |
-| 204 | Unable to decrypt password |

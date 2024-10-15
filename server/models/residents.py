@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Literal, Optional, TypeVar, cast
+from typing import Any, List, Literal, Optional, TypeVar
 
 from .auth import AuthorizationHeader, HashedAuthorization
 from .info import PublicInfo
@@ -157,11 +157,7 @@ class Resident(PublicInfo, HashedAuthorization):
             return Result(code=201, data=None)
 
         resident = residents[0]
-        password = headers.decrypt_password()
-        if password.data is None:
-            return cast(Result[None], password)
-
-        if not check_password(password.data, hashed=resident.hashed_password):
+        if not check_password(headers.password, hashed=resident.hashed_password):
             return Result(code=202, data=None)
 
         return Result(data=resident)

@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import Response, status
 
 from ......apps import api_v1
-from ......models import Authorization, AuthorizationHeader, RegisterRequest, Result
+from ......models import AuthorizationHeader, RegisterRequest, Result
 
 
 __all__ = ("admin_reg_request_count",)
@@ -36,7 +36,7 @@ async def admin_reg_request_count(
     room: Optional[int] = None,
     username: Optional[str] = None,
 ) -> Result[Optional[int]]:
-    auth = await Authorization.verify_admin_headers(headers)
+    auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth

@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import Response, status
 
 from .....apps import api_v1
-from .....models import Authorization, AuthorizationHeader, Result
+from .....models import AuthorizationHeader, Result
 
 
 __all__ = ("admin_login",)
@@ -32,7 +32,7 @@ async def admin_login(
     headers: AuthorizationHeader,
     response: Response,
 ) -> Optional[Result[None]]:
-    result = await Authorization.verify_admin_headers(headers)
+    result = await headers.verify_admin()
     if result is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
 

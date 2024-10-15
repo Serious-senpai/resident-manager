@@ -8,8 +8,6 @@ from typing import Any, Generator, Optional
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from nacl.encoding import Base64Encoder
-from nacl.public import Box, PrivateKey, PublicKey
 
 from main import app
 from server import DEFAULT_ADMIN_PASSWORD, Authorization, check_password
@@ -59,17 +57,9 @@ def assert_match(
 
 
 def generate_auth_headers(*, username: str, password: str) -> Authorization:
-    private_key = PrivateKey.generate()
-    public_key = private_key.public_key
-
-    server_key = PublicKey(b"FUgK7Fi7O7eSDi5Ekd/hbmjIN3k/WcLevFTgZqmn9Bo=", encoder=Base64Encoder)
-
-    box = Box(private_key, server_key)
-
     return Authorization(
         username=username,
-        encrypted=box.encrypt(password.encode("utf-8"), encoder=Base64Encoder).decode("utf-8"),
-        pkey=public_key.encode(encoder=Base64Encoder).decode("utf-8"),
+        password=password,
     )
 
 

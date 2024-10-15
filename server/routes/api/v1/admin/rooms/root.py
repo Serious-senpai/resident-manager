@@ -6,7 +6,7 @@ from fastapi import Response, status
 
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
-from ......models import Authorization, AuthorizationHeader, Result, Room
+from ......models import AuthorizationHeader, Result, Room
 
 
 __all__ = ("admin_rooms",)
@@ -35,7 +35,7 @@ async def admin_rooms(
     room: Optional[int] = None,
     floor: Optional[int] = None,
 ) -> Result[Optional[List[Room]]]:
-    auth = await Authorization.verify_admin_headers(headers)
+    auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth

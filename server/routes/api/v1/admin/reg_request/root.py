@@ -6,7 +6,7 @@ from fastapi import Response, status
 
 from ......apps import api_v1
 from ......config import DB_PAGINATION_QUERY
-from ......models import Authorization, AuthorizationHeader, RegisterRequest, Result
+from ......models import AuthorizationHeader, RegisterRequest, Result
 
 
 __all__ = ("admin_reg_request",)
@@ -39,7 +39,7 @@ async def admin_reg_request(
     order_by: Literal["request_id", "name", "room", "username"] = "request_id",
     ascending: bool = True,
 ) -> Result[Optional[List[RegisterRequest]]]:
-    auth = await Authorization.verify_admin_headers(headers)
+    auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth

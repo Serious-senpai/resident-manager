@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import Response, status
 
 from ......apps import api_v1
-from ......models import Authorization, AuthorizationHeader, Result, RoomData
+from ......models import AuthorizationHeader, Result, RoomData
 
 
 __all__ = ("admin_rooms_update",)
@@ -33,7 +33,7 @@ async def admin_rooms_update(
     response: Response,
     rooms: List[RoomData],
 ) -> Optional[Result[None]]:
-    auth = await Authorization.verify_admin_headers(headers)
+    auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth

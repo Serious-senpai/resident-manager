@@ -38,11 +38,6 @@ async def register(
     response: Response,
     data: Annotated[PersonalInfo, Query()],
 ) -> Result[Optional[PublicInfo]]:
-    password = headers.decrypt_password()
-    if password.data is None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return cast(Result[None], password)
-
     result = await RegisterRequest.create(
         name=data.name,
         room=data.room,
@@ -50,7 +45,7 @@ async def register(
         phone=data.phone,
         email=data.email,
         username=headers.username,
-        password=password.data,
+        password=headers.password,
     )
 
     if result.data is None:

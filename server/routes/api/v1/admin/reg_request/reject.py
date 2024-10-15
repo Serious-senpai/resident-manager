@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import Response, status
 
 from ......apps import api_v1
-from ......models import Authorization, AuthorizationHeader, RegisterRequest, Result, Snowflake
+from ......models import AuthorizationHeader, RegisterRequest, Result, Snowflake
 
 
 __all__ = ("admin_reg_request_reject",)
@@ -33,7 +33,7 @@ async def admin_reg_request_reject(
     response: Response,
     objects: List[Snowflake],
 ) -> Optional[Result[None]]:
-    auth = await Authorization.verify_admin_headers(headers)
+    auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
