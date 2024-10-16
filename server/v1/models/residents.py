@@ -161,3 +161,33 @@ class Resident(PublicInfo, HashedAuthorization):
             return Result(code=202, data=None)
 
         return Result(data=resident)
+
+    @classmethod
+    async def update(cls, *, id: int, info: PublicInfo) -> Result[Optional[Resident]]:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                        UPDATE residents
+                        SET
+                            name = ?,
+                            room = ?,
+                            birthday = ?,
+                            phone = ?,
+                            email = ?
+                        OUTPUT INSERTED.*
+                        WHERE resident_id = ?
+                    """,
+                    info.name,
+                    info.room,
+                    info.birthday,
+                    info.phone,
+                    info.email,
+                    id,
+                )
+
+                row = await cursor.fetchone()
+                if row is not None:
+                    return Result(data=cls.from_row(row))
+
+        return Result(code=302, data=None)

@@ -104,7 +104,15 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                 await cursor.execute(
                     f"""
                     DELETE FROM register_queue
-                    OUTPUT temp.resident_id, DELETED.name, DELETED.room, DELETED.birthday, DELETED.phone, DELETED.email, DELETED.username, DELETED.hashed_password
+                    OUTPUT
+                        temp.resident_id,
+                        DELETED.name,
+                        DELETED.room,
+                        DELETED.birthday,
+                        DELETED.phone,
+                        DELETED.email,
+                        DELETED.username,
+                        DELETED.hashed_password
                     INTO residents
                     FROM register_queue
                     INNER JOIN {temp_decl}
