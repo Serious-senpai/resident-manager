@@ -98,7 +98,7 @@ String? roomValidator(BuildContext context, {required bool required, required St
     return null;
   }
 
-  final pattern = RegExp(r"^\d*$");
+  final pattern = RegExp(r"^\d{1,6}$");
   if (!pattern.hasMatch(value)) {
     return AppLocale.InvalidRoomNumber.getString(context);
   }

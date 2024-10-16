@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:collection";
 import "dart:io";
 import "dart:math";
 
@@ -30,7 +31,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   Future<bool>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
-  final _selected = <RegisterRequest>{};
+  final _selected = SplayTreeSet<RegisterRequest>((k1, k2) => k1.id.compareTo(k2.id));
   final _actionLock = Lock();
 
   final _nameSearch = TextEditingController();
@@ -99,6 +100,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         orderBy: orderBy,
         ascending: ascending,
       );
+      _requests.removeWhere((r) => _selected.contains(r));
+      _requests.addAll(_selected);
 
       refresh();
       return true;

@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:collection";
 import "dart:io";
 import "dart:math";
 
@@ -29,7 +30,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
   Future<bool>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
-  final _selected = <Resident>{};
+  final _selected = SplayTreeSet<Resident>((k1, k2) => k1.id.compareTo(k2.id));
   final _actionLock = Lock();
 
   final _nameSearch = TextEditingController();
@@ -61,6 +62,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
         orderBy: orderBy,
         ascending: ascending,
       );
+      _residents.removeWhere((r) => _selected.contains(r));
+      _residents.addAll(_selected);
 
       refresh();
       return true;
