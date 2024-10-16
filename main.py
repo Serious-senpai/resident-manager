@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import sys
+import logging
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
@@ -21,7 +21,13 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from server import api_v1, CI, Database
+from server import api_v1, CI
+
+
+logger = logging.getLogger(__name__)
+subapps = {
+    "/api/v1": api_v1
+}
 
 
 class ApplicationLifespan(AbstractAsyncContextManager):
@@ -38,23 +44,24 @@ class ApplicationLifespan(AbstractAsyncContextManager):
         if CI:
             self.cov = coverage.Coverage(data_suffix=True, config_file=True)
             self.cov.start()
-            print("Measuring code coverage...", file=sys.stderr)
+            logger.info("Measuring code coverage...")
 
     async def __aenter__(self) -> None:
-        await Database.instance.prepare()
+        coros = [a.router.lifespan_context(subapp).__aenter__() for a in subapps.values()]
+        await asyncio.gather(*coros)
 
     async def __aexit__(
         self,
         exc_type: Optional[Type[BaseException]],
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
-    ) -> bool:
-        await Database.instance.close()
+    ) -> None:
         if self.cov is not None:
             self.cov.stop()
             self.cov.save()
 
-        return True
+        coros = [a.router.lifespan_context(subapp).__aexit__(exc_type, exc_val, exc_tb) for a in subapps.values()]
+        await asyncio.gather(*coros)
 
 
 app = FastAPI(
@@ -64,7 +71,8 @@ app = FastAPI(
     redoc_url=None,
     lifespan=ApplicationLifespan,
 )
-app.mount("/api/v1", api_v1)
+for route, subapp in subapps.items():
+    app.mount(route, subapp)
 
 
 @app.get("/", include_in_schema=False)

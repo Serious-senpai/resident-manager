@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated, ClassVar, Optional, cast
 
 import pydantic
 from fastapi import Header
@@ -19,25 +19,25 @@ class Authorization(pydantic.BaseModel):
     username: str
     password: str
 
+    admin_username: ClassVar[Optional[str]] = None
+    admin_hashed_password: ClassVar[Optional[str]] = None
+
     async def verify_admin(self) -> Optional[Result[None]]:
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM config WHERE name = 'admin_username' OR name = 'admin_hashed_password'")
-                rows = await cursor.fetchall()
+        if Authorization.admin_username is None or Authorization.admin_hashed_password is None:
+            async with Database.instance.pool.acquire() as connection:
+                async with connection.cursor() as cursor:
+                    await cursor.execute("SELECT * FROM config WHERE name = 'admin_username'")
+                    row = await cursor.fetchone()
+                    Authorization.admin_username = cast(str, row[1])
 
-                if len(rows) != 2:
-                    raise RuntimeError("Invalid database format. Couldn't verify admin login.")
+                    await cursor.execute("SELECT * FROM config WHERE name = 'admin_hashed_password'")
+                    row = await cursor.fetchone()
+                    Authorization.admin_hashed_password = cast(str, row[1])
 
-                for name, value in rows:
-                    if name == "admin_username":
-                        if self.username != value:
-                            return Result(code=203, data=None)
+        if self.username == Authorization.admin_username and check_password(self.password, hashed=Authorization.admin_hashed_password):
+            return None
 
-                    else:
-                        if not check_password(self.password, hashed=value):
-                            return Result(code=203, data=None)
-
-        return None
+        return Result(code=203, data=None)
 
 
 AuthorizationHeader = Annotated[Authorization, Header(description="Authorization headers")]
