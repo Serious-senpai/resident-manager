@@ -4,8 +4,8 @@ from typing import List, Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......models import AuthorizationHeader, RegisterRequest, Result, Snowflake
+from .....apps import api_v1
+from .....models import AuthorizationHeader, RegisterRequest, Result, Snowflake
 
 
 __all__ = ("admin_reg_request_accept",)

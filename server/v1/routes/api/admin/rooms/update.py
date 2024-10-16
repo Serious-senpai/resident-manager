@@ -4,17 +4,17 @@ from typing import List, Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......models import AuthorizationHeader, Resident, Result, Snowflake
+from .....apps import api_v1
+from .....models import AuthorizationHeader, Result, RoomData
 
 
-__all__ = ("admin_residents_delete",)
+__all__ = ("admin_rooms_update",)
 
 
 @api_v1.post(
-    "/admin/residents/delete",
-    name="Account deletion",
-    description="Delete one or more resident accounts",
+    "/admin/rooms/update",
+    name="Room information update",
+    description="Update room information",
     tags=["admin"],
     response_model=None,
     responses={
@@ -28,15 +28,15 @@ __all__ = ("admin_residents_delete",)
     },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_residents_delete(
+async def admin_rooms_update(
     headers: AuthorizationHeader,
     response: Response,
-    objects: List[Snowflake],
+    rooms: List[RoomData],
 ) -> Optional[Result[None]]:
     auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
-    await Resident.delete_many(objects)
+    await RoomData.update_many(rooms)
     return None

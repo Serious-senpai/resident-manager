@@ -77,17 +77,11 @@ def snowflake_time(id: int) -> datetime:
     return from_epoch(timedelta(milliseconds=id >> (8 * 3)))
 
 
-class __IDGenerator:
-
-    @classmethod
-    def generate_id(cls) -> int:
-        now = int(1000 * since_epoch().total_seconds())
-        tail = struct.unpack("I", randbytes(4))[0] & 0x00FFFFFF
-        result = (now << (8 * 3)) | tail
-        return result
-
-
-generate_id = __IDGenerator.generate_id
+def generate_id() -> int:
+    now = int(1000 * since_epoch().total_seconds())
+    tail = struct.unpack("I", randbytes(4))[0] & 0x00FFFFFF
+    result = (now << (8 * 3)) | tail
+    return result
 
 
 def validate_name(name: str) -> bool:

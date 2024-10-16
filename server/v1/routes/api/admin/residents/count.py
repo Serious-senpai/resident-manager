@@ -4,21 +4,21 @@ from typing import Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......models import AuthorizationHeader, RegisterRequest, Result
+from .....apps import api_v1
+from .....models import AuthorizationHeader, Resident, Result
 
 
-__all__ = ("admin_reg_request_count",)
+__all__ = ("admin_residents_count",)
 
 
 @api_v1.get(
-    "/admin/reg-request/count",
-    name="Registration requests count",
-    description="Return number of registration requests",
+    "/admin/residents/count",
+    name="Residents count",
+    description="Return number of residents",
     tags=["admin"],
     responses={
         status.HTTP_200_OK: {
-            "description": "Number of registration requests",
+            "description": "Return number of residents",
             "model": Result[int],
         },
         status.HTTP_400_BAD_REQUEST: {
@@ -26,9 +26,8 @@ __all__ = ("admin_reg_request_count",)
             "model": Result[None],
         },
     },
-    status_code=status.HTTP_200_OK,
 )
-async def admin_reg_request_count(
+async def admin_residents_count(
     headers: AuthorizationHeader,
     response: Response,
     id: Optional[int] = None,
@@ -41,11 +40,4 @@ async def admin_reg_request_count(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
-    return Result(
-        data=await RegisterRequest.count(
-            id=id,
-            name=name,
-            room=room,
-            username=username,
-        ),
-    )
+    return Result(data=await Resident.count(id=id, name=name, room=room, username=username))

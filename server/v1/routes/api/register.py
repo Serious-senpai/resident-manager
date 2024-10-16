@@ -4,8 +4,8 @@ from typing import Annotated, Optional, cast
 
 from fastapi import Query, Response, status
 
-from ....apps import api_v1
-from ....models import (
+from ...apps import api_v1
+from ...models import (
     AuthorizationHeader,
     PersonalInfo,
     PublicInfo,

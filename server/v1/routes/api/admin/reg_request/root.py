@@ -4,9 +4,9 @@ from typing import List, Literal, Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......config import DB_PAGINATION_QUERY
-from ......models import AuthorizationHeader, RegisterRequest, Result
+from .....apps import api_v1
+from .....config import DB_PAGINATION_QUERY
+from .....models import AuthorizationHeader, RegisterRequest, Result
 
 
 __all__ = ("admin_reg_request",)

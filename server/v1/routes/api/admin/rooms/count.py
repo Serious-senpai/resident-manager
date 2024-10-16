@@ -4,8 +4,8 @@ from typing import Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......models import AuthorizationHeader, Result, Room
+from .....apps import api_v1
+from .....models import AuthorizationHeader, Result, Room
 
 
 __all__ = ("admin_rooms_count",)

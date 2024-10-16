@@ -4,17 +4,17 @@ from typing import List, Optional
 
 from fastapi import Response, status
 
-from ......apps import api_v1
-from ......models import AuthorizationHeader, RegisterRequest, Result, Snowflake
+from .....apps import api_v1
+from .....models import AuthorizationHeader, Result, RoomData
 
 
-__all__ = ("admin_reg_request_reject",)
+__all__ = ("admin_rooms_delete",)
 
 
 @api_v1.post(
-    "/admin/reg-request/reject",
-    name="Registration requests rejection",
-    description="Reject one or more registration requests",
+    "/admin/rooms/delete",
+    name="Room information deletion",
+    description="Delete room information",
     tags=["admin"],
     response_model=None,
     responses={
@@ -28,15 +28,15 @@ __all__ = ("admin_reg_request_reject",)
     },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_reg_request_reject(
+async def admin_rooms_delete(
     headers: AuthorizationHeader,
     response: Response,
-    objects: List[Snowflake],
+    rooms: List[int],
 ) -> Optional[Result[None]]:
     auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
-    await RegisterRequest.accept_many(objects)
+    await RoomData.delete_many(rooms)
     return None
