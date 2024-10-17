@@ -4,8 +4,8 @@ from typing import Any, List, Optional
 
 import pydantic
 
-from ..config import DB_PAGINATION_QUERY
 from ..database import Database
+from ...config import DB_PAGINATION_QUERY
 
 
 __all__ = ("RoomData", "Room")

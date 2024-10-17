@@ -6,7 +6,6 @@ from .auth import AuthorizationHeader, HashedAuthorization
 from .info import PublicInfo
 from .results import Result
 from .snowflake import Snowflake
-from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..utils import (
     check_password,
@@ -14,6 +13,7 @@ from ..utils import (
     validate_room,
     validate_username,
 )
+from ...config import DB_PAGINATION_QUERY
 
 
 __all__ = ("Resident",)

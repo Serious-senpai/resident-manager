@@ -10,7 +10,6 @@ from .auth import HashedAuthorization
 from .info import PublicInfo
 from .results import Result
 from .snowflake import Snowflake
-from ..config import DB_PAGINATION_QUERY
 from ..database import Database
 from ..utils import (
     generate_id,
@@ -22,6 +21,7 @@ from ..utils import (
     validate_username,
     validate_password,
 )
+from ...config import DB_PAGINATION_QUERY
 
 
 __all__ = ("RegisterRequest",)

@@ -1,5 +1,4 @@
-from .apps import *
-from .config import *
+from .app import *
 from .database import *
 from .models import *
 from .routes import *

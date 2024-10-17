@@ -65,8 +65,6 @@ class ApplicationLifespan(AbstractAsyncContextManager):
 
 
 app = FastAPI(
-    title="Apartment management API",
-    description="REST API for apartment management application",
     docs_url=None,
     redoc_url=None,
     lifespan=ApplicationLifespan,

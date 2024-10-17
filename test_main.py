@@ -56,13 +56,6 @@ def assert_match(
         assert check_password(password, hashed=data["hashed_password"])
 
 
-def generate_auth_headers(*, username: str, password: str) -> Authorization:
-    return Authorization(
-        username=username,
-        password=password,
-    )
-
-
 def test_root(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == status.HTTP_200_OK
@@ -82,7 +75,7 @@ admin_passwords = [DEFAULT_ADMIN_PASSWORD, random_string(50)]
 def test_admin_login(client: TestClient, username_i: int, password_i: int) -> None:
     response = client.post(
         "/api/v1/admin/login",
-        headers=generate_auth_headers(
+        headers=Authorization(
             username=admin_usernames[username_i],
             password=admin_passwords[password_i],
         ).model_dump(),
@@ -119,7 +112,7 @@ def test_register_main_flow(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=generate_auth_headers(username=username, password=password).model_dump(),
+        headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -131,7 +124,7 @@ def test_register_main_flow(client: TestClient) -> None:
     response = client.get(
         "/api/v1/admin/reg-request",
         params={"offset": 0, "id": request_id},
-        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -154,13 +147,13 @@ def test_register_main_flow(client: TestClient) -> None:
     response = client.post(
         "/api/v1/admin/reg-request/accept",
         json=[data[0]],
-        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     response = client.post(
         "/api/v1/login",
-        headers=generate_auth_headers(username=username, password=password).model_dump(),
+        headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -180,7 +173,7 @@ def test_register_main_flow(client: TestClient) -> None:
     response = client.post(
         "/api/v1/admin/residents/delete",
         json=[data],
-        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -223,9 +216,9 @@ def test_register_fail(
             "phone": resident_phones[phone_i],
             "email": resident_emails[email_i],
         },
-        headers=generate_auth_headers(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
+        headers=Authorization(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
     )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
 
     if name_i != 0:
@@ -249,7 +242,7 @@ def test_register_fail(
     response = client.get(
         "/api/v1/admin/reg-request",
         params={"offset": 0, "username": resident_usernames[username_i], "room": resident_rooms[room_i]},
-        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -259,7 +252,7 @@ def test_register_fail(
 
     response = client.post(
         "/api/v1/login",
-        headers=generate_auth_headers(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
+        headers=Authorization(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
@@ -274,7 +267,7 @@ def test_register_username_taken(client: TestClient) -> None:
     phone = random_numstring(random.randint(1, 15))
     email = f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com"
     username = random_string(255)
-    password = random_string(random.randint(256, 10 ** 4 + 7))
+    password = random_string(random.randint(256, 10 ** 4 + 7))  # Invalid password
 
     response = client.post(
         "/api/v1/register",
@@ -285,7 +278,7 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=generate_auth_headers(username=username, password=password).model_dump(),
+        headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
@@ -302,7 +295,7 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=generate_auth_headers(username=username, password=password).model_dump(),
+        headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -326,7 +319,7 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=generate_auth_headers(username=username, password=password).model_dump(),
+        headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     d = response.json()
@@ -335,6 +328,6 @@ def test_register_username_taken(client: TestClient) -> None:
     response = client.post(
         "/api/v1/admin/reg-request/reject",
         json=[{"id": data["id"]}],
-        headers=generate_auth_headers(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT

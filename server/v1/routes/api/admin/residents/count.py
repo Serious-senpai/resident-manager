@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import Response, status
 
-from .....apps import api_v1
+from .....app import api_v1
 from .....models import AuthorizationHeader, Resident, Result
 
 

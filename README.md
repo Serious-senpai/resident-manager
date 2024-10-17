@@ -11,6 +11,9 @@ Management system for residents sharing an apartment.
 
 ### Response codes
 
+This is the list of possible values in the `"code"` field of every JSON response object. Note that this is
+different from the HTTP response code.
+
 The reason we return a result code instead of a string is to give the client a chance to translate the response
 message into a specific language.
 

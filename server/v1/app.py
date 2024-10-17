@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager
+from os.path import join
 from types import TracebackType
 from typing import Optional, Final, Type, TYPE_CHECKING
 
@@ -35,9 +36,13 @@ class _ApplicationLifespan(AbstractAsyncContextManager):
         await Database.instance.close()
 
 
+with open(join(__file__, "..", "..", "..", "README.md")) as readme:
+    description = readme.read()
+
+
 api_v1 = FastAPI(
     title="Apartment management API v1",
-    description="REST API for apartment management application",
+    description=description,
     version="1.0.0",
     lifespan=_ApplicationLifespan,
 )
