@@ -295,7 +295,9 @@ jobs:
           sleep 5
 
       - name: Measure performance
-        run: wrk http://localhost:$PORT | tee wrk.txt
+        run: |
+          wrk --script scripts/wrk/root.lua http://localhost:$PORT | tee wrk-root.txt
+          wrk --script scripts/wrk/api/v1/admin/login.lua http://localhost:$PORT | tee wrk-api-v1-admin-login.txt
 
       - name: Stop API server
         run: |
@@ -306,7 +308,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wrk
-          path: wrk.txt
+          path: wrk-*.txt
 
   python-coverage:
     name: Combine coverage reports
@@ -397,12 +399,14 @@ jobs:
                 body += `\n<details>\n<summary>Coverage report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
-              if (${{ needs.python-coverage.result == 'success' }}) {
-                const wrk = await fs.readFile("wrk.txt", { encoding: "utf8" });
+              if (${{ needs.stress-test.result == 'success' }}) {
+                const wrk_root = await fs.readFile("wrk-root.txt", { encoding: "utf8" });
+                const wrk_api_v1_admin_login = await fs.readFile("wrk-api-v1-admin-login.txt", { encoding: "utf8" });
 
-                const wrapped = `\`\`\`\n${wrk}\`\`\``;
+                const wrapped = `-\`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n-\`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
                 body += `\n<details>\n<summary>Performance report</summary>\n\n${wrapped}\n\n</details>`;
               }
+
             } else {
               body = `❌ [One or more tests #${{ github.run_attempt }}](${url}) of \`${sha}\` failed.`;
             }
