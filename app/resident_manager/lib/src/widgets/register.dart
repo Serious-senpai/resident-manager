@@ -72,27 +72,15 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
             authorization: Authorization(username: username, password: password),
           );
 
-          if (result == 200) {
+          if (result == 0) {
             _notification = TranslatedText(
               (ctx) => AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(ctx),
               state: state,
               style: const TextStyle(color: Colors.blue),
             );
-          } else if (result == 400) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.CheckInputAgain.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
-            );
-          } else if (result == 409) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.UsernameAlreadyTaken.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
-            );
           } else {
             _notification = TranslatedText(
-              (ctx) => AppLocale.UnknownError.getString(ctx),
+              (ctx) => AppLocale.errorMessage(result).getString(ctx),
               state: state,
               style: const TextStyle(color: Colors.red),
             );

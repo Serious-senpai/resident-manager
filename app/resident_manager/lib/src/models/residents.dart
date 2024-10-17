@@ -69,7 +69,7 @@ class Resident extends PublicInfo {
       },
     );
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
+      final data = json.decode(utf8.decode(response.bodyBytes))["data"] as List;
       result.addAll(data.map(Resident.fromJson));
     }
 
@@ -94,7 +94,7 @@ class Resident extends PublicInfo {
       },
     );
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes));
+      return json.decode(utf8.decode(response.bodyBytes))["data"];
     }
 
     return null;

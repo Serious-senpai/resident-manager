@@ -45,7 +45,7 @@ class _Authorization extends PublicAuthorization {
     final result = response.statusCode < 400;
     if (result) {
       if (!isAdmin) {
-        resident = Resident.fromJson(json.decode(utf8.decode(response.bodyBytes)));
+        resident = Resident.fromJson(json.decode(utf8.decode(response.bodyBytes))["data"]);
       }
 
       if (remember) {
