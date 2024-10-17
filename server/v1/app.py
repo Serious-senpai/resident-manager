@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager
-from os.path import join
+from pathlib import Path
 from types import TracebackType
 from typing import Optional, Final, Type, TYPE_CHECKING
 
@@ -36,8 +36,9 @@ class _ApplicationLifespan(AbstractAsyncContextManager):
         await Database.instance.close()
 
 
-with open(join(__file__, "..", "..", "..", "README.md")) as readme:
-    description = readme.read()
+readme = Path(__file__).parent.parent.parent / "README.md"
+with readme.open("r", encoding="utf-8") as f:
+    description = f.read()
 
 
 api_v1 = FastAPI(
