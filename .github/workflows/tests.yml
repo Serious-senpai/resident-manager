@@ -306,8 +306,13 @@ jobs:
 
       - name: Measure performance
         run: |
-          wrk --script scripts/wrk/root.lua http://localhost:$PORT | tee wrk-root.txt
-          wrk --script scripts/wrk/api/v1/admin/login.lua http://localhost:$PORT | tee wrk-api-v1-admin-login.txt
+          command="wrk --script scripts/wrk/root.lua -d 20s http://localhost:$PORT"
+          echo $command > wrk-root.txt
+          $command | tee --append wrk-root.txt
+
+          command="wrk --script scripts/wrk/api/v1/admin/login.lua -d 20s http://localhost:$PORT"
+          echo $command > wrk-api-v1-admin-login.txt
+          $command | tee wrk-api-v1-admin-login.txt
 
       - name: Stop API server
         run: |
@@ -413,7 +418,7 @@ jobs:
                 const wrk_root = await fs.readFile("wrk-root.txt", { encoding: "utf8" });
                 const wrk_api_v1_admin_login = await fs.readFile("wrk-api-v1-admin-login.txt", { encoding: "utf8" });
 
-                const wrapped = `-\`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n-\`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
+                const wrapped = `- \`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
                 body += `\n<details>\n<summary>Performance report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
