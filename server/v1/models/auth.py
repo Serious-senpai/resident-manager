@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated, ClassVar, Optional, cast
 
 import pydantic
@@ -21,18 +22,20 @@ class Authorization(pydantic.BaseModel):
 
     admin_username: ClassVar[Optional[str]] = None
     admin_hashed_password: ClassVar[Optional[str]] = None
+    admin_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     async def verify_admin(self) -> Optional[Result[None]]:
-        if Authorization.admin_username is None or Authorization.admin_hashed_password is None:
-            async with Database.instance.pool.acquire() as connection:
-                async with connection.cursor() as cursor:
-                    await cursor.execute("SELECT * FROM config WHERE name = 'admin_username'")
-                    row = await cursor.fetchone()
-                    Authorization.admin_username = cast(str, row[1])
+        async with Authorization.admin_lock:
+            if Authorization.admin_username is None or Authorization.admin_hashed_password is None:
+                async with Database.instance.pool.acquire() as connection:
+                    async with connection.cursor() as cursor:
+                        await cursor.execute("SELECT * FROM config WHERE name = 'admin_username'")
+                        row = await cursor.fetchone()
+                        Authorization.admin_username = cast(str, row[1])
 
-                    await cursor.execute("SELECT * FROM config WHERE name = 'admin_hashed_password'")
-                    row = await cursor.fetchone()
-                    Authorization.admin_hashed_password = cast(str, row[1])
+                        await cursor.execute("SELECT * FROM config WHERE name = 'admin_hashed_password'")
+                        row = await cursor.fetchone()
+                        Authorization.admin_hashed_password = cast(str, row[1])
 
         if self.username == Authorization.admin_username and check_password(self.password, hashed=Authorization.admin_hashed_password):
             return None
