@@ -246,7 +246,7 @@ jobs:
           path: .coverage.flutter-integration
           include-hidden-files: true
 
-  stress-test:
+  performance-test:
     name: Server performance test
     needs: checkout
     runs-on: ubuntu-latest
@@ -269,11 +269,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev
 
+      - name: Fetch cached wrk
+        id: wrk-cache
+        uses: actions/cache@v4
+        with:
+          key: wrk-ubuntu-latest-${{ hashFiles('extern/wrk') }}
+          path: extern/wrk/wrk
+
       - name: Build wrk
+        if: ${{ steps.wrk-cache.outputs.cache-hit != 'true' }}
         working-directory: extern/wrk
-        run: |
-          sudo make
-          sudo cp wrk /usr/local/bin
+        run: sudo make
+
+      - name: Copy wrk to /usr/local/bin
+        working-directory: extern/wrk
+        run: sudo cp wrk /usr/local/bin
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -295,9 +305,15 @@ jobs:
           sleep 5
 
       - name: Measure performance
+        working-directory: scripts/wrk
         run: |
-          wrk --script scripts/wrk/root.lua http://localhost:$PORT | tee wrk-root.txt
-          wrk --script scripts/wrk/api/v1/admin/login.lua http://localhost:$PORT | tee wrk-api-v1-admin-login.txt
+          command="wrk --script root.lua -d 20s http://localhost:$PORT"
+          echo "$ $command" > wrk-root.txt
+          $command | tee --append wrk-root.txt
+
+          command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT"
+          echo "$ $command" > wrk-api-v1-admin-login.txt
+          $command | tee --append wrk-api-v1-admin-login.txt
 
       - name: Stop API server
         run: |
@@ -362,7 +378,7 @@ jobs:
 
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter, flutter-integration, python-coverage, stress-test]
+    needs: [checkout, python, flutter, flutter-integration, python-coverage, performance-test]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
@@ -374,7 +390,7 @@ jobs:
           name: coverage-txt
 
       - name: Download performance report
-        if: ${{ needs.stress-test.result == 'success' }}
+        if: ${{ needs.performance-test.result == 'success' }}
         uses: actions/download-artifact@v4
         with:
           name: wrk
@@ -399,11 +415,11 @@ jobs:
                 body += `\n<details>\n<summary>Coverage report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
-              if (${{ needs.stress-test.result == 'success' }}) {
+              if (${{ needs.performance-test.result == 'success' }}) {
                 const wrk_root = await fs.readFile("wrk-root.txt", { encoding: "utf8" });
                 const wrk_api_v1_admin_login = await fs.readFile("wrk-api-v1-admin-login.txt", { encoding: "utf8" });
 
-                const wrapped = `-\`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n-\`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
+                const wrapped = `- \`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
                 body += `\n<details>\n<summary>Performance report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
