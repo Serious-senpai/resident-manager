@@ -305,12 +305,13 @@ jobs:
           sleep 5
 
       - name: Measure performance
+        working-directory: scripts/wrk
         run: |
-          command="wrk --script scripts/wrk/root.lua -d 20s http://localhost:$PORT"
+          command="wrk --script root.lua -d 20s http://localhost:$PORT"
           echo "$ $command" > wrk-root.txt
           $command | tee --append wrk-root.txt
 
-          command="wrk --script scripts/wrk/api/v1/admin/login.lua -d 20s http://localhost:$PORT"
+          command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT"
           echo "$ $command" > wrk-api-v1-admin-login.txt
           $command | tee --append wrk-api-v1-admin-login.txt
 
