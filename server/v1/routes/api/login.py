@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, cast
+from typing import Optional
 
 from fastapi import Response, status
 
@@ -35,6 +35,6 @@ async def login(
 
     if result.data is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
-        return cast(Result[None], result)
+        return result
 
     return Result(data=result.data.to_public_info())

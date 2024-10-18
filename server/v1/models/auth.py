@@ -17,8 +17,8 @@ __all__ = ("Authorization", "AuthorizationHeader", "HashedAuthorization")
 class Authorization(pydantic.BaseModel):
     """Data model for authorization headers"""
 
-    username: str
-    password: str
+    username: Annotated[str, pydantic.Field(description="The username for authorization")]
+    password: Annotated[str, pydantic.Field(description="The password for authorization")]
 
     admin_username: ClassVar[Optional[str]] = None
     admin_hashed_password: ClassVar[Optional[str]] = None
@@ -52,5 +52,5 @@ class HashedAuthorization(pydantic.BaseModel):
     Keep in mind that using underscore in headers is not safe.
     """
 
-    username: str
-    hashed_password: str
+    username: Annotated[str, pydantic.Field(description="The username for authorization")]
+    hashed_password: Annotated[str, pydantic.Field(description="The SHA256-hashed password stored in the database")]

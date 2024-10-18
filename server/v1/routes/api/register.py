@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Optional, cast
+from typing import Annotated, Optional
 
 from fastapi import Query, Response, status
 
@@ -50,6 +50,6 @@ async def register(
 
     if result.data is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
-        return cast(Result[None], result)
+        return result
 
     return Result(data=result.data.to_public_info())

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Annotated, Any, List, Optional
 
 import pydantic
 
@@ -16,10 +16,10 @@ class RoomData(pydantic.BaseModel):
 
     Each object of this class corresponds to a database row.
     """
-    room: int
-    area: float
-    motorbike: int
-    car: int
+    room: Annotated[int, pydantic.Field(description="The room number")]
+    area: Annotated[float, pydantic.Field(description="The area of the room in square meters")]
+    motorbike: Annotated[int, pydantic.Field(description="The number of motorbikes")]
+    car: Annotated[int, pydantic.Field(description="The number of cars")]
 
     @staticmethod
     async def update_many(rooms: List[RoomData]) -> None:
@@ -91,11 +91,11 @@ class Room(pydantic.BaseModel):
     a record obtained from a JOIN query.
     """
 
-    room: int
-    area: Optional[float]
-    motorbike: Optional[int]
-    car: Optional[int]
-    residents: int
+    room: Annotated[int, pydantic.Field(description="The room number")]
+    area: Annotated[Optional[float], pydantic.Field(description="The area of the room in square meters")]
+    motorbike: Annotated[Optional[int], pydantic.Field(description="The number of motorbikes")]
+    car: Annotated[Optional[int], pydantic.Field(description="The number of cars")]
+    residents: Annotated[int, pydantic.Field(description="The number of residents in this room")]
 
     @classmethod
     def from_row(cls, row: Any) -> Room:

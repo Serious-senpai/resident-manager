@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
 import pydantic
 
@@ -14,7 +14,7 @@ __all__ = ("Snowflake",)
 class Snowflake(pydantic.BaseModel):
     """Data model for snowflake IDs"""
 
-    id: int
+    id: Annotated[int, pydantic.Field(description="The snowflake ID")]
 
     @property
     def created_at(self) -> datetime:

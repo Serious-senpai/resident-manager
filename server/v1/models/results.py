@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, Optional, TypeVar
+from typing import Annotated, Generic, Optional, TypeVar
 
 import pydantic
 
@@ -12,5 +12,5 @@ _SerializableT = TypeVar("_SerializableT", covariant=True)
 class Result(pydantic.BaseModel, Generic[_SerializableT]):
     """Response model for all API results"""
 
-    code: int = 0
-    data: Optional[_SerializableT]
+    code: Annotated[int, pydantic.Field(description="The result code of the operation")] = 0
+    data: Annotated[_SerializableT, pydantic.Field(description="The result data of the operation")]
