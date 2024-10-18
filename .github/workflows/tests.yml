@@ -308,12 +308,12 @@ jobs:
         working-directory: scripts/wrk
         run: |
           command="wrk --script root.lua -d 20s http://localhost:$PORT"
-          echo "$ $command" > wrk-root.txt
-          $command | tee --append wrk-root.txt
+          echo "$ $command" > $GITHUB_WORKSPACE/wrk-root.txt
+          $command | tee --append $GITHUB_WORKSPACE/wrk-root.txt
 
           command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT"
-          echo "$ $command" > wrk-api-v1-admin-login.txt
-          $command | tee --append wrk-api-v1-admin-login.txt
+          echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
+          $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
 
       - name: Stop API server
         run: |
