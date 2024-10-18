@@ -311,7 +311,7 @@ jobs:
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-root.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-root.txt
 
-          command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT"
+          command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT/api/v1/admin/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
 

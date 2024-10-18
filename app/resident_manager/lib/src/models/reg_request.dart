@@ -56,7 +56,7 @@ class RegisterRequest extends PublicInfo {
       },
     );
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
+      final data = json.decode(utf8.decode(response.bodyBytes))["data"] as List;
       result.addAll(data.map(RegisterRequest.fromJson));
     }
 
@@ -65,7 +65,7 @@ class RegisterRequest extends PublicInfo {
 
   /// Request the server to create a new registration request.
   ///
-  /// Returns the status code of the HTTP request.
+  /// Returns the error code of the API request (not the HTTP status code).
   static Future<int> create({
     required ApplicationState state,
     required PersonalInfo info,
@@ -81,7 +81,8 @@ class RegisterRequest extends PublicInfo {
       authorize: false,
     );
 
-    return response.statusCode;
+    final data = json.decode(utf8.decode(response.bodyBytes));
+    return data["code"];
   }
 
   static Future<bool> _approveOrReject({
@@ -130,7 +131,7 @@ class RegisterRequest extends PublicInfo {
       },
     );
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes));
+      return json.decode(utf8.decode(response.bodyBytes))["data"];
     }
 
     return null;
