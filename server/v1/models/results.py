@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Generic, Optional, TypeVar
+from typing import Annotated, Generic, TypeVar
 
 import pydantic
 
