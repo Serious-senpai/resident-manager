@@ -1,7 +1,9 @@
+local bit = require("bit")
+
 local utils = {}
 
--- Initialize rng: https://stackoverflow.com/q/52745798
-math.randomseed(os.time())
+local random_addr = tonumber(string.format("%p", {}));
+math.randomseed(bit.bxor(os.time(), random_addr))
 math.random()
 
 -- https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/utils.py
