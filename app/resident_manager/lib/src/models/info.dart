@@ -27,7 +27,7 @@ class PersonalInfo {
   });
 
   /// Convert this object into a JSON-encodable map.
-  Map<String, dynamic> personalInfoJson() {
+  Map<String, dynamic> toJson() {
     return {
       "name": name,
       "room": room,
@@ -38,18 +38,13 @@ class PersonalInfo {
   }
 
   Map<String, String> personalInfoQuery() {
-    final result = {"name": name, "room": room.toString()};
-    if (birthday != null) {
-      result["birthday"] = birthday!.toIso8601String();
-    }
-    if (phone != null) {
-      result["phone"] = phone!;
-    }
-    if (email != null) {
-      result["email"] = email!;
-    }
-
-    return result;
+    return {
+      "name": name,
+      "room": room.toString(),
+      if (birthday != null) "birthday": birthday!.toIso8601String(),
+      if (phone != null) "phone": phone!,
+      if (email != null) "email": email!,
+    };
   }
 }
 
@@ -58,10 +53,10 @@ class PublicInfo extends PersonalInfo with Snowflake {
   @override
   final int id;
 
-  /// The username information, this data is only available from the admin endpoint.
+  /// The username information, this data is not always available.
   String? username;
 
-  /// The hashed password information, this data is only available from the admin endpoint.
+  /// The hashed password information, this data is not always available.
   String? hashedPassword;
 
   /// Constructs a [PublicInfo] object with the given [id], [name], [room], [birthday], [phone], and [email].

@@ -174,15 +174,15 @@ class Room(pydantic.BaseModel):
         """
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                where: List[str] = []
+                having: List[str] = []
                 params: List[Any] = []
 
                 if room is not None:
-                    where.append("room = ?")
+                    having.append("ru.room = ?")
                     params.append(room)
 
                 if floor is not None:
-                    where.append("room / 100 = ?")
+                    having.append("ru.room / 100 = ?")
                     params.append(floor)
 
                 query = [
@@ -206,8 +206,8 @@ class Room(pydantic.BaseModel):
                     """,
                 ]
 
-                if len(where) > 0:
-                    query.append("WHERE " + " AND ".join(where))
+                if len(having) > 0:
+                    query.append("HAVING " + " AND ".join(having))
 
                 query.append("ORDER BY ru.room OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
 

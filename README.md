@@ -28,5 +28,5 @@ message into a specific language.
 | 201 | Login username does not exist |
 | 202 | Incorrect login password |
 | 203 | Incorrect administrator authentication data |
-| 301 | The user attempted to modify the information of another user |
+| 301 | The user (except from administrator) attempted to modify the information of another user |
 | 302 | The resident with the provided ID does not exist in a update request |

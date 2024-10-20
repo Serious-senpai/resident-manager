@@ -5,7 +5,7 @@ from typing import Optional, Union
 from fastapi import Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, PublicInfo, Resident, Result
+from ....models import AuthorizationHeader, PersonalInfo, Resident, Result
 
 
 __all__ = ("residents_update",)
@@ -50,7 +50,7 @@ async def residents_update(
     headers: AuthorizationHeader,
     response: Response,
     id: int,
-    info: PublicInfo,
+    info: PersonalInfo,
 ) -> Result[Optional[Resident]]:
     result_id = await _resolve_id(id=id, headers=headers)
     if isinstance(result_id, Result):

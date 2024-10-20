@@ -1,5 +1,6 @@
 import "dart:convert";
 
+import "results.dart";
 import "../state.dart";
 
 class RoomData {
@@ -40,16 +41,15 @@ class Room {
 
   int get floor => room ~/ 100;
 
-  static Future<List<Room>> query({
+  static Future<Result<List<Room>?>> query({
     required ApplicationState state,
     required int offset,
     int? room,
     int? floor,
   }) async {
-    final result = <Room>[];
     final authorization = state.authorization;
     if (authorization == null) {
-      return result;
+      return Result(-1, null);
     }
 
     final response = await state.get(
@@ -60,17 +60,18 @@ class Room {
         if (floor != null) "floor": floor.toString(),
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
 
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes))["data"] as List;
-      result.addAll(data.map(Room.fromJson));
+      final data = result["data"] as List<dynamic>;
+      return Result(0, List<Room>.from(data.map(Room.fromJson)));
     }
 
-    return result;
+    return Result(result["code"], null);
   }
 
   /// Count the number of rooms.
-  static Future<int?> count({
+  static Future<Result<int?>> count({
     required ApplicationState state,
     int? room,
     int? floor,
@@ -82,10 +83,12 @@ class Room {
         if (floor != null) "floor": floor.toString(),
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes))["data"];
+      return Result(0, result["data"]);
     }
 
-    return null;
+    return Result(result["code"], null);
   }
 }

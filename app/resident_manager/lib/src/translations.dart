@@ -61,6 +61,7 @@ class AppLocale {
   static const String PersonalInfo = "PersonalInfo";
   static const String Settings = "Settings";
   static const String ComingSoon = "ComingSoon";
+  static const String EditPersonalInfo = "EditPersonalInfo";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -139,6 +140,7 @@ class AppLocale {
     PersonalInfo: "Personal information",
     Settings: "Settings",
     ComingSoon: "Coming soon",
+    EditPersonalInfo: "Edit personal information",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -218,6 +220,7 @@ class AppLocale {
     PersonalInfo: "Thông tin cá nhân",
     Settings: "Cài đặt",
     ComingSoon: "Sắp ra mắt",
+    EditPersonalInfo: "Chỉnh sửa thông tin cá nhân",
 
     // Error codes
     Error0: "Thao tác thành công.",

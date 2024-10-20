@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Literal, Optional, TypeVar
 
 from .auth import AuthorizationHeader, HashedAuthorization
-from .info import PublicInfo
+from .info import PersonalInfo, PublicInfo
 from .results import Result
 from .snowflake import Snowflake
 from ..database import Database
@@ -163,7 +163,7 @@ class Resident(PublicInfo, HashedAuthorization):
         return Result(data=resident)
 
     @classmethod
-    async def update(cls, *, id: int, info: PublicInfo) -> Result[Optional[Resident]]:
+    async def update(cls, *, id: int, info: PersonalInfo) -> Result[Optional[Resident]]:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(

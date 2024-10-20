@@ -6,10 +6,10 @@ import "dart:math";
 import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
+import "package:resident_manager/src/models/info.dart";
 
 import "../common.dart";
 import "../state.dart";
-import "../utils.dart";
 import "../../config.dart";
 import "../../translations.dart";
 import "../../utils.dart";
@@ -26,8 +26,8 @@ class ResidentsPage extends StateAwareWidget {
 class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
   List<Resident> _residents = [];
 
-  Future<bool>? _queryFuture;
-  Future<bool>? _countFuture;
+  Future<int?>? _queryFuture;
+  Future<int?>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
   final _selected = SplayTreeSet<Resident>((k1, k2) => k1.id.compareTo(k2.id));
@@ -36,8 +36,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
   final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
   final _usernameSearch = TextEditingController();
-  String? orderBy;
-  bool ascending = true;
+  String orderBy = "resident_id";
+  bool ascending = false;
 
   int _offset = 0;
   int _offsetLimit = 0;
@@ -49,11 +49,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
     refresh();
   }
 
-  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
+  bool get _searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
 
-  Future<bool> query() async {
+  Future<int?> _query() async {
     try {
-      _residents = await Resident.query(
+      final result = await Resident.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
         name: _nameSearch.text,
@@ -62,79 +62,88 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
         orderBy: orderBy,
         ascending: ascending,
       );
-      _residents.removeWhere((r) => _selected.contains(r));
-      _residents.addAll(_selected);
 
-      refresh();
-      return true;
+      final data = result.data;
+      if (data != null) {
+        _residents = data;
+        _residents.removeWhere(_selected.contains);
+        _residents.addAll(_selected);
+      }
+
+      return result.code;
     } catch (e) {
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
-  Future<bool> count() async {
+  Future<int?> _count() async {
     try {
-      final value = await Resident.count(
+      final result = await Resident.count(
         state: state,
         name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
         username: _usernameSearch.text,
       );
-      if (value == null) {
+
+      final data = result.data;
+      if (data != null) {
+        _offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      } else {
         _offsetLimit = offset;
-        return false;
       }
 
-      _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      return true;
+      return result.code;
     } catch (e) {
+      _offsetLimit = offset;
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        _offsetLimit = offset;
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
   Future<void> _deleteAccounts() async {
     await _actionLock.run(
       () async {
-        _notification = TranslatedText(
-          (ctx) => AppLocale.Loading.getString(ctx),
-          state: state,
-          style: const TextStyle(color: Colors.blue),
+        _notification = Builder(
+          builder: (context) => Text(
+            AppLocale.Loading.getString(context),
+            style: const TextStyle(color: Colors.blue),
+          ),
         );
         refresh();
 
-        var success = false;
         try {
-          success = await Resident.delete(state: state, objects: _selected);
+         if (await Resident.delete(state: state, objects: _selected)){
+          _selected.clear();
+         }
+         
+          _notification = const SizedBox.square(dimension: 0);
         } catch (e) {
-          if (e is SocketException || e is TimeoutException) {
-            await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-          } else {
+          await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          _notification = Builder(
+            builder: (context) => Text(
+              AppLocale.ConnectionError.getString(context),
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+
+          if (!(e is SocketException || e is TimeoutException)) {
             rethrow;
           }
-        }
-
-        if (success) {
-          _notification = const SizedBox.square(dimension: 0);
-          _selected.clear();
+        } finally {
           offset = 0;
-        } else {
-          _notification = TranslatedText(
-            (ctx) => AppLocale.ErrorUnknown.getString(ctx),
-            state: state,
-            style: const TextStyle(color: Colors.red),
-          );
-          refresh();
         }
       },
     );
@@ -156,8 +165,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= query();
-    _countFuture ??= count();
+    _queryFuture ??= _query();
+    _countFuture ??= _count();
 
     return Scaffold(
       key: scaffoldKey,
@@ -191,8 +200,8 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
               );
 
             case ConnectionState.done:
-              final success = snapshot.data ?? false;
-              if (success) {
+              final code = snapshot.data;
+              if (code == 0) {
                 TableCell headerCeil(String text, [String? newOrderBy]) {
                   if (newOrderBy != null) {
                     if (orderBy == newOrderBy) {
@@ -322,10 +331,156 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                             child: Row(
                               children: [
                                 IconButton(
-                                  color: Colors.red,
                                   icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () {
-                                    // TODO: Implement this
+                                  onPressed: () async {
+                                    final formKey = GlobalKey<FormState>();
+                                    final nameController = TextEditingController(text: resident.name);
+                                    final roomController = TextEditingController(text: resident.room.toString());
+                                    final birthdayController = TextEditingController(text: resident.birthday?.toLocal().formatDate() ?? "");
+                                    final phoneController = TextEditingController(text: resident.phone ?? "");
+                                    final emailController = TextEditingController(text: resident.email ?? "");
+                                    final submitted = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => SimpleDialog(
+                                        contentPadding: const EdgeInsets.all(10),
+                                        title: Text(AppLocale.EditPersonalInfo.getString(context)),
+                                        children: [
+                                          Form(
+                                            key: formKey,
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                TextFormField(
+                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                  controller: nameController,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(8.0),
+                                                    label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
+                                                  ),
+                                                  validator: (value) => nameValidator(context, required: true, value: value),
+                                                ),
+                                                TextFormField(
+                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                  controller: roomController,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(8.0),
+                                                    label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                                                  ),
+                                                  validator: (value) => roomValidator(context, required: true, value: value),
+                                                ),
+                                                TextFormField(
+                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                  controller: birthdayController,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(8.0),
+                                                    label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
+                                                  ),
+                                                  onTap: () async {
+                                                    final birthday = await showDatePicker(
+                                                      context: context,
+                                                      initialDate: DateFormat.fromFormattedDate(birthdayController.text),
+                                                      firstDate: DateTime.utc(1900),
+                                                      lastDate: DateTime.now(),
+                                                    );
+
+                                                    if (birthday != null) {
+                                                      birthdayController.text = birthday.toLocal().formatDate();
+                                                    } else {
+                                                      birthdayController.clear();
+                                                    }
+                                                  },
+                                                  readOnly: true, // no need for validator
+                                                ),
+                                                TextFormField(
+                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                  controller: phoneController,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(8.0),
+                                                    label: FieldLabel(AppLocale.Phone.getString(context)),
+                                                  ),
+                                                  validator: (value) => phoneValidator(context, value: value),
+                                                ),
+                                                TextFormField(
+                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                  controller: emailController,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(8.0),
+                                                    label: FieldLabel(AppLocale.Email.getString(context)),
+                                                  ),
+                                                  validator: (value) => emailValidator(context, value: value),
+                                                ),
+                                                const SizedBox.square(dimension: 10),
+                                                Container(
+                                                  padding: const EdgeInsets.all(5),
+                                                  width: double.infinity,
+                                                  child: TextButton.icon(
+                                                    icon: const Icon(Icons.done_outlined),
+                                                    label: Text(AppLocale.Confirm.getString(context)),
+                                                    onPressed: () => Navigator.pop(context, true),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (submitted != null) {
+                                      final check = formKey.currentState?.validate() ?? false;
+                                      if (check) {
+                                        await _actionLock.run(
+                                          () async {
+                                            _notification = Builder(
+                                              builder: (context) => Text(
+                                                AppLocale.Loading.getString(context),
+                                                style: const TextStyle(color: Colors.blue),
+                                              ),
+                                            );
+                                            refresh();
+
+                                            try {
+                                              final result = await resident.update(
+                                                state: state,
+                                                info: PersonalInfo(
+                                                  name: nameController.text,
+                                                  room: int.parse(roomController.text),
+                                                  birthday: birthdayController.text.isEmpty ? null : DateFormat.fromFormattedDate(birthdayController.text),
+                                                  phone: phoneController.text,
+                                                  email: emailController.text,
+                                                ),
+                                              );
+
+                                              if (result.code != 0) {
+                                                _notification = Builder(
+                                                  builder: (context) => Text(
+                                                    AppLocale.errorMessage(result.code).getString(context),
+                                                    style: const TextStyle(color: Colors.red),
+                                                  ),
+                                                );
+                                              } else {
+                                                _notification = const SizedBox.square(dimension: 0);
+                                              }
+                                            } catch (e) {
+                                              await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                                              _notification = Builder(
+                                                builder: (context) => Text(
+                                                  AppLocale.ConnectionError.getString(context),
+                                                  style: const TextStyle(color: Colors.red),
+                                                ),
+                                              );
+
+                                              if (!(e is SocketException || e is TimeoutException)) {
+                                                rethrow;
+                                              }
+                                            } finally {
+                                              _queryFuture = null;
+                                              refresh();
+                                            }
+                                          },
+                                        );
+                                      }
+                                    }
                                   },
                                 ),
                               ],
@@ -387,96 +542,94 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                         TextButton.icon(
                           icon: const Icon(Icons.search_outlined),
                           label: Text(
-                            searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                            style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                            _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
                             final nameSearch = _nameSearch.text;
                             final roomSearch = _roomSearch.text;
                             final usernameSearch = _usernameSearch.text;
-                            final submitted = await showDialog(
+                            final submitted = await showDialog<bool>(
                               context: context,
                               builder: (context) => SimpleDialog(
+                                contentPadding: const EdgeInsets.all(10),
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Form(
-                                      child: Column(
-                                        children: [
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _nameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.badge_outlined),
-                                              label: Text(AppLocale.Fullname.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => nameValidator(context, required: false, value: value),
+                                  Form(
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _nameSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.badge_outlined),
+                                            label: Text(AppLocale.Fullname.getString(context)),
                                           ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _roomSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.room_outlined),
-                                              label: Text(AppLocale.Room.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => roomValidator(context, required: false, value: value),
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                          validator: (value) => nameValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _roomSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.room_outlined),
+                                            label: Text(AppLocale.Room.getString(context)),
                                           ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _usernameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outlined),
-                                              label: Text(AppLocale.Username.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                          validator: (value) => roomValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _usernameSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.person_outlined),
+                                            label: Text(AppLocale.Username.getString(context)),
                                           ),
-                                          const SizedBox.square(dimension: 10),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.done_outlined),
-                                                  label: Text(AppLocale.Search.getString(context)),
-                                                  onPressed: () {
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                        ),
+                                        const SizedBox.square(dimension: 10),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.clear_outlined),
-                                                  label: Text(AppLocale.ClearAll.getString(context)),
-                                                  onPressed: () {
-                                                    _nameSearch.clear();
-                                                    _roomSearch.clear();
-                                                    _usernameSearch.clear();
+                                            ),
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.clear_outlined),
+                                                label: Text(AppLocale.ClearAll.getString(context)),
+                                                onPressed: () {
+                                                  _nameSearch.clear();
+                                                  _roomSearch.clear();
+                                                  _usernameSearch.clear();
 
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -527,7 +680,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                       child: Icon(Icons.highlight_off_outlined),
                     ),
                     const SizedBox.square(dimension: 5),
-                    Text(AppLocale.ConnectionError.getString(context)),
+                    Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
                   ],
                 ),
               );

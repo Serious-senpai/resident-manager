@@ -3,6 +3,7 @@ import "dart:convert";
 
 import "auth.dart";
 import "info.dart";
+import "results.dart";
 import "snowflake.dart";
 import "../state.dart";
 
@@ -27,7 +28,7 @@ class RegisterRequest extends PublicInfo {
   /// Queries the server for registration requests.
   ///
   /// If [state] hasn't been authorized as an administratoor yet, the result will always be empty.
-  static Future<List<RegisterRequest>> query({
+  static Future<Result<List<RegisterRequest>?>> query({
     required ApplicationState state,
     required int offset,
     int? id,
@@ -37,10 +38,9 @@ class RegisterRequest extends PublicInfo {
     String? orderBy,
     bool? ascending,
   }) async {
-    final result = <RegisterRequest>[];
     final authorization = state.authorization;
     if (authorization == null) {
-      return result;
+      return Result(-1, null);
     }
 
     final response = await state.get(
@@ -55,12 +55,13 @@ class RegisterRequest extends PublicInfo {
         if (ascending != null) "ascending": ascending.toString(),
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes))["data"] as List;
-      result.addAll(data.map(RegisterRequest.fromJson));
+      final data = result["data"] as List<dynamic>;
+      return Result(0, List<RegisterRequest>.from(data.map(RegisterRequest.fromJson)));
     }
 
-    return result;
+    return Result(result["code"], null);
   }
 
   /// Request the server to create a new registration request.
@@ -114,7 +115,7 @@ class RegisterRequest extends PublicInfo {
   }
 
   /// Count the number of registration requests.
-  static Future<int?> count({
+  static Future<Result<int?>> count({
     required ApplicationState state,
     int? id,
     String? name,
@@ -130,10 +131,12 @@ class RegisterRequest extends PublicInfo {
         if (username != null && username.isNotEmpty) "username": username,
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes))["data"];
+      return Result(0, result["data"]);
     }
 
-    return null;
+    return Result(result["code"], null);
   }
 }
