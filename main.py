@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import OrderedDict
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
+from urllib.parse import urljoin
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -25,9 +27,11 @@ from server import api_v1, CI
 
 
 logger = logging.getLogger(__name__)
-subapps = {
-    "/api/v1": api_v1
-}
+subapps = OrderedDict()
+subapps["/api/v1"] = api_v1
+
+final_subroute = list(subapps.keys())[-1]
+final_subapp = list(subapps.values())[-1]
 
 
 class ApplicationLifespan(AbstractAsyncContextManager):
@@ -65,9 +69,11 @@ class ApplicationLifespan(AbstractAsyncContextManager):
 
 
 app = FastAPI(
+    title="Resident manager API",
     docs_url=None,
     redoc_url=None,
     lifespan=ApplicationLifespan,
+    version=final_subapp.version,
 )
 for route, subapp in subapps.items():
     app.mount(route, subapp)
@@ -76,7 +82,7 @@ for route, subapp in subapps.items():
 @app.get("/", include_in_schema=False)
 async def root() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
-    return RedirectResponse("/api/v1")
+    return RedirectResponse(final_subroute)
 
 
 @app.get("/loop", include_in_schema=False)
@@ -88,10 +94,10 @@ async def loop() -> str:
 @app.get("/docs", include_in_schema=False)
 async def docs() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
-    return RedirectResponse("/api/v1/docs")
+    return RedirectResponse(urljoin(final_subroute, "/docs"))
 
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
-    return RedirectResponse("/api/v1/redoc")
+    return RedirectResponse(urljoin(final_subroute, "/redoc"))

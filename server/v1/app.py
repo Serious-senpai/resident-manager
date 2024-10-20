@@ -37,33 +37,25 @@ class _ApplicationLifespan(AbstractAsyncContextManager):
         await Database.instance.close()
 
 
-readme = Path(__file__).parent.parent.parent / "README.md"
+current_dir = Path(__file__).parent
+readme = current_dir.parent.parent / "README.md"
 with readme.open("r", encoding="utf-8") as f:
     description = f.read()
 
 
 api_v1 = FastAPI(
-    title="Apartment management API v1",
+    title="Resident manager API v1",
     description=description,
     version="1.0.0",
     lifespan=_ApplicationLifespan,
 )
 
 
+index = current_dir / "index.html"
+with index.open("r", encoding="utf-8") as f:
+    index_html = f.read()
+
+
 @api_v1.get("/", include_in_schema=False)
 async def root() -> HTMLResponse:
-    return HTMLResponse(
-        """
-        <!doctype html> <!-- Important: must specify -->
-        <html>
-        <head>
-            <meta charset="utf-8"> <!-- Important: rapi-doc uses utf8 characters -->
-            <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
-        </head>
-        <body>
-            <rapi-doc spec-url="/api/v1/openapi.json"></rapi-doc>
-        </body>
-        </html>
-
-        """
-    )
+    return HTMLResponse(index_html)
