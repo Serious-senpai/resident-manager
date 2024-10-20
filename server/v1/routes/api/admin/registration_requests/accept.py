@@ -8,13 +8,13 @@ from .....app import api_v1
 from .....models import AuthorizationHeader, RegisterRequest, Result, Snowflake
 
 
-__all__ = ("admin_reg_request_reject",)
+__all__ = ("admin_reg_request_accept",)
 
 
 @api_v1.post(
-    "/admin/reg-request/reject",
-    name="Registration requests rejection",
-    description="Reject one or more registration requests",
+    "/admin/registration-requests/accept",
+    name="Registration requests approval",
+    description="Approve one or more registration requests",
     tags=["admin"],
     response_model=None,
     responses={
@@ -28,7 +28,7 @@ __all__ = ("admin_reg_request_reject",)
     },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_reg_request_reject(
+async def admin_reg_request_accept(
     headers: AuthorizationHeader,
     response: Response,
     objects: List[Snowflake],
@@ -38,5 +38,5 @@ async def admin_reg_request_reject(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
-    await RegisterRequest.reject_many(objects)
+    await RegisterRequest.accept_many(objects)
     return None

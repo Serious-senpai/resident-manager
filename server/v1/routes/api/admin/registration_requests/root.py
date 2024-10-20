@@ -13,7 +13,7 @@ __all__ = ("admin_reg_request",)
 
 
 @api_v1.get(
-    "/admin/reg-request",
+    "/admin/registration-requests",
     name="Registration requests query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} registration requests from the specified offset",
     tags=["admin"],

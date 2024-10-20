@@ -12,7 +12,7 @@ __all__ = ("admin_reg_request_count",)
 
 
 @api_v1.get(
-    "/admin/reg-request/count",
+    "/admin/registration-requests/count",
     name="Registration requests count",
     description="Return number of registration requests",
     tags=["admin"],

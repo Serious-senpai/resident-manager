@@ -29,7 +29,7 @@ def random_numstring(length: int) -> str:
 
 def check_no_registration_request(id: int, *, client: TestClient) -> None:
     response = client.get(
-        "/api/v1/admin/reg-request",
+        "/api/v1/admin/registration-requests",
         params={"id": id},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -146,7 +146,7 @@ def test_register_main_flow(client: TestClient) -> None:
     request_id = data["data"]["id"]
 
     response = client.get(
-        "/api/v1/admin/reg-request",
+        "/api/v1/admin/registration-requests",
         params={"offset": 0, "id": request_id},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -169,7 +169,7 @@ def test_register_main_flow(client: TestClient) -> None:
     )
 
     response = client.post(
-        "/api/v1/admin/reg-request/accept",
+        "/api/v1/admin/registration-requests/accept",
         json=[data[0]],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -269,7 +269,7 @@ def test_register_fail(
         assert data["code"] == 106
 
     response = client.get(
-        "/api/v1/admin/reg-request",
+        "/api/v1/admin/registration-requests",
         params={"offset": 0, "username": resident_usernames[username_i], "room": resident_rooms[room_i]},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -355,7 +355,7 @@ def test_register_username_taken(client: TestClient) -> None:
     assert data["code"] == 107
 
     response = client.post(
-        "/api/v1/admin/reg-request/reject",
+        "/api/v1/admin/registration-requests/reject",
         json=[{"id": request_id}],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )

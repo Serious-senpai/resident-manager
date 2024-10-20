@@ -1,4 +1,4 @@
 from .login import *
-from .reg_request import *
+from .registration_requests import *
 from .residents import *
 from .rooms import *

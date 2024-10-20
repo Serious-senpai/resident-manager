@@ -44,7 +44,7 @@ class RegisterRequest extends PublicInfo {
     }
 
     final response = await state.get(
-      "/api/v1/admin/reg-request",
+      "/api/v1/admin/registration-requests",
       queryParameters: {
         "offset": offset.toString(),
         if (id != null) "id": id.toString(),
@@ -103,7 +103,7 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/accept");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/registration-requests/accept");
   }
 
   /// Reject a list of registration requests.
@@ -111,7 +111,7 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/reject");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/registration-requests/reject");
   }
 
   /// Count the number of registration requests.
@@ -123,7 +123,7 @@ class RegisterRequest extends PublicInfo {
     String? username,
   }) async {
     final response = await state.get(
-      "/api/v1/admin/reg-request/count",
+      "/api/v1/admin/registration-requests/count",
       queryParameters: {
         if (id != null) "id": id.toString(),
         if (name != null && name.isNotEmpty) "name": name,
