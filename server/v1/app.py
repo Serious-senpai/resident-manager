@@ -6,6 +6,7 @@ from types import TracebackType
 from typing import Optional, Final, Type, TYPE_CHECKING
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from .database import Database
 
@@ -47,3 +48,22 @@ api_v1 = FastAPI(
     version="1.0.0",
     lifespan=_ApplicationLifespan,
 )
+
+
+@api_v1.get("/", include_in_schema=False)
+async def root() -> HTMLResponse:
+    return HTMLResponse(
+        """
+        <!doctype html> <!-- Important: must specify -->
+        <html>
+        <head>
+            <meta charset="utf-8"> <!-- Important: rapi-doc uses utf8 characters -->
+            <script type="module" src="https://unpkg.com/rapidoc/dist/rapidoc-min.js"></script>
+        </head>
+        <body>
+            <rapi-doc spec-url="/api/v1/openapi.json"></rapi-doc>
+        </body>
+        </html>
+
+        """
+    )

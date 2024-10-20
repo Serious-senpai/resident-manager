@@ -75,8 +75,8 @@ for route, subapp in subapps.items():
 
 @app.get("/", include_in_schema=False)
 async def root() -> RedirectResponse:
-    """Redirect to API documentation"""
-    return RedirectResponse("/api/v1/docs")
+    """Redirect to API documentation of latest version"""
+    return RedirectResponse("/api/v1")
 
 
 @app.get("/loop", include_in_schema=False)
@@ -87,11 +87,11 @@ async def loop() -> str:
 
 @app.get("/docs", include_in_schema=False)
 async def docs() -> RedirectResponse:
-    """Redirect to API documentation"""
+    """Redirect to API documentation of latest version"""
     return RedirectResponse("/api/v1/docs")
 
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc() -> RedirectResponse:
-    """Redirect to API documentation"""
+    """Redirect to API documentation of latest version"""
     return RedirectResponse("/api/v1/redoc")
