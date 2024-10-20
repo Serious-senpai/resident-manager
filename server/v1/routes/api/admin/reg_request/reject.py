@@ -38,5 +38,5 @@ async def admin_reg_request_reject(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
-    await RegisterRequest.accept_many(objects)
+    await RegisterRequest.reject_many(objects)
     return None

@@ -27,6 +27,30 @@ def random_numstring(length: int) -> str:
     return "".join(random.choices(string.digits, k=length))
 
 
+def check_no_registration_request(id: int, *, client: TestClient) -> None:
+    response = client.get(
+        "/api/v1/admin/reg-request",
+        params={"id": id},
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["code"] == 0
+    assert len(data["data"]) == 0
+
+
+def check_no_resident(id: int, *, client: TestClient) -> None:
+    response = client.get(
+        "/api/v1/admin/residents",
+        params={"id": id},
+        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["code"] == 0
+    assert len(data["data"]) == 0
+
+
 def assert_match(
     data: Any,
     *,
@@ -151,6 +175,8 @@ def test_register_main_flow(client: TestClient) -> None:
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    check_no_registration_request(request_id, client=client)
+
     response = client.post(
         "/api/v1/login",
         headers=Authorization(username=username, password=password).model_dump(),
@@ -159,7 +185,6 @@ def test_register_main_flow(client: TestClient) -> None:
     data = response.json()
 
     assert data["code"] == 0
-
     data = data["data"]
     assert_match(
         data,
@@ -170,12 +195,16 @@ def test_register_main_flow(client: TestClient) -> None:
         email=email,
     )
 
+    resident_id = data["id"]
+
     response = client.post(
         "/api/v1/admin/residents/delete",
         json=[data],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    check_no_resident(resident_id, client=client)
 
 
 resident_names = [f"test-{random_string(random.randint(1, 69))}", "", f"test-{random_string(random.randint(256, 10**4 + 7))}"]
@@ -301,7 +330,7 @@ def test_register_username_taken(client: TestClient) -> None:
 
     data = response.json()
     assert data["code"] == 0
-    data = data["data"]
+    request_id = data["data"]["id"]
 
     name = f"test-{random_string(random.randint(1, 69))}"
     room = random.randint(0, 32767)
@@ -322,12 +351,14 @@ def test_register_username_taken(client: TestClient) -> None:
         headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    d = response.json()
-    assert d["code"] == 107
+    data = response.json()
+    assert data["code"] == 107
 
     response = client.post(
         "/api/v1/admin/reg-request/reject",
-        json=[{"id": data["id"]}],
+        json=[{"id": request_id}],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    check_no_registration_request(request_id, client=client)
