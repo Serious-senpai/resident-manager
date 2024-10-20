@@ -90,6 +90,11 @@ def test_docs(client: TestClient) -> None:
     assert response.status_code == status.HTTP_200_OK
 
 
+def test_redoc(client: TestClient) -> None:
+    response = client.get("/redoc")
+    assert response.status_code == status.HTTP_200_OK
+
+
 admin_usernames = ["admin", random_string(50)]
 admin_passwords = [DEFAULT_ADMIN_PASSWORD, random_string(50)]
 

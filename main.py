@@ -6,7 +6,6 @@ from collections import OrderedDict
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
-from urllib.parse import urljoin
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -94,10 +93,10 @@ async def loop() -> str:
 @app.get("/docs", include_in_schema=False)
 async def docs() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
-    return RedirectResponse(urljoin(final_subroute, "/docs"))
+    return RedirectResponse(final_subroute + "/docs")
 
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
-    return RedirectResponse(urljoin(final_subroute, "/redoc"))
+    return RedirectResponse(final_subroute + "/redoc")
