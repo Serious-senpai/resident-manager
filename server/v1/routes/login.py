@@ -4,8 +4,8 @@ from typing import Optional
 
 from fastapi import Response, status
 
-from ...app import api_v1
-from ...models import AuthorizationHeader, PublicInfo, Resident, Result
+from ..app import api_v1
+from ..models import AuthorizationHeader, PublicInfo, Resident, Result
 
 
 __all__ = ("login",)

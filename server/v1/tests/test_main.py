@@ -9,13 +9,16 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from main import app
+from ..app import api_v1
 from server import DEFAULT_ADMIN_PASSWORD, Authorization, check_password
+
+
+__all__ = ()
 
 
 @pytest.fixture
 def client() -> Generator[TestClient]:
-    with TestClient(app) as _client:
+    with TestClient(api_v1) as _client:
         yield _client
 
 
@@ -29,7 +32,7 @@ def random_numstring(length: int) -> str:
 
 def check_no_registration_request(id: int, *, client: TestClient) -> None:
     response = client.get(
-        "/api/v1/admin/registration-requests",
+        "/admin/registration-requests",
         params={"id": id},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -41,7 +44,7 @@ def check_no_registration_request(id: int, *, client: TestClient) -> None:
 
 def check_no_resident(id: int, *, client: TestClient) -> None:
     response = client.get(
-        "/api/v1/admin/residents",
+        "/admin/residents",
         params={"id": id},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -103,7 +106,7 @@ admin_passwords = [DEFAULT_ADMIN_PASSWORD, random_string(50)]
 @pytest.mark.parametrize("password_i", range(len(admin_passwords)))
 def test_admin_login(client: TestClient, username_i: int, password_i: int) -> None:
     response = client.post(
-        "/api/v1/admin/login",
+        "/admin/login",
         headers=Authorization(
             username=admin_usernames[username_i],
             password=admin_passwords[password_i],
@@ -133,7 +136,7 @@ def test_register_main_flow(client: TestClient) -> None:
     password = random_string(12)
 
     response = client.post(
-        "/api/v1/register",
+        "/register",
         params={
             "name": name,
             "room": room,
@@ -151,7 +154,7 @@ def test_register_main_flow(client: TestClient) -> None:
     request_id = data["data"]["id"]
 
     response = client.get(
-        "/api/v1/admin/registration-requests",
+        "/admin/registration-requests",
         params={"offset": 0, "id": request_id},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -174,7 +177,7 @@ def test_register_main_flow(client: TestClient) -> None:
     )
 
     response = client.post(
-        "/api/v1/admin/registration-requests/accept",
+        "/admin/registration-requests/accept",
         json=[data[0]],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -183,7 +186,7 @@ def test_register_main_flow(client: TestClient) -> None:
     check_no_registration_request(request_id, client=client)
 
     response = client.post(
-        "/api/v1/login",
+        "/login",
         headers=Authorization(username=username, password=password).model_dump(),
     )
     assert response.status_code == status.HTTP_200_OK
@@ -203,7 +206,7 @@ def test_register_main_flow(client: TestClient) -> None:
     resident_id = data["id"]
 
     response = client.post(
-        "/api/v1/admin/residents/delete",
+        "/admin/residents/delete",
         json=[data],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -242,7 +245,7 @@ def test_register_fail(
     birthday = datetime(now.year - 18, now.month, now.day, tzinfo=timezone.utc)
 
     response = client.post(
-        "/api/v1/register",
+        "/register",
         params={
             "name": resident_names[name_i],
             "room": resident_rooms[room_i],
@@ -274,7 +277,7 @@ def test_register_fail(
         assert data["code"] == 106
 
     response = client.get(
-        "/api/v1/admin/registration-requests",
+        "/admin/registration-requests",
         params={"offset": 0, "username": resident_usernames[username_i], "room": resident_rooms[room_i]},
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )
@@ -285,7 +288,7 @@ def test_register_fail(
     assert len(data["data"]) == 0
 
     response = client.post(
-        "/api/v1/login",
+        "/login",
         headers=Authorization(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -304,7 +307,7 @@ def test_register_username_taken(client: TestClient) -> None:
     password = random_string(random.randint(256, 10 ** 4 + 7))  # Invalid password
 
     response = client.post(
-        "/api/v1/register",
+        "/register",
         params={
             "name": name,
             "room": room,
@@ -321,7 +324,7 @@ def test_register_username_taken(client: TestClient) -> None:
     password = random_string(random.randint(8, 255))
 
     response = client.post(
-        "/api/v1/register",
+        "/register",
         params={
             "name": name,
             "room": room,
@@ -345,7 +348,7 @@ def test_register_username_taken(client: TestClient) -> None:
     password = random_string(random.randint(8, 255))
 
     response = client.post(
-        "/api/v1/register",
+        "/register",
         params={
             "name": name,
             "room": room,
@@ -360,7 +363,7 @@ def test_register_username_taken(client: TestClient) -> None:
     assert data["code"] == 107
 
     response = client.post(
-        "/api/v1/admin/registration-requests/reject",
+        "/admin/registration-requests/reject",
         json=[{"id": request_id}],
         headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
     )

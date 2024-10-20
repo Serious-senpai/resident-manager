@@ -1,25 +1,25 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Result
+from ....models import AuthorizationHeader, Result, RoomData
 
 
-__all__ = ("admin_login",)
+__all__ = ("admin_rooms_delete",)
 
 
 @api_v1.post(
-    "/admin/login",
-    name="Administrators login",
-    description="Verify administrator authorization data.",
+    "/admin/rooms/delete",
+    name="Room information deletion",
+    description="Delete room information",
     tags=["admin"],
     response_model=None,
     responses={
         status.HTTP_204_NO_CONTENT: {
-            "description": "Successfully logged in",
+            "description": "Operation completed successfully",
         },
         status.HTTP_400_BAD_REQUEST: {
             "description": "Incorrect authorization data",
@@ -28,12 +28,15 @@ __all__ = ("admin_login",)
     },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def admin_login(
+async def admin_rooms_delete(
     headers: AuthorizationHeader,
     response: Response,
+    rooms: List[int],
 ) -> Optional[Result[None]]:
-    result = await headers.verify_admin()
-    if result is not None:
+    auth = await headers.verify_admin()
+    if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
+        return auth
 
-    return result
+    await RoomData.delete_many(rooms)
+    return None

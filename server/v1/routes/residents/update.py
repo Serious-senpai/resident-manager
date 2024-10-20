@@ -4,8 +4,8 @@ from typing import Optional, Union
 
 from fastapi import Response, status
 
-from ....app import api_v1
-from ....models import AuthorizationHeader, PersonalInfo, Resident, Result
+from ...app import api_v1
+from ...models import AuthorizationHeader, PersonalInfo, Resident, Result
 
 
 __all__ = ("residents_update",)

@@ -4,23 +4,23 @@ from typing import List, Literal, Optional
 
 from fastapi import Response, status
 
-from .....app import api_v1
-from .....models import AuthorizationHeader, RegisterRequest, Result
-from ......config import DB_PAGINATION_QUERY
+from ....app import api_v1
+from ....models import AuthorizationHeader, Resident, Result
+from .....config import DB_PAGINATION_QUERY
 
 
-__all__ = ("admin_reg_request",)
+__all__ = ("admin_residents",)
 
 
 @api_v1.get(
-    "/admin/registration-requests",
-    name="Registration requests query",
+    "/admin/residents",
+    name="Residents query",
     description=f"Query a maximum of {DB_PAGINATION_QUERY} registration requests from the specified offset",
     tags=["admin"],
     responses={
         status.HTTP_200_OK: {
-            "description": "List of registration requests",
-            "model": Result[List[RegisterRequest]],
+            "description": "List of residents objects",
+            "model": Result[List[Resident]],
         },
         status.HTTP_400_BAD_REQUEST: {
             "description": "Incorrect authorization data",
@@ -28,7 +28,7 @@ __all__ = ("admin_reg_request",)
         },
     },
 )
-async def admin_reg_request(
+async def admin_residents(
     headers: AuthorizationHeader,
     response: Response,
     offset: int = 0,
@@ -36,16 +36,16 @@ async def admin_reg_request(
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-    order_by: Literal["request_id", "name", "room", "username"] = "request_id",
+    order_by: Literal["resident_id", "name", "room", "username"] = "resident_id",
     ascending: bool = True,
-) -> Result[Optional[List[RegisterRequest]]]:
+) -> Result[Optional[List[Resident]]]:
     auth = await headers.verify_admin()
     if auth is not None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return auth
 
     return Result(
-        data=await RegisterRequest.query(
+        data=await Resident.query(
             offset=offset,
             id=id,
             name=name,

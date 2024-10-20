@@ -7,6 +7,7 @@ from typing import Optional, Final, Type, TYPE_CHECKING
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from .database import Database
 
@@ -49,6 +50,7 @@ api_v1 = FastAPI(
     version="1.0.0",
     lifespan=_ApplicationLifespan,
 )
+api_v1.mount("/static", StaticFiles(directory=current_dir / "static"))
 
 
 index = current_dir / "index.html"
