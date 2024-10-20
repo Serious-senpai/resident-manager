@@ -24,8 +24,8 @@ class RoomsPage extends StateAwareWidget {
 class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
   List<Room> _rooms = [];
 
-  Future<bool>? _queryFuture;
-  Future<bool>? _countFuture;
+  Future<int?>? _queryFuture;
+  Future<int?>? _countFuture;
 
   final _roomSearch = TextEditingController();
   final _floorSearch = TextEditingController();
@@ -40,51 +40,61 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
     refresh();
   }
 
-  bool get searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
+  bool get _searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
 
-  Future<bool> query() async {
+  Future<int?> _query() async {
     try {
-      _rooms = await Room.query(
+      final result = await Room.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
         room: int.tryParse(_roomSearch.text),
         floor: int.tryParse(_floorSearch.text),
       );
 
-      refresh();
-      return true;
+      final data = result.data;
+      if (data != null) {
+        _rooms = data;
+      }
+
+      return result.code;
     } catch (e) {
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
-  Future<bool> count() async {
+  Future<int?> _count() async {
     try {
-      final value = await Room.count(
+      final result = await Room.count(
         state: state,
         room: int.tryParse(_roomSearch.text),
         floor: int.tryParse(_floorSearch.text),
       );
-      if (value == null) {
+
+      final data = result.data;
+      if (data != null) {
+        _offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      } else {
         _offsetLimit = offset;
-        return false;
       }
 
-      _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      return true;
+      return result.code;
     } catch (e) {
+      _offsetLimit = offset;
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        _offsetLimit = offset;
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
@@ -93,8 +103,8 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= query();
-    _countFuture ??= count();
+    _queryFuture ??= _query();
+    _countFuture ??= _count();
 
     return Scaffold(
       key: scaffoldKey,
@@ -128,8 +138,8 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
               );
 
             case ConnectionState.done:
-              final success = snapshot.data ?? false;
-              if (success) {
+              final code = snapshot.data;
+              if (code == 0) {
                 TableCell headerCeil(String text) {
                   return TableCell(
                     child: Padding(
@@ -253,8 +263,8 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                         TextButton.icon(
                           icon: const Icon(Icons.search_outlined),
                           label: Text(
-                            searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                            style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                            _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
                             final roomSearch = _roomSearch.text;
@@ -262,71 +272,69 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
+                                contentPadding: const EdgeInsets.all(10),
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Form(
-                                      child: Column(
-                                        children: [
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _roomSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.room_outlined),
-                                              label: Text(AppLocale.Room.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => roomValidator(context, required: false, value: value),
+                                  Form(
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _roomSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.room_outlined),
+                                            label: Text(AppLocale.Room.getString(context)),
                                           ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _floorSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.apartment_outlined),
-                                              label: Text(AppLocale.Floor.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                          validator: (value) => roomValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _floorSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.apartment_outlined),
+                                            label: Text(AppLocale.Floor.getString(context)),
                                           ),
-                                          const SizedBox.square(dimension: 10),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.done_outlined),
-                                                  label: Text(AppLocale.Search.getString(context)),
-                                                  onPressed: () {
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                        ),
+                                        const SizedBox.square(dimension: 10),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.clear_outlined),
-                                                  label: Text(AppLocale.ClearAll.getString(context)),
-                                                  onPressed: () {
-                                                    _roomSearch.clear();
-                                                    _floorSearch.clear();
+                                            ),
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.clear_outlined),
+                                                label: Text(AppLocale.ClearAll.getString(context)),
+                                                onPressed: () {
+                                                  _roomSearch.clear();
+                                                  _floorSearch.clear();
 
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -374,7 +382,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                       child: Icon(Icons.highlight_off_outlined),
                     ),
                     const SizedBox.square(dimension: 5),
-                    Text(AppLocale.ConnectionError.getString(context)),
+                    Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
                   ],
                 ),
               );

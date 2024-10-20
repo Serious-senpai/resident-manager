@@ -14,7 +14,7 @@ import "package:resident_manager/src/widgets/admin/residents.dart";
 import "package:resident_manager/src/widgets/admin/rooms.dart";
 
 final rng = Random();
-const WAIT_DURATION = Duration(seconds: 10);
+const MAX_WAIT_DURATION = Duration(seconds: 10);
 
 String randomString(int length) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -24,6 +24,29 @@ String randomString(int length) {
 String randomDigits(int length) {
   const chars = "0123456789";
   return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(rng.nextInt(chars.length))));
+}
+
+Future<Finder> pumpUntilFound(
+  bool Function(Widget) predicate,
+  Matcher matcher,
+  WidgetTester tester,
+) async {
+  final stopWatch = Stopwatch();
+  while (true) {
+    await tester.pumpAndSettle();
+    try {
+      final finder = find.byWidgetPredicate(predicate);
+      expect(finder, matcher);
+
+      return finder;
+    } catch (_) {
+      if (stopWatch.elapsed > MAX_WAIT_DURATION) {
+        rethrow;
+      }
+    }
+
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
 }
 
 void main() {
@@ -48,9 +71,7 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -58,9 +79,7 @@ void main() {
 
       // Open residents list
       await tester.tap(find.byIcon(Icons.people_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is ResidentsPage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -68,9 +87,7 @@ void main() {
 
       // Open rooms list
       await tester.tap(find.byIcon(Icons.room_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is RoomsPage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -123,7 +140,7 @@ void main() {
 
       // Tap the "Register" button
       await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
+      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -144,9 +161,7 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open search interface
       await tester.tap(find.byIcon(Icons.search_outlined));
@@ -166,7 +181,7 @@ void main() {
       await tester.enterText(searchFields.at(1), room.toString());
       await tester.enterText(searchFields.at(2), username);
       await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
-      await tester.pumpAndSettle(WAIT_DURATION);
+      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
       final checkboxes = find.byWidgetPredicate((widget) => widget is Checkbox);
@@ -180,7 +195,7 @@ void main() {
 
       // Approve the registration request
       await tester.tap(find.byIcon(Icons.done_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
+      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -201,10 +216,7 @@ void main() {
 
       // Press the "Login as resident" button
       await tester.tap(find.byIcon(Icons.login_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      // Reach the home page
-      expect(find.byWidgetPredicate((widget) => widget is HomePage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is HomePage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -225,9 +237,7 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
-
-      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -257,7 +267,7 @@ void main() {
       await tester.enterText(searchFields2.at(1), room.toString());
       await tester.enterText(searchFields2.at(2), username);
       await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
-      await tester.pumpAndSettle(WAIT_DURATION);
+      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
       final checkboxes2 = find.byWidgetPredicate((widget) => widget is Checkbox);
@@ -271,7 +281,7 @@ void main() {
 
       // Delete the created account
       await tester.tap(find.byIcon(Icons.delete_outlined));
-      await tester.pumpAndSettle(WAIT_DURATION);
+      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));

@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:collection";
 import "dart:io";
 import "dart:math";
 
@@ -8,7 +9,6 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
-import "../utils.dart";
 import "../../config.dart";
 import "../../state.dart";
 import "../../translations.dart";
@@ -26,18 +26,18 @@ class RegisterQueuePage extends StateAwareWidget {
 class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
   List<RegisterRequest> _requests = [];
 
-  Future<bool>? _queryFuture;
-  Future<bool>? _countFuture;
+  Future<int?>? _queryFuture;
+  Future<int?>? _countFuture;
   Widget _notification = const SizedBox.square(dimension: 0);
 
-  final _selected = <RegisterRequest>{};
+  final _selected = SplayTreeSet<RegisterRequest>((k1, k2) => k1.id.compareTo(k2.id));
   final _actionLock = Lock();
 
   final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
   final _usernameSearch = TextEditingController();
-  String? orderBy;
-  bool ascending = true;
+  String orderBy = "request_id";
+  bool ascending = false;
 
   int _offset = 0;
   int _offsetLimit = 0;
@@ -49,48 +49,47 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
     refresh();
   }
 
-  bool get searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
+  bool get _searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
 
   Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
       () async {
-        _notification = TranslatedText(
-          (ctx) => AppLocale.Loading.getString(ctx),
-          state: state,
-          style: const TextStyle(color: Colors.blue),
+        _notification = Builder(
+          builder: (context) => Text(
+            AppLocale.Loading.getString(context),
+            style: const TextStyle(color: Colors.blue),
+          ),
         );
         refresh();
 
-        var success = false;
         try {
-          success = await coro(state: state, objects: _selected);
+          if (await coro(state: state, objects: _selected)) {
+            _selected.clear();
+          }
+
+          _notification = const SizedBox.square(dimension: 0);
         } catch (e) {
-          if (e is SocketException || e is TimeoutException) {
-            await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-          } else {
+          await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+          _notification = Builder(
+            builder: (context) => Text(
+              AppLocale.ConnectionError.getString(context),
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+
+          if (!(e is SocketException || e is TimeoutException)) {
             rethrow;
           }
-        }
-
-        if (success) {
-          _notification = const SizedBox.square(dimension: 0);
-          _selected.clear();
+        } finally {
           offset = 0;
-        } else {
-          _notification = TranslatedText(
-            (ctx) => AppLocale.UnknownError.getString(ctx),
-            state: state,
-            style: const TextStyle(color: Colors.red),
-          );
-          refresh();
         }
       },
     );
   }
 
-  Future<bool> query() async {
+  Future<int?> _query() async {
     try {
-      _requests = await RegisterRequest.query(
+      final result = await RegisterRequest.query(
         state: state,
         offset: DB_PAGINATION_QUERY * offset,
         name: _nameSearch.text,
@@ -100,41 +99,53 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         ascending: ascending,
       );
 
-      refresh();
-      return true;
+      final data = result.data;
+      if (data != null) {
+        _requests = data;
+        _requests.removeWhere(_selected.contains);
+        _requests.addAll(_selected);
+      }
+
+      return result.code;
     } catch (e) {
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
-  Future<bool> count() async {
+  Future<int?> _count() async {
     try {
-      final value = await RegisterRequest.count(
+      final result = await RegisterRequest.count(
         state: state,
         name: _nameSearch.text,
         room: int.tryParse(_roomSearch.text),
         username: _usernameSearch.text,
       );
-      if (value == null) {
+
+      final data = result.data;
+      if (data != null) {
+        _offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      } else {
         _offsetLimit = offset;
-        return false;
       }
 
-      _offsetLimit = (value + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      return true;
+      return result.code;
     } catch (e) {
+      _offsetLimit = offset;
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        _offsetLimit = offset;
-        return false;
+        return null;
       }
 
       rethrow;
+    } finally {
+      refresh();
     }
   }
 
@@ -143,8 +154,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= query();
-    _countFuture ??= count();
+    _queryFuture ??= _query();
+    _countFuture ??= _count();
 
     return Scaffold(
       key: scaffoldKey,
@@ -177,8 +188,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
               );
 
             case ConnectionState.done:
-              final success = snapshot.data ?? false;
-              if (success) {
+              final code = snapshot.data;
+              if (code == 0) {
                 TableCell headerCeil(String text, [String? newOrderBy]) {
                   if (newOrderBy != null) {
                     if (orderBy == newOrderBy) {
@@ -361,8 +372,8 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                         TextButton.icon(
                           icon: const Icon(Icons.search_outlined),
                           label: Text(
-                            searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                            style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                            _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
                             final nameSearch = _nameSearch.text;
@@ -371,86 +382,84 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
+                                contentPadding: const EdgeInsets.all(10),
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Form(
-                                      child: Column(
-                                        children: [
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _nameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.badge_outlined),
-                                              label: Text(AppLocale.Fullname.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => nameValidator(context, required: false, value: value),
+                                  Form(
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _nameSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.badge_outlined),
+                                            label: Text(AppLocale.Fullname.getString(context)),
                                           ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _roomSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.room_outlined),
-                                              label: Text(AppLocale.Room.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
-                                            validator: (value) => roomValidator(context, required: false, value: value),
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                          validator: (value) => nameValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _roomSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.room_outlined),
+                                            label: Text(AppLocale.Room.getString(context)),
                                           ),
-                                          TextFormField(
-                                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                                            controller: _usernameSearch,
-                                            decoration: InputDecoration(
-                                              contentPadding: const EdgeInsets.all(8.0),
-                                              icon: const Icon(Icons.person_outlined),
-                                              label: Text(AppLocale.Username.getString(context)),
-                                            ),
-                                            onFieldSubmitted: (_) {
-                                              Navigator.pop(context, true);
-                                              offset = 0;
-                                            },
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                          validator: (value) => roomValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                                          controller: _usernameSearch,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.person_outlined),
+                                            label: Text(AppLocale.Username.getString(context)),
                                           ),
-                                          const SizedBox.square(dimension: 10),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.done_outlined),
-                                                  label: Text(AppLocale.Search.getString(context)),
-                                                  onPressed: () {
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                          onFieldSubmitted: (_) {
+                                            Navigator.pop(context, true);
+                                            offset = 0;
+                                          },
+                                        ),
+                                        const SizedBox.square(dimension: 10),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                              Expanded(
-                                                child: TextButton.icon(
-                                                  icon: const Icon(Icons.clear_outlined),
-                                                  label: Text(AppLocale.ClearAll.getString(context)),
-                                                  onPressed: () {
-                                                    _nameSearch.clear();
-                                                    _roomSearch.clear();
-                                                    _usernameSearch.clear();
+                                            ),
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.clear_outlined),
+                                                label: Text(AppLocale.ClearAll.getString(context)),
+                                                onPressed: () {
+                                                  _nameSearch.clear();
+                                                  _roomSearch.clear();
+                                                  _usernameSearch.clear();
 
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  },
-                                                ),
+                                                  Navigator.pop(context, true);
+                                                  offset = 0;
+                                                },
                                               ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -501,7 +510,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                       child: Icon(Icons.highlight_off_outlined),
                     ),
                     const SizedBox.square(dimension: 5),
-                    Text(AppLocale.ConnectionError.getString(context)),
+                    Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
                   ],
                 ),
               );
