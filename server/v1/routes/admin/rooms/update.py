@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Result, RoomData
+from ....models import AdminPermission, Result, RoomData
 
 
 __all__ = ("admin_rooms_update",)
@@ -29,14 +29,13 @@ __all__ = ("admin_rooms_update",)
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_rooms_update(
-    headers: AuthorizationHeader,
+    admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     rooms: List[RoomData],
 ) -> Optional[Result[None]]:
-    auth = await headers.verify_admin()
-    if auth is not None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return auth
+    if admin.admin:
+        await RoomData.update_many(rooms)
+        return None
 
-    await RoomData.update_many(rooms)
-    return None
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return Result(code=401, data=None)

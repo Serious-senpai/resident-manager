@@ -10,7 +10,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from ..app import api_v1
-from server import DEFAULT_ADMIN_PASSWORD, Authorization, check_password
+from server import DEFAULT_ADMIN_PASSWORD, check_password
 
 
 __all__ = ()
@@ -30,11 +30,11 @@ def random_numstring(length: int) -> str:
     return "".join(random.choices(string.digits, k=length))
 
 
-def check_no_registration_request(id: int, *, client: TestClient) -> None:
+def check_no_registration_request(id: int, *, client: TestClient, admin_token: str) -> None:
     response = client.get(
         "/admin/registration-requests",
         params={"id": id},
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -42,11 +42,11 @@ def check_no_registration_request(id: int, *, client: TestClient) -> None:
     assert len(data["data"]) == 0
 
 
-def check_no_resident(id: int, *, client: TestClient) -> None:
+def check_no_resident(id: int, *, client: TestClient, admin_token: str) -> None:
     response = client.get(
         "/admin/residents",
         params={"id": id},
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -83,6 +83,37 @@ def assert_match(
         assert check_password(password, hashed=data["hashed_password"])
 
 
+def _get_token(
+    endpoint: str,
+    *,
+    client: TestClient,
+    username: str,
+    password: str,
+    status_code: int = status.HTTP_200_OK,
+) -> Optional[str]:
+    response = client.post(
+        endpoint,
+        data={"username": username, "password": password},
+    )
+
+    assert response.status_code == status_code
+
+    if status_code == status.HTTP_200_OK:
+        data = response.json()
+        assert data["token_type"] == "bearer"
+        return data["access_token"]
+
+    return None
+
+
+def get_admin_token(client: TestClient, *, username: str, password: str, status_code: int = status.HTTP_200_OK) -> Optional[str]:
+    return _get_token("/admin/login", client=client, username=username, password=password, status_code=status_code)
+
+
+def get_token(client: TestClient, *, username: str, password: str, status_code: int = status.HTTP_200_OK) -> Optional[str]:
+    return _get_token("/login", client=client, username=username, password=password, status_code=status_code)
+
+
 def test_root(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == status.HTTP_200_OK
@@ -105,22 +136,12 @@ admin_passwords = [DEFAULT_ADMIN_PASSWORD, random_string(50)]
 @pytest.mark.parametrize("username_i", range(len(admin_usernames)))
 @pytest.mark.parametrize("password_i", range(len(admin_passwords)))
 def test_admin_login(client: TestClient, username_i: int, password_i: int) -> None:
-    response = client.post(
-        "/admin/login",
-        headers=Authorization(
-            username=admin_usernames[username_i],
-            password=admin_passwords[password_i],
-        ).model_dump(),
+    get_admin_token(
+        client,
+        username=admin_usernames[username_i],
+        password=admin_passwords[password_i],
+        status_code=status.HTTP_200_OK if username_i == 0 and password_i == 0 else status.HTTP_400_BAD_REQUEST,
     )
-
-    if username_i == 0 and password_i == 0:
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-    else:
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-        data = response.json()
-        assert data["code"] == 203
-        assert data["data"] is None
 
 
 def test_register_main_flow(client: TestClient) -> None:
@@ -144,7 +165,7 @@ def test_register_main_flow(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=Authorization(username=username, password=password).model_dump(),
+        headers=dict(username=username, password=password),
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -153,10 +174,17 @@ def test_register_main_flow(client: TestClient) -> None:
 
     request_id = data["data"]["id"]
 
+    admin_token = get_admin_token(
+        client,
+        username="admin",
+        password=DEFAULT_ADMIN_PASSWORD,
+    )
+    assert admin_token is not None
+
     response = client.get(
         "/admin/registration-requests",
         params={"offset": 0, "id": request_id},
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -179,15 +207,18 @@ def test_register_main_flow(client: TestClient) -> None:
     response = client.post(
         "/admin/registration-requests/accept",
         json=[data[0]],
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    check_no_registration_request(request_id, client=client)
+    check_no_registration_request(request_id, client=client, admin_token=admin_token)
 
-    response = client.post(
-        "/login",
-        headers=Authorization(username=username, password=password).model_dump(),
+    resident_token = get_token(client, username=username, password=password)
+    assert resident_token is not None
+
+    response = client.get(
+        "/residents/me",
+        headers={"Authorization": f"Bearer {resident_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -208,19 +239,19 @@ def test_register_main_flow(client: TestClient) -> None:
     response = client.post(
         "/admin/residents/delete",
         json=[data],
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    check_no_resident(resident_id, client=client)
+    check_no_resident(resident_id, client=client, admin_token=admin_token)
 
 
-resident_names = [f"test-{random_string(random.randint(1, 69))}", "", f"test-{random_string(random.randint(256, 10**4 + 7))}"]
-resident_rooms = [random.randint(0, 32767), random.randint(-10**9 - 7, -1), random.randint(32768, 10**9 + 7)]
-resident_phones = [random_numstring(random.randint(1, 15)), random_numstring(random.randint(16, 10**4 + 7)), random_string(random.randint(1, 10**4 + 7))]
-resident_emails = [f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com", random_string(random.randint(1, 10**4 + 7))]
-resident_usernames = [random_string(random.randint(1, 255)), "", random_string(random.randint(256, 10**4 + 7))]
-resident_passwords = [random_string(random.randint(8, 255)), random_string(random.randint(1, 7)), random_string(random.randint(256, 10**4 + 7))]
+resident_names = [f"test-{random_string(random.randint(1, 69))}", "", f"test-{random_string(random.randint(256, 10 ** 4 + 7))}"]
+resident_rooms = [random.randint(0, 32767), random.randint(-10 ** 9 - 7, -1), random.randint(32768, 10 ** 9 + 7)]
+resident_phones = [random_numstring(random.randint(1, 15)), random_numstring(random.randint(16, 10 ** 4 + 7)), random_string(random.randint(1, 10 ** 4 + 7))]
+resident_emails = [f"{random_string(random.randint(1, 69))}@{random_string(random.randint(1, 69))}.com", random_string(random.randint(1, 10 ** 4 + 7))]
+resident_usernames = [random_string(random.randint(1, 255)), "", random_string(random.randint(256, 10 ** 4 + 7))]
+resident_passwords = [random_string(random.randint(8, 255)), random_string(random.randint(1, 7)), random_string(random.randint(256, 10 ** 4 + 7))]
 
 
 @pytest.mark.parametrize("name_i", range(len(resident_names)))
@@ -253,7 +284,7 @@ def test_register_fail(
             "phone": resident_phones[phone_i],
             "email": resident_emails[email_i],
         },
-        headers=Authorization(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
+        headers=dict(username=resident_usernames[username_i], password=resident_passwords[password_i]),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
@@ -276,10 +307,17 @@ def test_register_fail(
     elif password_i != 0:
         assert data["code"] == 106
 
+    admin_token = get_admin_token(
+        client,
+        username="admin",
+        password=DEFAULT_ADMIN_PASSWORD,
+    )
+    assert admin_token is not None
+
     response = client.get(
         "/admin/registration-requests",
         params={"offset": 0, "username": resident_usernames[username_i], "room": resident_rooms[room_i]},
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -287,13 +325,12 @@ def test_register_fail(
     assert data["code"] == 0
     assert len(data["data"]) == 0
 
-    response = client.post(
-        "/login",
-        headers=Authorization(username=resident_usernames[username_i], password=resident_passwords[password_i]).model_dump(),
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    data = response.json()
-    assert data["code"] == 201
+    assert get_token(
+        client,
+        username=resident_usernames[username_i],
+        password=resident_passwords[password_i],
+        status_code=status.HTTP_400_BAD_REQUEST,
+    ) is None
 
 
 def test_register_username_taken(client: TestClient) -> None:
@@ -315,7 +352,7 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=Authorization(username=username, password=password).model_dump(),
+        headers=dict(username=username, password=password),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
@@ -332,7 +369,7 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=Authorization(username=username, password=password).model_dump(),
+        headers=dict(username=username, password=password),
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -356,17 +393,24 @@ def test_register_username_taken(client: TestClient) -> None:
             "phone": phone,
             "email": email,
         },
-        headers=Authorization(username=username, password=password).model_dump(),
+        headers=dict(username=username, password=password),
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["code"] == 107
 
+    admin_token = get_admin_token(
+        client,
+        username="admin",
+        password=DEFAULT_ADMIN_PASSWORD,
+    )
+    assert admin_token is not None
+
     response = client.post(
         "/admin/registration-requests/reject",
         json=[{"id": request_id}],
-        headers=Authorization(username="admin", password=DEFAULT_ADMIN_PASSWORD).model_dump(),
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    check_no_registration_request(request_id, client=client)
+    check_no_registration_request(request_id, client=client, admin_token=admin_token)

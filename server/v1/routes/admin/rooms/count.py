@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Result, Room
+from ....models import AdminPermission, Result, Room
 
 
 __all__ = ("admin_rooms_count",)
@@ -28,14 +28,13 @@ __all__ = ("admin_rooms_count",)
     },
 )
 async def admin_rooms_count(
-    headers: AuthorizationHeader,
+    admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     room: Optional[int] = None,
     floor: Optional[int] = None,
 ) -> Result[Optional[int]]:
-    auth = await headers.verify_admin()
-    if auth is not None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return auth
+    if admin.admin:
+        return Result(data=await Room.count(room=room, floor=floor))
 
-    return Result(data=await Room.count(room=room, floor=floor))
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return Result(code=401, data=None)

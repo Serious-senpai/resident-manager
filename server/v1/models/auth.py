@@ -1,49 +1,20 @@
 from __future__ import annotations
 
-import asyncio
-from typing import Annotated, ClassVar, Optional, cast
+import secrets
+from datetime import datetime, timedelta, timezone
+from typing import Annotated, ClassVar, Literal
 
+import jwt
 import pydantic
-from fastapi import Header
-
-from .results import Result
-from ..database import Database
-from ..utils import check_password
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
 
 
-__all__ = ("Authorization", "AuthorizationHeader", "HashedAuthorization")
-
-
-class Authorization(pydantic.BaseModel):
-    """Data model for authorization headers"""
-
-    username: Annotated[str, pydantic.Field(description="The username for authorization")]
-    password: Annotated[str, pydantic.Field(description="The password for authorization")]
-
-    admin_username: ClassVar[Optional[str]] = None
-    admin_hashed_password: ClassVar[Optional[str]] = None
-    admin_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
-
-    async def verify_admin(self) -> Optional[Result[None]]:
-        async with Authorization.admin_lock:
-            if Authorization.admin_username is None or Authorization.admin_hashed_password is None:
-                async with Database.instance.pool.acquire() as connection:
-                    async with connection.cursor() as cursor:
-                        await cursor.execute("SELECT * FROM config WHERE name = 'admin_username'")
-                        row = await cursor.fetchone()
-                        Authorization.admin_username = cast(str, row[1])
-
-                        await cursor.execute("SELECT * FROM config WHERE name = 'admin_hashed_password'")
-                        row = await cursor.fetchone()
-                        Authorization.admin_hashed_password = cast(str, row[1])
-
-        if self.username == Authorization.admin_username and check_password(self.password, hashed=Authorization.admin_hashed_password):
-            return None
-
-        return Result(code=203, data=None)
-
-
-AuthorizationHeader = Annotated[Authorization, Header(description="Authorization headers")]
+__all__ = (
+    "HashedAuthorization",
+    "Token",
+    "AdminPermission",
+)
 
 
 class HashedAuthorization(pydantic.BaseModel):
@@ -54,3 +25,47 @@ class HashedAuthorization(pydantic.BaseModel):
 
     username: Annotated[str, pydantic.Field(description="The username for authorization")]
     hashed_password: Annotated[str, pydantic.Field(description="The SHA256-hashed password stored in the database")]
+
+
+class Token(pydantic.BaseModel):
+    """Data model for a token response."""
+
+    access_token: str
+    token_type: Literal["bearer"]
+
+    SECRET_KEY: ClassVar[str] = secrets.token_hex(32)
+    ALGORITHM: ClassVar[Literal["HS256"]] = "HS256"
+    TOKEN_EXPIRE_MINUTES: ClassVar[int] = 30
+
+    oauth2_resident: ClassVar[OAuth2PasswordBearer] = OAuth2PasswordBearer("login", scheme_name="oauth2_resident")
+    oauth2_admin: ClassVar[OAuth2PasswordBearer] = OAuth2PasswordBearer("admin/login", scheme_name="oauth2_admin")
+
+    @classmethod
+    def create(cls, object: pydantic.BaseModel) -> Token:
+        to_encode = object.model_dump()
+        expire = datetime.now(timezone.utc) + timedelta(minutes=cls.TOKEN_EXPIRE_MINUTES)
+
+        to_encode.update({"exp": expire})
+        return cls(
+            access_token=jwt.encode(to_encode, cls.SECRET_KEY, cls.ALGORITHM),
+            token_type="bearer",
+        )
+
+
+class AdminPermission(pydantic.BaseModel):
+    """Data model for admin permissions."""
+
+    admin: bool
+
+    @staticmethod
+    def create_token() -> Token:
+        return Token.create(AdminPermission(admin=True))
+
+    @classmethod
+    def from_token(cls, token: Annotated[str, Depends(Token.oauth2_admin)]) -> AdminPermission:
+        try:
+            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM])
+            return cls(admin=payload.get("admin", False))
+
+        except jwt.PyJWTError:
+            return cls(admin=False)

@@ -5,16 +5,16 @@ from typing import Annotated, Optional
 from fastapi import Depends, Response, status
 
 from ...app import api_v1
-from ...models import PersonalInfo, Resident, Result
+from ...models import Resident, Result
 
 
-__all__ = ("residents_update",)
+__all__ = ("residents_me",)
 
 
-@api_v1.post(
-    "/residents/update",
-    name="Residents update",
-    description="Update information of a resident",
+@api_v1.get(
+    "/residents/me",
+    name="Resident self-query",
+    description="View information of the currently authorized resident",
     tags=["resident"],
     responses={
         status.HTTP_200_OK: {
@@ -27,18 +27,11 @@ __all__ = ("residents_update",)
         },
     },
 )
-async def residents_update(
+async def residents_me(
     resident: Annotated[Result[Optional[Resident]], Depends(Resident.from_token)],
     response: Response,
-    id: int,
-    info: PersonalInfo,
 ) -> Result[Optional[Resident]]:
-    if resident.data is None or resident.data.id != id:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return Result(code=402, data=None)
-
-    result = await Resident.update(id=id, info=info)
-    if result.data is None:
+    if resident.data is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
 
-    return result
+    return resident

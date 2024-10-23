@@ -18,15 +18,14 @@ message into a specific language.
 | Code | Description |
 | ---- | ----------- |
 | 0 | Successful response |
-| 101 | Invalid registration name |
-| 102 | Invalid registration room number |
-| 103 | Invalid registration phone number |
-| 104 | Invalid registration email address |
-| 105 | Invalid registration username |
-| 106 | Invalid registration password |
+| 101 | Invalid resident name |
+| 102 | Invalid resident room number |
+| 103 | Invalid resident phone number |
+| 104 | Invalid resident email address |
+| 105 | Invalid resident username |
+| 106 | Invalid resident password |
 | 107 | The registration username has already been used |
-| 201 | Login username does not exist |
-| 202 | Incorrect login password |
-| 203 | Incorrect administrator authentication data |
-| 301 | The user (except from administrator) attempted to modify the information of another user |
-| 302 | The resident with the provided ID does not exist in a update request |
+| 201 | Unable to authorize resident from JWT |
+| 301 | Target resident ID does not exist in an update request |
+| 401 | Unauthorized administrator operation |
+| 402 | Unauthorized resident operation |

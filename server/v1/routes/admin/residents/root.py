@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Resident, Result
+from ....models import AdminPermission, Resident, Result
 from .....config import DB_PAGINATION_QUERY
 
 
@@ -29,7 +29,7 @@ __all__ = ("admin_residents",)
     },
 )
 async def admin_residents(
-    headers: AuthorizationHeader,
+    admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     offset: int = 0,
     id: Optional[int] = None,
@@ -39,19 +39,18 @@ async def admin_residents(
     order_by: Literal["resident_id", "name", "room", "username"] = "resident_id",
     ascending: bool = True,
 ) -> Result[Optional[List[Resident]]]:
-    auth = await headers.verify_admin()
-    if auth is not None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return auth
+    if admin.admin:
+        return Result(
+            data=await Resident.query(
+                offset=offset,
+                id=id,
+                name=name,
+                room=room,
+                username=username,
+                order_by=order_by,
+                ascending=ascending,
+            ),
+        )
 
-    return Result(
-        data=await Resident.query(
-            offset=offset,
-            id=id,
-            name=name,
-            room=room,
-            username=username,
-            order_by=order_by,
-            ascending=ascending,
-        ),
-    )
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return Result(code=401, data=None)

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Annotated, Optional
 
-from fastapi import Query, Response, status
+import pydantic
+from fastapi import Header, Query, Response, status
 
 from ..app import api_v1
 from ..models import (
-    AuthorizationHeader,
     PersonalInfo,
     PublicInfo,
     RegisterRequest,
@@ -15,6 +15,19 @@ from ..models import (
 
 
 __all__ = ("register",)
+
+
+class _Authorization(pydantic.BaseModel):
+    """Data model for authorization headers when registering a new account.
+
+    This should only be used to handle registration requests.
+    """
+
+    username: Annotated[str, pydantic.Field(description="The username for authorization")]
+    password: Annotated[str, pydantic.Field(description="The password for authorization")]
+
+
+_AuthorizationHeader = Annotated[_Authorization, Header(description="Authorization headers")]
 
 
 @api_v1.post(
@@ -34,7 +47,7 @@ __all__ = ("register",)
     },
 )
 async def register(
-    headers: AuthorizationHeader,
+    headers: _AuthorizationHeader,
     response: Response,
     data: Annotated[PersonalInfo, Query()],
 ) -> Result[Optional[PublicInfo]]:

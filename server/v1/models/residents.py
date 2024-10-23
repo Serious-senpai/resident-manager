@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, List, Literal, Optional, TypeVar
+from typing import Annotated, Any, List, Literal, Optional, TypeVar
 
-from .auth import AuthorizationHeader, HashedAuthorization
+import jwt
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordRequestForm
+from jwt.exceptions import PyJWTError
+
+from .auth import HashedAuthorization, Token
 from .info import PersonalInfo, PublicInfo
 from .results import Result
 from .snowflake import Snowflake
@@ -151,19 +156,35 @@ class Resident(PublicInfo, HashedAuthorization):
                 return await cursor.fetchval()
 
     @classmethod
-    async def authorize(cls, headers: AuthorizationHeader) -> Result[Optional[Resident]]:
-        residents = await cls.query(username=headers.username)
+    async def create_token(cls, form_data: OAuth2PasswordRequestForm) -> Optional[Token]:
+        residents = await cls.query(username=form_data.username)
         if len(residents) == 0:
-            return Result(code=201, data=None)
+            return None
 
         resident = residents[0]
-        if not check_password(headers.password, hashed=resident.hashed_password):
-            return Result(code=202, data=None)
+        if not check_password(form_data.password, hashed=resident.hashed_password):
+            return None
 
-        return Result(data=resident)
+        return Token.create(Snowflake(id=resident.id))
+
+    @classmethod
+    async def from_token(cls, token: Annotated[str, Depends(Token.oauth2_resident)]) -> Result[Optional[Resident]]:
+        try:
+            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM])
+            snowflake = Snowflake.model_validate(payload)
+
+            residents = await Resident.query(id=snowflake.id)
+            if len(residents) == 1:
+                return Result(data=residents[0])
+
+        except PyJWTError:
+            pass
+
+        return Result(code=201, data=None)
 
     @classmethod
     async def update(cls, *, id: int, info: PersonalInfo) -> Result[Optional[Resident]]:
+        info.validate_info()
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
@@ -190,4 +211,4 @@ class Resident(PublicInfo, HashedAuthorization):
                 if row is not None:
                     return Result(data=cls.from_row(row))
 
-        return Result(code=302, data=None)
+        return Result(code=301, data=None)

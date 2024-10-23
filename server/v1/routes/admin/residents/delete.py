@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Resident, Result, Snowflake
+from ....models import AdminPermission, Resident, Result, Snowflake
 
 
 __all__ = ("admin_residents_delete",)
@@ -29,14 +29,13 @@ __all__ = ("admin_residents_delete",)
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def admin_residents_delete(
-    headers: AuthorizationHeader,
+    admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     objects: List[Snowflake],
 ) -> Optional[Result[None]]:
-    auth = await headers.verify_admin()
-    if auth is not None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return auth
+    if admin.admin:
+        await Resident.delete_many(objects)
+        return None
 
-    await Resident.delete_many(objects)
-    return None
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return Result(code=401, data=None)

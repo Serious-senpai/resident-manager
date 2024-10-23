@@ -5,7 +5,14 @@ from typing import Annotated, Optional
 
 import pydantic
 
+from .results import Result
 from .snowflake import Snowflake
+from ..utils import (
+    validate_name,
+    validate_room,
+    validate_phone,
+    validate_email,
+)
 
 
 __all__ = ("PersonalInfo", "PublicInfo")
@@ -28,6 +35,27 @@ class PersonalInfo(pydantic.BaseModel):
             phone=self.phone,
             email=self.email,
         )
+
+    def validate_info(self) -> Optional[Result[None]]:
+        if self.phone is None or len(self.phone) == 0:
+            self.phone = None
+
+        if self.email is None or len(self.email) == 0:
+            self.email = None
+
+        if not validate_name(self.name):
+            return Result(code=101, data=None)
+
+        if not validate_room(self.room):
+            return Result(code=102, data=None)
+
+        if self.phone is not None and not validate_phone(self.phone):
+            return Result(code=103, data=None)
+
+        if self.email is not None and not validate_email(self.email):
+            return Result(code=104, data=None)
+
+        return None
 
 
 class PublicInfo(Snowflake, PersonalInfo):

@@ -176,7 +176,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     """
                     IF NOT EXISTS (
                         SELECT 1 FROM residents WHERE username = ?
-                        UNION
+                        UNION ALL
                         SELECT 1 FROM register_queue WHERE username = ?
                     )
                     INSERT INTO register_queue OUTPUT INSERTED.* VALUES (?, ?, ?, ?, ?, ?, ?, ?)

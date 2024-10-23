@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 from ....app import api_v1
-from ....models import AuthorizationHeader, Result, Room
+from ....models import AdminPermission, Result, Room
 from .....config import DB_PAGINATION_QUERY
 
 
@@ -29,15 +29,14 @@ __all__ = ("admin_rooms",)
     },
 )
 async def admin_rooms(
-    headers: AuthorizationHeader,
+    admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     offset: int,
     room: Optional[int] = None,
     floor: Optional[int] = None,
 ) -> Result[Optional[List[Room]]]:
-    auth = await headers.verify_admin()
-    if auth is not None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return auth
+    if admin.admin:
+        return Result(data=await Room.query(offset=offset, room=room, floor=floor))
 
-    return Result(data=await Room.query(offset=offset, room=room, floor=floor))
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return Result(code=401, data=None)
