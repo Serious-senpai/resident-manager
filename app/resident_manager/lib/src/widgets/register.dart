@@ -7,7 +7,6 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
-import "utils.dart";
 import "../translations.dart";
 import "../utils.dart";
 import "../models/auth.dart";
@@ -44,10 +43,11 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
           return;
         }
 
-        _notification = TranslatedText(
-          (ctx) => AppLocale.Loading.getString(ctx),
-          state: state,
-          style: const TextStyle(color: Colors.blue),
+        _notification = Builder(
+          builder: (context) => Text(
+            AppLocale.Loading.getString(context),
+            style: const TextStyle(color: Colors.blue),
+          ),
         );
         refresh();
 
@@ -72,37 +72,28 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
             authorization: Authorization(username: username, password: password),
           );
 
-          if (result == 200) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.blue),
-            );
-          } else if (result == 400) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.CheckInputAgain.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
-            );
-          } else if (result == 409) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.UsernameAlreadyTaken.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
+          if (result == 0) {
+            _notification = Builder(
+              builder: (context) => Text(
+                AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context),
+                style: const TextStyle(color: Colors.blue),
+              ),
             );
           } else {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.UnknownError.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
+            _notification = Builder(
+              builder: (context) => Text(
+                AppLocale.errorMessage(result).getString(context),
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           }
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.ConnectionError.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
+            _notification = Builder(
+              builder: (context) => Text(
+                AppLocale.ConnectionError.getString(context),
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           } else {
             rethrow;
@@ -118,14 +109,6 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final padding = mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20.0;
-
-    RichText fieldLabel(String label, {bool required = false}) => RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(color: Colors.black),
-            children: required ? const [TextSpan(text: " *", style: TextStyle(color: Colors.red))] : [],
-          ),
-        );
 
     return Scaffold(
       key: scaffoldKey,
@@ -148,7 +131,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _name,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Fullname.getString(context), required: true),
+                  label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
                 ),
                 validator: (value) => nameValidator(context, required: true, value: value),
               ),
@@ -157,7 +140,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _room,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Room.getString(context), required: true),
+                  label: FieldLabel(AppLocale.Room.getString(context), required: true),
                 ),
                 validator: (value) => roomValidator(context, required: true, value: value),
               ),
@@ -166,11 +149,12 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _birthday,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.DateOfBirth.getString(context)),
+                  label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
                 ),
                 onTap: () async {
                   final birthday = await showDatePicker(
                     context: context,
+                    initialDate: DateFormat.fromFormattedDate(_birthday.text),
                     firstDate: DateTime.utc(1900),
                     lastDate: DateTime.now(),
                   );
@@ -188,43 +172,25 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _phone,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Phone.getString(context)),
+                  label: FieldLabel(AppLocale.Phone.getString(context)),
                 ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    final pattern = RegExp(r"^\+?[\d\s]+$");
-                    if (value.length > 15 || !pattern.hasMatch(value)) {
-                      return AppLocale.InvalidPhoneNumber.getString(context);
-                    }
-                  }
-
-                  return null;
-                },
+                validator: (value) => phoneValidator(context, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _email,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Email.getString(context)),
+                  label: FieldLabel(AppLocale.Email.getString(context)),
                 ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    final pattern = RegExp(r"^[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?$");
-                    if (value.length > 255 || !pattern.hasMatch(value)) {
-                      return AppLocale.InvalidEmail.getString(context);
-                    }
-                  }
-
-                  return null;
-                },
+                validator: (value) => emailValidator(context, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _username,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Username.getString(context), required: true),
+                  label: FieldLabel(AppLocale.Username.getString(context), required: true),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -243,7 +209,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _password,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.Password.getString(context), required: true),
+                  label: FieldLabel(AppLocale.Password.getString(context), required: true),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -263,7 +229,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                 controller: _passwordRetype,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: fieldLabel(AppLocale.RetypePassword.getString(context), required: true),
+                  label: FieldLabel(AppLocale.RetypePassword.getString(context), required: true),
                 ),
                 obscureText: true,
                 validator: (value) {
