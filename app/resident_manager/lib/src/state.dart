@@ -188,7 +188,15 @@ class ApplicationState {
   /// Calling [_withLoginFile] again in the [callback] will incur a deadlock
   static Future<T?> _withLoginFile<T>(Future<T?> Function(File) callback) async {
     try {
-      final packageInfo = await PackageInfo.fromPlatform();
+      // Avoid call to native stuff when running `flutter test`
+      final packageInfo = Platform.environment.containsKey("FLUTTER_TEST")
+          ? PackageInfo(
+              appName: "",
+              packageName: "",
+              version: "",
+              buildNumber: "",
+            )
+          : await PackageInfo.fromPlatform();
       final cacheDir = await getApplicationCacheDirectory();
       final file = File(join(cacheDir.absolute.path, "login-${packageInfo.version}.json"));
 
