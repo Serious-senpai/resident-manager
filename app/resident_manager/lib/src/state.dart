@@ -115,8 +115,7 @@ class ApplicationState {
     await _withLoginFile(
       (file) async {
         // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
-        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
-        if (exists) {
+        if (await file.exists()) {
           savedLogin = await file.readAsString();
         }
       },
@@ -188,15 +187,7 @@ class ApplicationState {
   /// Calling [_withLoginFile] again in the [callback] will incur a deadlock
   static Future<T?> _withLoginFile<T>(Future<T?> Function(File) callback) async {
     try {
-      // Avoid call to native stuff when running `flutter test`
-      final packageInfo = Platform.environment.containsKey("FLUTTER_TEST")
-          ? PackageInfo(
-              appName: "",
-              packageName: "",
-              version: "",
-              buildNumber: "",
-            )
-          : await PackageInfo.fromPlatform();
+      final packageInfo = await PackageInfo.fromPlatform();
       final cacheDir = await getApplicationCacheDirectory();
       final file = File(join(cacheDir.absolute.path, "login-${packageInfo.version}.json"));
 
@@ -210,8 +201,7 @@ class ApplicationState {
     await _withLoginFile(
       (file) async {
         // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
-        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
-        if (exists) {
+        if (await file.exists()) {
           await file.delete();
         }
       },

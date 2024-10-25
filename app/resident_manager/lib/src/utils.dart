@@ -30,11 +30,7 @@ Future<bool> showToastSafe({
   dynamic webPosition = "right",
 }) async {
   try {
-    if (Platform.environment.containsKey("FLUTTER_TEST")) {
-      // Fluttertoast.showToast hang in flutter test? No issue URLs found yet.
-      return false;
-    }
-
+    // Fluttertoast.showToast hang in flutter test? No issue URLs found yet.
     return await Fluttertoast.showToast(
           msg: msg,
           toastLength: toastLength,
