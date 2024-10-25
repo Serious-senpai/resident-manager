@@ -1,34 +1,26 @@
 local utils = require("utils")
+local pre_request
 
-local user_agent = utils.random_user_agent()
-print("User-Agent: " .. user_agent)
-
-wrk.scheme = "http"
-wrk.host = "localhost"
-wrk.port = 8000
-wrk.method = "POST"
-wrk.path = "/api/v1/admin/login"
-wrk.headers = {
-    ["Username"] = "incorrect",
-    ["Password"] = "incorrect",    
-    ["User-Agent"] = user_agent,
-}
-wrk.body = nil
-
-local request
 
 function init(args)
     -- Pre-generate the request
-    request = string.format("%s %s HTTP/1.1\r\n", wrk.method, wrk.path) ..
-        "Host: localhost:8000\r\n" ..
+    payload = "grant_type=password&username=admin&password=NgaiLongGey"
+    pre_request = "POST /api/v1/admin/login HTTP/1.1\r\n" ..
+        "Accept: application/json\r\n" ..
         "Connection: keep-alive\r\n" ..
-        string.format("Username: %s\r\n", wrk.headers["username"]) ..
-        string.format("Password: %s\r\n", wrk.headers["password"]) ..
-        "\r\n"
+        string.format("Content-Length: %d\r\n", string.len(payload)) ..
+        "Content-Type: application/x-www-form-urlencoded\r\n" ..
+        "Host: localhost:8000\r\n" ..
+        "Origin: http://localhost:8000\r\n" ..
+        string.format("User-Agent: %s\r\n", utils.random_user_agent()) ..
+        "\r\n" ..
+        payload
+
+    print(string.format("Sending requests:\n%s\n", pre_request))
 
     response = nil
 end
 
 function request()
-    return request
+    return pre_request
 end
