@@ -38,8 +38,7 @@ class RegisterRequest extends PublicInfo {
     String? orderBy,
     bool? ascending,
   }) async {
-    final authorization = state.authorization;
-    if (authorization == null) {
+    if (!state.loggedInAsAdmin) {
       return Result(-1, null);
     }
 
@@ -72,8 +71,11 @@ class RegisterRequest extends PublicInfo {
     required PersonalInfo info,
     required Authorization authorization,
   }) async {
-    final headers = authorization.constructHeaders();
-    headers["content-type"] = "application/json";
+    final headers = {
+      "username": authorization.username,
+      "password": authorization.password,
+      "content-type": "application/json",
+    };
 
     final response = await state.post(
       "/api/v1/register",
@@ -91,6 +93,10 @@ class RegisterRequest extends PublicInfo {
     required Iterable<Snowflake> objects,
     required String path,
   }) async {
+    if (!state.loggedInAsAdmin) {
+      return false;
+    }
+
     final headers = {"content-type": "application/json"};
     final data = List<Map<String, int>>.from(objects.map((o) => {"id": o.id}));
 

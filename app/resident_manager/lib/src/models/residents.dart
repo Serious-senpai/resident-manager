@@ -72,8 +72,7 @@ class Resident extends PublicInfo {
     String? orderBy,
     bool? ascending,
   }) async {
-    final authorization = state.authorization;
-    if (authorization == null) {
+    if (!state.loggedInAsAdmin) {
       return Result(-1, null);
     }
 

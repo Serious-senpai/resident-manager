@@ -6,124 +6,39 @@ import "package:async_locks/async_locks.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:http/http.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart";
 import "package:path_provider/path_provider.dart";
 
 import "http.dart";
 import "translations.dart";
-import "models/auth.dart";
 import "models/residents.dart";
 
-class PublicAuthorization extends Authorization {
-  final bool isAdmin;
-  Resident? resident;
-
-  PublicAuthorization({required super.username, required super.password, required this.isAdmin});
-}
-
-class _Authorization extends PublicAuthorization {
-  _Authorization({required super.username, required super.password, required super.isAdmin});
-
-  Map<String, dynamic> toJson() {
-    return {
-      "username": username,
-      "password": password,
-      "is_admin": isAdmin,
-    };
-  }
-
-  Future<bool> validate({
-    required ApplicationState state,
-    required bool remember,
-  }) async {
-    final response = await state.post(
-      isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
-      headers: constructHeaders(),
-      authorize: false,
-    );
-
-    final result = response.statusCode < 400;
-    if (result) {
-      if (!isAdmin) {
-        resident = Resident.fromJson(json.decode(utf8.decode(response.bodyBytes))["data"]);
-      }
-
-      if (remember) {
-        await _withLoginFile((file) => file.writeAsString(json.encode(toJson())));
-      } else {
-        await removeAuthData();
-      }
-    }
-
-    return result;
-  }
-
-  Future<void> removeAuthData() async {
-    await _withLoginFile(
-      (file) async {
-        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
-        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
-        if (exists) {
-          await file.delete();
-        }
-      },
-    );
-  }
-
-  static final _withLoginFileLock = Lock();
-
-  static Future<T?> _withLoginFile<T>(Future<T?> Function(File) callback) async {
-    try {
-      final cacheDir = await getApplicationCacheDirectory();
-      final file = File(join(cacheDir.absolute.path, "login.json"));
-
-      // Watch out for deadlocks! _withLoginFile<T> mustn't be invoked again in `callback`.
-      return await _withLoginFileLock.run(() => callback(file));
-    } on MissingPlatformDirectoryException {
-      return null;
-    }
-  }
-
-  static Future<_Authorization?> prepare({required ApplicationState state}) async {
-    final auth = await _withLoginFile(
-      (file) async {
-        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
-        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
-        if (exists) {
-          final data = json.decode(await file.readAsString());
-          final username = data["username"];
-          final password = data["password"];
-          final isAdmin = data["is_admin"];
-
-          try {
-            return _Authorization(username: username, password: password, isAdmin: isAdmin);
-          } catch (_) {
-            return null;
-          }
-        }
-      },
-    );
-
-    // For the authorization data to exist in the file, `remember` must have been set to `true`.
-    if (auth != null && await auth.validate(state: state, remember: true)) {
-      return auth;
-    }
-
-    return null;
-  }
-}
-
 class ApplicationState {
+  /// Base URL for the API server.
   static final baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
 
+  /// HTTP client to make requests.
+  ///
+  /// When making request to the API server (see [baseUrl]), it is more convenient to use [get] and [post] instead.
   final HTTPClient http;
 
+  /// [FlutterLocalization] for the application.
   final localization = FlutterLocalization.instance;
   final _onTranslationCallbacks = <void Function(Locale?)>[];
+
+  /// Extra data that is globally available to the entire application.
   final extras = <Object, Object?>{};
 
-  _Authorization? _authorization;
-  PublicAuthorization? get authorization => _authorization;
+  /// Token used for authorization
+  String? _bearerToken;
+
+  /// Resident logged in as
+  Resident? resident;
+
+  bool get loggedIn => _bearerToken != null;
+  bool get loggedInAsAdmin => _bearerToken != null && resident == null;
+  bool get loggedInAsResident => _bearerToken != null && resident != null;
 
   ApplicationState({Client? client}) : http = HTTPClient(client: client ?? Client()) {
     print("Using base API URL $baseUrl"); // ignore: avoid_print
@@ -148,27 +63,74 @@ class ApplicationState {
     required bool isAdmin,
     required bool remember,
   }) async {
-    final auth = _Authorization(username: username, password: password, isAdmin: isAdmin);
-    final result = await auth.validate(state: this, remember: remember);
-    _authorization = result ? auth : null;
+    final response = await post(
+      isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
+      body: {"username": username, "password": password},
+      authorize: false,
+    );
+
+    final result = response.statusCode < 400;
+    if (result) {
+      // Update state attributes
+      final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      _bearerToken = data["access_token"];
+      if (!isAdmin) {
+        final response = await get(
+          "/api/v1/residents/me",
+          headers: {"Authorization": "Bearer $_bearerToken"},
+          authorize: false,
+        );
+        resident = Resident.fromJson(json.decode(utf8.decode(response.bodyBytes))["data"]);
+      }
+
+      // Save to login file if required
+      if (remember) {
+        await _withLoginFile(
+          (file) => file.writeAsString(
+            json.encode(
+              {
+                "username": username,
+                "password": password,
+                "is_admin": isAdmin,
+              },
+            ),
+          ),
+        );
+      } else {
+        await _removeLoginFile();
+      }
+    }
 
     return result;
   }
 
   Future<void> deauthorize() async {
-    await _authorization?.removeAuthData();
-    _authorization = null;
-  }
-
-  void _attachAuthorizationHeaders(Map<String, String> headers) {
-    final auth = _authorization;
-    if (auth != null) {
-      headers.addAll(auth.constructHeaders());
-    }
+    await _removeLoginFile();
+    _bearerToken = null;
+    resident = null;
   }
 
   Future<void> prepare() async {
-    _authorization = await _Authorization.prepare(state: this);
+    String? savedLogin;
+    await _withLoginFile(
+      (file) async {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
+          savedLogin = await file.readAsString();
+        }
+      },
+    );
+
+    if (savedLogin != null) {
+      final data = json.decode(savedLogin!);
+      final username = data["username"];
+      final password = data["password"];
+      final isAdmin = data["is_admin"];
+
+      // For the authorization data to exist in the file, `remember` must have been set to `true`.
+      await authorize(username: username, password: password, isAdmin: isAdmin, remember: true);
+    }
   }
 
   void pushTranslationCallback(void Function(Locale?) callback) {
@@ -186,7 +148,9 @@ class ApplicationState {
     bool authorize = true,
   }) async {
     headers ??= {};
-    if (authorize) _attachAuthorizationHeaders(headers);
+    if (authorize) {
+      headers["Authorization"] = "Bearer $_bearerToken";
+    }
 
     var response = await http.get(
       baseUrl.replace(path: path, queryParameters: queryParameters),
@@ -205,7 +169,9 @@ class ApplicationState {
     bool authorize = true,
   }) async {
     headers ??= {};
-    if (authorize) _attachAuthorizationHeaders(headers);
+    if (authorize) {
+      headers["Authorization"] = "Bearer $_bearerToken";
+    }
 
     var response = await http.post(
       baseUrl.replace(path: path, queryParameters: queryParameters),
@@ -215,5 +181,32 @@ class ApplicationState {
     );
 
     return response;
+  }
+
+  static final _withLoginFileLock = Lock();
+
+  /// Calling [_withLoginFile] again in the [callback] will incur a deadlock
+  static Future<T?> _withLoginFile<T>(Future<T?> Function(File) callback) async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final cacheDir = await getApplicationCacheDirectory();
+      final file = File(join(cacheDir.absolute.path, "login-${packageInfo.version}.json"));
+
+      return await _withLoginFileLock.run(() => callback(file));
+    } on MissingPlatformDirectoryException {
+      return null;
+    }
+  }
+
+  static Future<void> _removeLoginFile() async {
+    await _withLoginFile(
+      (file) async {
+        // `await file.exists()` hang in flutter test: https://github.com/flutter/flutter/issues/75249
+        final exists = Platform.environment.containsKey("FLUTTER_TEST") ? file.existsSync() : await file.exists();
+        if (exists) {
+          await file.delete();
+        }
+      },
+    );
   }
 }

@@ -61,8 +61,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
       ),
     ];
 
-    final authorization = state.authorization;
-    if (authorization == null) {
+    if (!state.loggedIn) {
       navigator.add(
         ListTile(
           leading: const Icon(Icons.lock_outlined),
@@ -79,7 +78,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
         ),
       );
     } else {
-      if (authorization.isAdmin) {
+      if (state.loggedInAsAdmin) {
         navigator.addAll(
           [
             ListTile(

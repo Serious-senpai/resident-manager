@@ -47,8 +47,7 @@ class Room {
     int? room,
     int? floor,
   }) async {
-    final authorization = state.authorization;
-    if (authorization == null) {
+    if (!state.loggedInAsAdmin) {
       return Result(-1, null);
     }
 

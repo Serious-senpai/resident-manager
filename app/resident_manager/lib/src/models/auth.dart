@@ -15,14 +15,6 @@ class Authorization extends _HasUsername {
     required super.username,
     required this.password,
   });
-
-  /// Constructs authorization headers to send to the server side for authentication.
-  Map<String, String> constructHeaders() {
-    return {
-      "username": username,
-      "password": password,
-    };
-  }
 }
 
 /// Represents authorization data, which consists of a username and a hashed password.
