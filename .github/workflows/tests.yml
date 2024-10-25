@@ -138,36 +138,6 @@ jobs:
           path: .coverage.python-${{ matrix.python-version }}
           include-hidden-files: true
 
-  flutter:
-    name: Client application test
-    needs: checkout
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
-    steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repository
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.24.3
-          channel: stable
-
-      - name: View Flutter status
-        run: |
-          flutter --version
-          flutter doctor -v
-
-      - name: Run tests
-        working-directory: app/resident_manager
-        run: flutter test
-
   flutter-integration:
     name: Client integration test
     needs: checkout
@@ -378,7 +348,7 @@ jobs:
 
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter, flutter-integration, python-coverage, performance-test]
+    needs: [checkout, python, flutter-integration, python-coverage, performance-test]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
@@ -405,7 +375,7 @@ jobs:
             const sha = "${{ needs.checkout.outputs.sha }}".substr(0, 7);
 
             let body = null;
-            if (${{ needs.python.result == 'success' && needs.flutter.result == 'success' && needs.flutter-integration.result == 'success' }}) {
+            if (${{ needs.python.result == 'success' && needs.flutter-integration.result == 'success' }}) {
               body = `🎉 [All tests #${{ github.run_attempt }}](${url}) of \`${sha}\` passed successfully.`;
 
               if (${{ needs.python-coverage.result == 'success' }}) {

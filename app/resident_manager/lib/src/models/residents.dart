@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "info.dart";
+import "results.dart";
 import "snowflake.dart";
 import "../state.dart";
 
@@ -20,6 +21,7 @@ class Resident extends PublicInfo {
 
   Resident.fromJson(super.data) : super.fromJson();
 
+  @override
   Map<String, dynamic> toJson() => {
         "id": id,
         "name": name,
@@ -28,6 +30,26 @@ class Resident extends PublicInfo {
         "phone": phone,
         "email": email,
       };
+
+  Future<Result<Resident?>> update({
+    required ApplicationState state,
+    required PersonalInfo info,
+  }) async {
+    final headers = {"content-type": "application/json"};
+    final response = await state.post(
+      "/api/v1/residents/update",
+      queryParameters: {"id": id.toString()},
+      headers: headers,
+      body: json.encode(info.toJson()),
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    if (response.statusCode == 200) {
+      return Result(0, Resident.fromJson(result["data"]));
+    }
+
+    return Result(result["code"], null);
+  }
 
   static Future<bool> delete({
     required ApplicationState state,
@@ -40,7 +62,7 @@ class Resident extends PublicInfo {
     return response.statusCode == 204;
   }
 
-  static Future<List<Resident>> query({
+  static Future<Result<List<Resident>?>> query({
     required ApplicationState state,
     required int offset,
     int? id,
@@ -50,10 +72,8 @@ class Resident extends PublicInfo {
     String? orderBy,
     bool? ascending,
   }) async {
-    final result = <Resident>[];
-    final authorization = state.authorization;
-    if (authorization == null) {
-      return result;
+    if (!state.loggedInAsAdmin) {
+      return Result(-1, null);
     }
 
     final response = await state.get(
@@ -68,16 +88,18 @@ class Resident extends PublicInfo {
         if (ascending != null) "ascending": ascending.toString(),
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
-      result.addAll(data.map(Resident.fromJson));
+      final data = result["data"] as List<dynamic>;
+      return Result(0, List<Resident>.from(data.map(Resident.fromJson)));
     }
 
-    return result;
+    return Result(result["code"], null);
   }
 
   /// Count the number of residents.
-  static Future<int?> count({
+  static Future<Result<int?>> count({
     required ApplicationState state,
     int? id,
     String? name,
@@ -93,10 +115,12 @@ class Resident extends PublicInfo {
         if (username != null && username.isNotEmpty) "username": username,
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes));
+      return Result(0, result["data"]);
     }
 
-    return null;
+    return Result(result["code"], null);
   }
 }

@@ -7,7 +7,6 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
-import "utils.dart";
 import "../routes.dart";
 import "../translations.dart";
 import "../utils.dart";
@@ -30,10 +29,11 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   Future<void> _login(bool isAdmin) async {
     await _actionLock.run(
       () async {
-        _notification = TranslatedText(
-          (ctx) => AppLocale.LoggingInEllipsis.getString(ctx),
-          state: state,
-          style: const TextStyle(color: Colors.blue),
+        _notification = Builder(
+          builder: (context) => Text(
+            AppLocale.LoggingInEllipsis.getString(context),
+            style: const TextStyle(color: Colors.blue),
+          ),
         );
         refresh();
 
@@ -49,10 +49,11 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           );
         } catch (e) {
           if (e is SocketException || e is TimeoutException) {
-            _notification = TranslatedText(
-              (ctx) => AppLocale.ConnectionError.getString(ctx),
-              state: state,
-              style: const TextStyle(color: Colors.red),
+            _notification = Builder(
+              builder: (context) => Text(
+                AppLocale.ConnectionError.getString(context),
+                style: const TextStyle(color: Colors.red),
+              ),
             );
 
             refresh();
@@ -69,10 +70,11 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
             await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
-          _notification = TranslatedText(
-            (ctx) => AppLocale.InvalidCredentials.getString(ctx),
-            state: state,
-            style: const TextStyle(color: Colors.red),
+          _notification = Builder(
+            builder: (context) => Text(
+              AppLocale.InvalidCredentials.getString(context),
+              style: const TextStyle(color: Colors.red),
+            ),
           );
 
           refresh();

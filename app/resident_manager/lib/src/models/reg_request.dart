@@ -3,6 +3,7 @@ import "dart:convert";
 
 import "auth.dart";
 import "info.dart";
+import "results.dart";
 import "snowflake.dart";
 import "../state.dart";
 
@@ -27,7 +28,7 @@ class RegisterRequest extends PublicInfo {
   /// Queries the server for registration requests.
   ///
   /// If [state] hasn't been authorized as an administratoor yet, the result will always be empty.
-  static Future<List<RegisterRequest>> query({
+  static Future<Result<List<RegisterRequest>?>> query({
     required ApplicationState state,
     required int offset,
     int? id,
@@ -37,14 +38,12 @@ class RegisterRequest extends PublicInfo {
     String? orderBy,
     bool? ascending,
   }) async {
-    final result = <RegisterRequest>[];
-    final authorization = state.authorization;
-    if (authorization == null) {
-      return result;
+    if (!state.loggedInAsAdmin) {
+      return Result(-1, null);
     }
 
     final response = await state.get(
-      "/api/v1/admin/reg-request",
+      "/api/v1/admin/registration-requests",
       queryParameters: {
         "offset": offset.toString(),
         if (id != null) "id": id.toString(),
@@ -55,24 +54,28 @@ class RegisterRequest extends PublicInfo {
         if (ascending != null) "ascending": ascending.toString(),
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) {
-      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
-      result.addAll(data.map(RegisterRequest.fromJson));
+      final data = result["data"] as List<dynamic>;
+      return Result(0, List<RegisterRequest>.from(data.map(RegisterRequest.fromJson)));
     }
 
-    return result;
+    return Result(result["code"], null);
   }
 
   /// Request the server to create a new registration request.
   ///
-  /// Returns the status code of the HTTP request.
+  /// Returns the error code of the API request (not the HTTP status code).
   static Future<int> create({
     required ApplicationState state,
     required PersonalInfo info,
     required Authorization authorization,
   }) async {
-    final headers = authorization.constructHeaders();
-    headers["content-type"] = "application/json";
+    final headers = {
+      "username": authorization.username,
+      "password": authorization.password,
+      "content-type": "application/json",
+    };
 
     final response = await state.post(
       "/api/v1/register",
@@ -81,7 +84,8 @@ class RegisterRequest extends PublicInfo {
       authorize: false,
     );
 
-    return response.statusCode;
+    final data = json.decode(utf8.decode(response.bodyBytes));
+    return data["code"];
   }
 
   static Future<bool> _approveOrReject({
@@ -89,6 +93,10 @@ class RegisterRequest extends PublicInfo {
     required Iterable<Snowflake> objects,
     required String path,
   }) async {
+    if (!state.loggedInAsAdmin) {
+      return false;
+    }
+
     final headers = {"content-type": "application/json"};
     final data = List<Map<String, int>>.from(objects.map((o) => {"id": o.id}));
 
@@ -101,7 +109,7 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/accept");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/registration-requests/accept");
   }
 
   /// Reject a list of registration requests.
@@ -109,11 +117,11 @@ class RegisterRequest extends PublicInfo {
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
-    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/reg-request/reject");
+    return _approveOrReject(state: state, objects: objects, path: "/api/v1/admin/registration-requests/reject");
   }
 
   /// Count the number of registration requests.
-  static Future<int?> count({
+  static Future<Result<int?>> count({
     required ApplicationState state,
     int? id,
     String? name,
@@ -121,7 +129,7 @@ class RegisterRequest extends PublicInfo {
     String? username,
   }) async {
     final response = await state.get(
-      "/api/v1/admin/reg-request/count",
+      "/api/v1/admin/registration-requests/count",
       queryParameters: {
         if (id != null) "id": id.toString(),
         if (name != null && name.isNotEmpty) "name": name,
@@ -129,10 +137,12 @@ class RegisterRequest extends PublicInfo {
         if (username != null && username.isNotEmpty) "username": username,
       },
     );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
     if (response.statusCode == 200) {
-      return json.decode(utf8.decode(response.bodyBytes));
+      return Result(0, result["data"]);
     }
 
-    return null;
+    return Result(result["code"], null);
   }
 }

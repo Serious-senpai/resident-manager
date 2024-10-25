@@ -56,7 +56,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                         Builder(
                           builder: (context) {
                             return Text(
-                              "${AppLocale.Welcome.getString(context)}, ${state.authorization?.resident?.name ?? "---"}!",
+                              "${AppLocale.Welcome.getString(context)}, ${state.resident?.name ?? "---"}!",
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: mediaQuery.size.width < ScreenWidth.SMALL ? 24 : 48,

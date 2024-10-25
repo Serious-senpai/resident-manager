@@ -23,10 +23,9 @@ class MainApplication extends StateAwareWidget {
 class MainApplicationState extends AbstractCommonState<MainApplication> {
   @override
   Widget build(BuildContext context) {
-    final authorization = state.authorization;
     String initialRoute = ApplicationRoute.login;
-    if (authorization != null) {
-      initialRoute = authorization.isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home;
+    if (state.loggedIn) {
+      initialRoute = state.loggedInAsAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home;
     }
 
     return MaterialApp(

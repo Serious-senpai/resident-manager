@@ -1,9 +1,3 @@
-import "dart:convert";
-
-import "package:pinenacl/x25519.dart";
-
-import "../config.dart";
-
 class _HasUsername {
   /// The username for authentication.
   final String username;
@@ -21,23 +15,6 @@ class Authorization extends _HasUsername {
     required super.username,
     required this.password,
   });
-
-  /// Constructs authorization headers to send to the server side for authentication.
-  ///
-  /// The password is encrypted using the server's public key and our key pair from
-  /// the Curve25519 algorithm.
-  Map<String, String> constructHeaders() {
-    final privateKey = PrivateKey.generate();
-    final publicKey = privateKey.publicKey;
-
-    final box = Box(myPrivateKey: privateKey, theirPublicKey: serverKey);
-
-    return {
-      "username": username,
-      "encrypted": base64.encode(box.encrypt(utf8.encode(password))),
-      "pkey": base64.encode(publicKey),
-    };
-  }
 }
 
 /// Represents authorization data, which consists of a username and a hashed password.

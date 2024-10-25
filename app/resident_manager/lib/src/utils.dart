@@ -1,5 +1,3 @@
-import "dart:io";
-
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:fluttertoast/fluttertoast.dart";
@@ -30,11 +28,7 @@ Future<bool> showToastSafe({
   dynamic webPosition = "right",
 }) async {
   try {
-    if (Platform.environment.containsKey("FLUTTER_TEST")) {
-      // Fluttertoast.showToast hang in flutter test? No issue URLs found yet.
-      return false;
-    }
-
+    // Fluttertoast.showToast hang in flutter test? No issue URLs found yet.
     return await Fluttertoast.showToast(
           msg: msg,
           toastLength: toastLength,
@@ -67,9 +61,33 @@ extension DateFormat on DateTime {
     return "$day/$month/$year";
   }
 
-  static DateTime fromFormattedDate(String s) {
-    final parts = s.split("/");
-    return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+  static DateTime? fromFormattedDate(String s) {
+    try {
+      final parts = s.split("/");
+      return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+class FieldLabel extends StatelessWidget {
+  final String _label;
+  final bool _required;
+
+  const FieldLabel(String label, {super.key, bool required = false})
+      : _label = label,
+        _required = required;
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        text: _label,
+        style: const TextStyle(color: Colors.black),
+        children: _required ? const [TextSpan(text: " *", style: TextStyle(color: Colors.red))] : [],
+      ),
+    );
   }
 }
 
@@ -98,7 +116,7 @@ String? roomValidator(BuildContext context, {required bool required, required St
     return null;
   }
 
-  final pattern = RegExp(r"^\d*$");
+  final pattern = RegExp(r"^\d{1,6}$");
   if (!pattern.hasMatch(value)) {
     return AppLocale.InvalidRoomNumber.getString(context);
   }
@@ -106,6 +124,28 @@ String? roomValidator(BuildContext context, {required bool required, required St
   final roomInt = int.parse(value);
   if (roomInt < 0 || roomInt > 32767) {
     return AppLocale.InvalidRoomNumber.getString(context);
+  }
+
+  return null;
+}
+
+String? phoneValidator(BuildContext context, {required String? value}) {
+  if (value != null && value.isNotEmpty) {
+    final pattern = RegExp(r"^\+?[\d\s]+$");
+    if (value.length > 15 || !pattern.hasMatch(value)) {
+      return AppLocale.InvalidPhoneNumber.getString(context);
+    }
+  }
+
+  return null;
+}
+
+String? emailValidator(BuildContext context, {required String? value}) {
+  if (value != null && value.isNotEmpty) {
+    final pattern = RegExp(r"^[\w\.-]+@[\w\.-]+\.[\w\.]+[\w\.]?$");
+    if (value.length > 255 || !pattern.hasMatch(value)) {
+      return AppLocale.InvalidEmail.getString(context);
+    }
   }
 
   return null;
