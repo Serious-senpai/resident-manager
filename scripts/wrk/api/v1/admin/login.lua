@@ -4,7 +4,7 @@ local pre_request
 
 function init(args)
     -- Pre-generate the request
-    payload = "grant_type=password&username=admin&password=NgaiLongGey"
+    payload = "grant_type=password&username=incorrect&password=incorrect"
     pre_request = "POST /api/v1/admin/login HTTP/1.1\r\n" ..
         "Accept: application/json\r\n" ..
         "Connection: keep-alive\r\n" ..
@@ -15,8 +15,6 @@ function init(args)
         string.format("User-Agent: %s\r\n", utils.random_user_agent()) ..
         "\r\n" ..
         payload
-
-    print(string.format("Sending requests:\n%s\n", pre_request))
 
     response = nil
 end

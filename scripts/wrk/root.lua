@@ -12,8 +12,6 @@ function init(args)
         string.format("User-Agent: %s\r\n", utils.random_user_agent()) ..
         "\r\n"
 
-    print(string.format("Sending requests:\n%s\n", pre_request))
-
     response = nil
 end
 
