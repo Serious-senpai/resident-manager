@@ -108,14 +108,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
 
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        leading: IconButton(
-          onPressed: openDrawer,
-          icon: const Icon(Icons.menu_outlined),
-        ),
-        title: Text(AppLocale.RoomsList.getString(context)),
-      ),
+      appBar: createAppBar(context, title: AppLocale.RoomsList.getString(context)),
       body: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {

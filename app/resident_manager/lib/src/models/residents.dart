@@ -37,7 +37,7 @@ class Resident extends PublicInfo {
   }) async {
     final headers = {"content-type": "application/json"};
     final response = await state.post(
-      "/api/v1/residents/update",
+      state.loggedInAsAdmin ? "/api/v1/admin/residents/update" : "/api/v1/residents/update",
       queryParameters: {"id": id.toString()},
       headers: headers,
       body: json.encode(info.toJson()),

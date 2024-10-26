@@ -17,7 +17,7 @@ final rng = Random();
 const MAX_WAIT_DURATION = Duration(seconds: 10);
 
 String randomString(int length) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(rng.nextInt(chars.length))));
 }
 

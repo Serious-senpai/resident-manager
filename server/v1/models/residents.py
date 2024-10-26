@@ -184,7 +184,10 @@ class Resident(PublicInfo, HashedAuthorization):
 
     @classmethod
     async def update(cls, *, id: int, info: PersonalInfo) -> Result[Optional[Resident]]:
-        info.validate_info()
+        result = info.validate_info()
+        if result is not None:
+            return result
+
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(

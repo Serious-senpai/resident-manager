@@ -62,6 +62,10 @@ class AppLocale {
   static const String Settings = "Settings";
   static const String ComingSoon = "ComingSoon";
   static const String EditPersonalInfo = "EditPersonalInfo";
+  static const String NewPassword = "NewPassword";
+  static const String RetypeNewPassword = "RetypeNewPassword";
+  static const String GeneralInformation = "GeneralInformation";
+  static const String AuthorizationInformation = "AuthorizationInformation";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -73,8 +77,9 @@ class AppLocale {
   static const String Error106 = "Error106";
   static const String Error107 = "Error107";
   static const String Error201 = "Error201";
-  static const String Error202 = "Error202";
-  static const String Error203 = "Error203";
+  static const String Error301 = "Error301";
+  static const String Error401 = "Error401";
+  static const String Error402 = "Error402";
   static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
@@ -141,6 +146,10 @@ class AppLocale {
     Settings: "Settings",
     ComingSoon: "Coming soon",
     EditPersonalInfo: "Edit personal information",
+    NewPassword: "New password",
+    RetypeNewPassword: "Retype new password",
+    GeneralInformation: "General information",
+    AuthorizationInformation: "Authorization information",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -152,8 +161,9 @@ class AppLocale {
     Error106: "The provided password for registration is invalid.",
     Error107: "The registration username has already been taken.",
     Error201: "The login username does not exist.",
-    Error202: "The provided login password is incorrect.",
-    Error203: "The administrator authentication data is incorrect.",
+    Error301: "Unable to update a non-existing resident.",
+    Error401: "You must log in as an administrator to perform this action.",
+    Error402: "You must log in as a resident to perform this action.",
     ErrorUnknown: "An unknown error occurred.",
   };
 
@@ -221,6 +231,10 @@ class AppLocale {
     Settings: "Cài đặt",
     ComingSoon: "Sắp ra mắt",
     EditPersonalInfo: "Chỉnh sửa thông tin cá nhân",
+    NewPassword: "Mật khẩu mới",
+    RetypeNewPassword: "Nhập lại mật khẩu mới",
+    GeneralInformation: "Thông tin cơ bản",
+    AuthorizationInformation: "Thông tin đăng nhập",
 
     // Error codes
     Error0: "Thao tác thành công.",
@@ -232,8 +246,9 @@ class AppLocale {
     Error106: "Mật khẩu đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
     Error107: "Tên đăng nhập đã được sử dụng. Vui lòng chọn tên khác.",
     Error201: "Tên đăng nhập không tồn tại. Vui lòng kiểm tra lại.",
-    Error202: "Mật khẩu đăng nhập không chính xác. Vui lòng kiểm tra lại.",
-    Error203: "Dữ liệu xác thực quản trị viên không chính xác. Vui lòng kiểm tra lại.",
+    Error301: "Không thể cập nhật thông tin của cư dân không tồn tại.",
+    Error401: "Yêu cầu đăng nhập với tài khoản quản trị viên.",
+    Error402: "Yêu cầu đăng nhập với tài khoản cư dân.",
     ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
 
@@ -257,10 +272,12 @@ class AppLocale {
         return Error107;
       case 201:
         return Error201;
-      case 202:
-        return Error202;
-      case 203:
-        return Error203;
+      case 301:
+        return Error301;
+      case 401:
+        return Error401;
+      case 402:
+        return Error402;
       default:
         return ErrorUnknown;
     }

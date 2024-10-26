@@ -159,13 +159,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: openDrawer,
-          icon: const Icon(Icons.menu_outlined),
-        ),
-        title: Text(AppLocale.RegisterQueue.getString(context)),
-      ),
+      appBar: createAppBar(context, title: AppLocale.RegisterQueue.getString(context)),
       body: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {

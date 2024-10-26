@@ -125,10 +125,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
         refresh();
 
         try {
-         if (await Resident.delete(state: state, objects: _selected)){
-          _selected.clear();
-         }
-         
+          if (await Resident.delete(state: state, objects: _selected)) {
+            _selected.clear();
+          }
+
           _notification = const SizedBox.square(dimension: 0);
         } catch (e) {
           await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -170,14 +170,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
 
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        leading: IconButton(
-          onPressed: openDrawer,
-          icon: const Icon(Icons.menu_outlined),
-        ),
-        title: Text(AppLocale.ResidentsList.getString(context)),
-      ),
+      appBar: createAppBar(context, title: AppLocale.ResidentsList.getString(context)),
       body: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {

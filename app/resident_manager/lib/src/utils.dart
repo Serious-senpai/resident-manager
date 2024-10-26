@@ -150,3 +150,27 @@ String? emailValidator(BuildContext context, {required String? value}) {
 
   return null;
 }
+
+String? usernameValidator(BuildContext context, {required String? value}) {
+  if (value == null || value.isEmpty) {
+    return AppLocale.MissingUsername.getString(context);
+  }
+
+  if (value.length > 255) {
+    return AppLocale.InvalidUsernameLength.getString(context);
+  }
+
+  return null;
+}
+
+String? passwordValidator(BuildContext context, {required String? value}) {
+  if (value == null || value.isEmpty) {
+    return AppLocale.MissingPassword.getString(context);
+  }
+
+  if (value.length < 8 || value.length > 255) {
+    return AppLocale.InvalidPasswordLength.getString(context);
+  }
+
+  return null;
+}

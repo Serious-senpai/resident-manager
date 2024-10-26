@@ -50,93 +50,87 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
     if (state != null) state.closeDrawer();
   }
 
+  AppBar createAppBar(BuildContext context, {Icon icon = const Icon(Icons.menu_outlined), required String title}) {
+    return AppBar(
+      leading: IconButton(
+        onPressed: openDrawer,
+        icon: icon,
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+    );
+  }
+
   /// Create a default [Drawer] for all pages within this application
   Drawer createDrawer(BuildContext context) {
     var currentRoute = ModalRoute.of(context)?.settings.name;
 
     final navigator = <Widget>[
       const DrawerHeader(
-        decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/apartment.png"), fit: BoxFit.cover)),
+        decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/vector-background-green.jpg"), fit: BoxFit.cover)),
         child: null,
       ),
     ];
 
-    if (!state.loggedIn) {
-      navigator.add(
+    Widget routeTile({
+      required Icon leading,
+      required String title,
+      required String route,
+    }) =>
         ListTile(
-          leading: const Icon(Icons.lock_outlined),
+          leading: leading,
           title: Text(
-            AppLocale.Login.getString(context),
-            style: currentRoute == ApplicationRoute.login ? const TextStyle(color: Colors.blue) : null,
+            title,
+            style: currentRoute == route ? const TextStyle(color: Colors.blue) : null,
           ),
-          onTap: () => currentRoute == ApplicationRoute.login
+          onTap: () => currentRoute == route
               ? Navigator.pop(context)
               : Navigator.pushReplacementNamed(
                   context,
-                  ApplicationRoute.login,
+                  route,
                 ),
+        );
+
+    if (!state.loggedIn) {
+      navigator.add(
+        routeTile(
+          leading: const Icon(Icons.lock_outlined),
+          title: AppLocale.Login.getString(context),
+          route: ApplicationRoute.login,
         ),
       );
     } else {
       if (state.loggedInAsAdmin) {
         navigator.addAll(
           [
-            ListTile(
+            routeTile(
               leading: const Icon(Icons.how_to_reg_outlined),
-              title: Text(
-                AppLocale.RegisterQueue.getString(context),
-                style: currentRoute == ApplicationRoute.adminRegisterQueue ? const TextStyle(color: Colors.blue) : null,
-              ),
-              onTap: () => currentRoute == ApplicationRoute.adminRegisterQueue
-                  ? Navigator.pop(context)
-                  : Navigator.pushReplacementNamed(
-                      context,
-                      ApplicationRoute.adminRegisterQueue,
-                    ),
+              title: AppLocale.RegisterQueue.getString(context),
+              route: ApplicationRoute.adminRegisterQueue,
             ),
-            ListTile(
+            routeTile(
               leading: const Icon(Icons.people_outlined),
-              title: Text(
-                AppLocale.ResidentsList.getString(context),
-                style: currentRoute == ApplicationRoute.adminResidentsPage ? const TextStyle(color: Colors.blue) : null,
-              ),
-              onTap: () => currentRoute == ApplicationRoute.adminResidentsPage
-                  ? Navigator.pop(context)
-                  : Navigator.pushReplacementNamed(
-                      context,
-                      ApplicationRoute.adminResidentsPage,
-                    ),
+              title: AppLocale.ResidentsList.getString(context),
+              route: ApplicationRoute.adminResidentsPage,
             ),
-            ListTile(
+            routeTile(
               leading: const Icon(Icons.room_outlined),
-              title: Text(
-                AppLocale.RoomsList.getString(context),
-                style: currentRoute == ApplicationRoute.adminRoomsPage ? const TextStyle(color: Colors.blue) : null,
-              ),
-              onTap: () => currentRoute == ApplicationRoute.adminRoomsPage
-                  ? Navigator.pop(context)
-                  : Navigator.pushReplacementNamed(
-                      context,
-                      ApplicationRoute.adminRoomsPage,
-                    ),
+              title: AppLocale.RoomsList.getString(context),
+              route: ApplicationRoute.adminRoomsPage,
             ),
           ],
         );
       } else {
         navigator.addAll(
           [
-            ListTile(
+            routeTile(
               leading: const Icon(Icons.home_outlined),
-              title: Text(
-                AppLocale.Home.getString(context),
-                style: currentRoute == ApplicationRoute.home ? const TextStyle(color: Colors.blue) : null,
-              ),
-              onTap: () => currentRoute == ApplicationRoute.home
-                  ? Navigator.pop(context)
-                  : Navigator.pushReplacementNamed(
-                      context,
-                      ApplicationRoute.home,
-                    ),
+              title: AppLocale.Home.getString(context),
+              route: ApplicationRoute.home,
+            ),
+            routeTile(
+              leading: const Icon(Icons.person_outlined),
+              title: AppLocale.PersonalInfo.getString(context),
+              route: ApplicationRoute.personalInfo,
             ),
           ],
         );

@@ -94,13 +94,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
 
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: openDrawer,
-          icon: const Icon(Icons.menu_outlined),
-        ),
-        title: Text(AppLocale.Login.getString(context)),
-      ),
+      appBar: createAppBar(context, title: AppLocale.Login.getString(context)),
       body: Padding(
         padding: EdgeInsets.only(left: padding, right: padding),
         child: Center(
