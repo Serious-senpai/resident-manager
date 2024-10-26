@@ -16,7 +16,7 @@ class PersonalInfoPage extends StateAwareWidget {
 class _InfoCard extends StatelessWidget {
   final Widget child;
 
-  const _InfoCard({super.key, required this.child});
+  const _InfoCard({required this.child});
 
   @override
   Widget build(BuildContext context) {

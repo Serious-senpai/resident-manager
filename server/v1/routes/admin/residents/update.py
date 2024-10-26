@@ -8,7 +8,7 @@ from ....app import api_v1
 from ....models import AdminPermission, PersonalInfo, Resident, Result
 
 
-__all__ = ("residents_update",)
+__all__ = ("admin_residents_update",)
 
 
 @api_v1.post(
@@ -27,7 +27,7 @@ __all__ = ("residents_update",)
         },
     },
 )
-async def residents_update(
+async def admin_residents_update(
     admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
     id: int,
