@@ -4,6 +4,7 @@ import asyncio
 import logging
 from collections import OrderedDict
 from contextlib import AbstractAsyncContextManager
+from pathlib import Path
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
 

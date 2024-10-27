@@ -60,28 +60,23 @@ class RoomData(pydantic.BaseModel):
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                params = [
-                    (
-                        room.room,
-                        int(100 * room.area), room.motorbike, room.car,
-                        room.room,
-                        room.room, int(100 * room.area), room.motorbike, room.car,
-                    ) for room in rooms
-                ]
-
                 # https://github.com/aio-libs/aioodbc/issues/423
                 cursor._impl.fast_executemany = True
                 await cursor.executemany(
                     """
-                    IF EXISTS (SELECT 1 FROM rooms WHERE room = ?)
+                    DECLARE @Room SMALLINT = ?
+                    DECLARE @Area INT = ?
+                    DECLARE @Motorbike TINYINT = ?
+                    DECLARE @Car TINYINT = ?
+                    IF EXISTS (SELECT 1 FROM rooms WHERE room = @Room)
                         UPDATE rooms
-                        SET area = ?, motorbike = ?, car = ?
-                        WHERE room = ?
+                        SET area = @Area, motorbike = @Motorbike, car = @Car
+                        WHERE room = @Room
                     ELSE
                         INSERT INTO rooms
-                        VALUES (?, ?, ?, ?)
+                        VALUES (@Room, @Area, @Motorbike, @Car)
                     """,
-                    params,
+                    [(r.room, int(100 * r.area), r.motorbike, r.car) for r in rooms],
                 )
 
         return None

@@ -27,9 +27,6 @@ class _Authorization(pydantic.BaseModel):
     password: Annotated[str, pydantic.Field(description="The password for authorization")]
 
 
-_AuthorizationHeader = Annotated[_Authorization, Header(description="Authorization headers")]
-
-
 @api_v1.post(
     "/register",
     name="Residents registration",
@@ -47,7 +44,7 @@ _AuthorizationHeader = Annotated[_Authorization, Header(description="Authorizati
     },
 )
 async def register(
-    headers: _AuthorizationHeader,
+    headers: Annotated[_Authorization, Header(description="Authorization headers")],
     response: Response,
     data: Annotated[PersonalInfo, Query()],
 ) -> Result[Optional[PublicInfo]]:

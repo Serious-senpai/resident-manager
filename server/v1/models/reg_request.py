@@ -168,20 +168,37 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         if not validate_password(password):
             return Result(code=106, data=None)
 
-        hashed_password = hash_password(password)
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
+                    DECLARE
+                        @RequestId BIGINT = ?,
+                        @Name NVARCHAR(255) = ?,
+                        @Room SMALLINT = ?,
+                        @Birthday DATETIME = ?,
+                        @Phone NVARCHAR(15) = ?,
+                        @Email NVARCHAR(255) = ?,
+                        @Username NVARCHAR(255) = ?,
+                        @HashedPassword NVARCHAR(255) = ?
                     IF NOT EXISTS (
-                        SELECT 1 FROM residents WHERE username = ?
+                        SELECT 1 FROM residents WHERE username = @Username
                         UNION ALL
-                        SELECT 1 FROM register_queue WHERE username = ?
+                        SELECT 1 FROM register_queue WHERE username = @Username
                     )
-                    INSERT INTO register_queue OUTPUT INSERTED.* VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO register_queue
+                        OUTPUT INSERTED.*
+                        VALUES (
+                            @RequestId,
+                            @Name,
+                            @Room,
+                            @Birthday,
+                            @Phone,
+                            @Email,
+                            @Username,
+                            @HashedPassword
+                        )
                     """,
-                    username,
-                    username,
                     generate_id(),
                     name,
                     room,
@@ -189,7 +206,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                     phone,
                     email,
                     username,
-                    hashed_password,
+                    hash_password(password),
                 )
 
                 try:

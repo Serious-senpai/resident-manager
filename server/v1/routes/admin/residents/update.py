@@ -34,7 +34,7 @@ async def admin_residents_update(
     info: PersonalInfo,
 ) -> Result[Optional[Resident]]:
     if admin.admin:
-        result = await Resident.update(id=id, info=info)
+        result = await Resident.update(id=id, info=info, username=None, password=None)
         if result.data is None:
             response.status_code = status.HTTP_400_BAD_REQUEST
 

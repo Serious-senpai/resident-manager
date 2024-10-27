@@ -49,6 +49,33 @@ Future<Finder> pumpUntilFound(
   }
 }
 
+Future<void> adminSearch(
+  WidgetTester tester, {
+  required String fullname,
+  required int room,
+  required String username,
+}) async {
+  // Open search interface
+  await tester.tap(find.byIcon(Icons.search_outlined));
+  await tester.pumpAndSettle();
+
+  final searchDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
+  expect(searchDialog, findsOneWidget);
+
+  final searchFields = find.descendant(
+    of: searchDialog,
+    matching: find.byWidgetPredicate((widget) => widget is TextFormField),
+  );
+  expect(searchFields, findsExactly(3));
+
+  // Fill in search fields
+  await tester.enterText(searchFields.at(0), fullname);
+  await tester.enterText(searchFields.at(1), room.toString());
+  await tester.enterText(searchFields.at(2), username);
+  await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
+  await tester.pumpAndSettle(MAX_WAIT_DURATION);
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -121,12 +148,12 @@ void main() {
       final registrationFields = find.byWidgetPredicate((widget) => widget is TextFormField);
       expect(registrationFields, findsExactly(8));
 
-      final fullname = randomString(20);
-      final room = rng.nextInt(32767);
-      final phone = randomDigits(10);
-      final email = "$fullname@test.com";
-      final username = randomString(12);
-      final password = randomString(12);
+      var fullname = randomString(20); // Will append the string " (edited)" later
+      var room = rng.nextInt(32766); // Will increase by 1 later
+      var phone = randomDigits(10); // Will append 1 digit later
+      var email = "$fullname@test.com"; // Will prepend the string "edited." later
+      var username = randomString(15); // Will append 1 character later
+      var password = randomString(15); // Will append 1 character later
 
       // Fill in registration fields
       await tester.enterText(registrationFields.at(0), fullname);
@@ -161,27 +188,12 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
+
+      // Successfully logged in as admin
       await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
-      // Open search interface
-      await tester.tap(find.byIcon(Icons.search_outlined));
-      await tester.pumpAndSettle();
-
-      final searchDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
-      expect(searchDialog, findsOneWidget);
-
-      final searchFields = find.descendant(
-        of: searchDialog,
-        matching: find.byWidgetPredicate((widget) => widget is TextFormField),
-      );
-      expect(searchFields, findsExactly(3));
-
-      // Fill in search fields
-      await tester.enterText(searchFields.at(0), fullname);
-      await tester.enterText(searchFields.at(1), room.toString());
-      await tester.enterText(searchFields.at(2), username);
-      await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
-      await tester.pumpAndSettle(MAX_WAIT_DURATION);
+      // Search for resident
+      await adminSearch(tester, fullname: fullname, room: room, username: username);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
       final checkboxes = find.byWidgetPredicate((widget) => widget is Checkbox);
@@ -216,6 +228,8 @@ void main() {
 
       // Press the "Login as resident" button
       await tester.tap(find.byIcon(Icons.login_outlined));
+
+      // Successfully logged in as resident
       await pumpUntilFound((widget) => widget is HomePage, findsOneWidget, tester);
 
       // Open drawer
@@ -237,6 +251,8 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
+
+      // Successfully logged in as admin
       await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open drawer
@@ -249,25 +265,41 @@ void main() {
 
       expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
-      // Open search interface
-      await tester.tap(find.byIcon(Icons.search_outlined));
+      // Search for resident
+      await adminSearch(tester, fullname: fullname, room: room, username: username);
+
+      // Open the dialog to edit resident information
+      await tester.tap(find.byIcon(Icons.edit_outlined));
       await tester.pumpAndSettle();
 
-      final searchDialog2 = find.byWidgetPredicate((widget) => widget is SimpleDialog);
-      expect(searchDialog2, findsOneWidget);
+      final editDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
+      expect(editDialog, findsOneWidget);
 
-      final searchFields2 = find.descendant(
-        of: searchDialog2,
+      // Find edit fields
+      final editFields = find.descendant(
+        of: editDialog,
         matching: find.byWidgetPredicate((widget) => widget is TextFormField),
       );
-      expect(searchFields2, findsExactly(3));
 
-      // Fill in search fields
-      await tester.enterText(searchFields2.at(0), fullname);
-      await tester.enterText(searchFields2.at(1), room.toString());
-      await tester.enterText(searchFields2.at(2), username);
-      await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
+      // Update information
+      fullname = "$fullname (edited)";
+      room = room + 1;
+      phone = phone + randomDigits(1);
+      email = "edited.$email";
+
+      // Fill in edit fields
+      await tester.enterText(editFields.at(0), fullname);
+      await tester.enterText(editFields.at(1), room.toString());
+      await tester.enterText(editFields.at(3), phone);
+      await tester.enterText(editFields.at(4), email);
+      await tester.tap(find.descendant(of: editDialog, matching: find.byIcon(Icons.done_outlined)));
       await tester.pumpAndSettle(MAX_WAIT_DURATION);
+
+      // Now no result should match our search
+      expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOneWidget);
+
+      // Search the resident again using updated information
+      await adminSearch(tester, fullname: fullname, room: room, username: username);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
       final checkboxes2 = find.byWidgetPredicate((widget) => widget is Checkbox);

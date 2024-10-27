@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 
 __all__ = (
@@ -29,3 +30,6 @@ DEFAULT_ADMIN_USERNAME = "admin"
 DEFAULT_ADMIN_PASSWORD = "NgaiLongGey"
 
 DB_PAGINATION_QUERY = 50
+
+
+ROOT = Path(__file__).parent.parent.resolve()

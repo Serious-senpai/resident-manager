@@ -15,6 +15,7 @@ from .snowflake import Snowflake
 from ..database import Database
 from ..utils import (
     check_password,
+    hash_password,
     validate_name,
     validate_room,
     validate_username,
@@ -184,7 +185,14 @@ class Resident(PublicInfo, HashedAuthorization):
         return Result(code=201, data=None)
 
     @classmethod
-    async def update(cls, *, id: int, info: PersonalInfo) -> Result[Optional[Resident]]:
+    async def update(
+        cls,
+        *,
+        id: int,
+        info: PersonalInfo,
+        username: Optional[str],
+        password: Optional[str],
+    ) -> Result[Optional[Resident]]:
         result = info.validate_info()
         if result is not None:
             return result
@@ -193,22 +201,40 @@ class Resident(PublicInfo, HashedAuthorization):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        UPDATE residents
-                        SET
-                            name = ?,
-                            room = ?,
-                            birthday = ?,
-                            phone = ?,
-                            email = ?
-                        OUTPUT INSERTED.*
-                        WHERE resident_id = ?
+                        DECLARE
+                            @ResidentId BIGINT = ?,
+                            @Name NVARCHAR(255) = ?,
+                            @Room SMALLINT = ?,
+                            @Birthday DATETIME = ?,
+                            @Phone NVARCHAR(15) = ?,
+                            @Email NVARCHAR(255) = ?,
+                            @Username NVARCHAR(255) = ?,
+                            @HashedPassword NVARCHAR(255) = ?
+                        IF NOT EXISTS (
+                            SELECT 1 FROM residents WHERE username = @Username
+                            UNION ALL
+                            SELECT 1 FROM register_queue WHERE username = @Username
+                        )
+                            UPDATE residents
+                            SET
+                                name = @Name,
+                                room = @Room,
+                                birthday = @Birthday,
+                                phone = @Phone,
+                                email = @Email,
+                                username = IIF(@Username IS NULL, username, @Username),
+                                hashed_password = IIF(@HashedPassword IS NULL, hashed_password, @HashedPassword)
+                            OUTPUT INSERTED.*
+                            WHERE resident_id = @ResidentId
                     """,
+                    id,
                     info.name,
                     info.room,
                     info.birthday,
                     info.phone,
                     info.email,
-                    id,
+                    username,
+                    None if password is None else hash_password(password),
                 )
 
                 row = await cursor.fetchone()
