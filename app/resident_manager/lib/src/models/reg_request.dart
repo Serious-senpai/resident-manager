@@ -64,9 +64,7 @@ class RegisterRequest extends PublicInfo {
   }
 
   /// Request the server to create a new registration request.
-  ///
-  /// Returns the error code of the API request (not the HTTP status code).
-  static Future<int> create({
+  static Future<Result<void>> create({
     required ApplicationState state,
     required PersonalInfo info,
     required Authorization authorization,
@@ -85,27 +83,34 @@ class RegisterRequest extends PublicInfo {
     );
 
     final data = json.decode(utf8.decode(response.bodyBytes));
-    return data["code"];
+    return Result(data["code"], null);
   }
 
-  static Future<bool> _approveOrReject({
+  static Future<Result<void>?> _approveOrReject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
     required String path,
   }) async {
     if (!state.loggedInAsAdmin) {
-      return false;
+      return Result(-1, null);
     }
 
-    final headers = {"content-type": "application/json"};
-    final data = List<Map<String, int>>.from(objects.map((o) => {"id": o.id}));
+    final response = await state.post(
+      path,
+      body: json.encode(List<Map<String, int>>.from(objects.map((o) => {"id": o.id}))),
+      headers: {"content-type": "application/json"},
+    );
 
-    final response = await state.post(path, headers: headers, body: json.encode(data));
-    return response.statusCode == 204;
+    if (response.statusCode == 204) {
+      return null;
+    }
+
+    final data = json.decode(utf8.decode(response.bodyBytes));
+    return Result(data["code"], null);
   }
 
   /// Approve a list of registration requests.
-  static Future<bool> approve({
+  static Future<Result<void>?> approve({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {
@@ -113,7 +118,7 @@ class RegisterRequest extends PublicInfo {
   }
 
   /// Reject a list of registration requests.
-  static Future<bool> reject({
+  static Future<Result<void>?> reject({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
   }) {

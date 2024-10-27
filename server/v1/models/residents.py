@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Annotated, Any, List, Literal, Optional, TypeVar
 
 import jwt
@@ -105,8 +106,8 @@ class Resident(PublicInfo, HashedAuthorization):
         if len(objects) == 0:
             return
 
+        temp_fmt = ", ".join(itertools.repeat("?", len(objects)))
         async with Database.instance.pool.acquire() as connection:
-            temp_fmt = ", ".join("?" for _ in objects)
             async with connection.cursor() as cursor:
                 await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *[o.id for o in objects])
 

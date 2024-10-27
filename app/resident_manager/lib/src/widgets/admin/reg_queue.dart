@@ -14,6 +14,7 @@ import "../../state.dart";
 import "../../translations.dart";
 import "../../utils.dart";
 import "../../models/reg_request.dart";
+import "../../models/results.dart";
 import "../../models/snowflake.dart";
 
 class RegisterQueuePage extends StateAwareWidget {
@@ -51,7 +52,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
 
   bool get _searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
 
-  Future<void> _approveOrReject(Future<bool> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
+  Future<void> _approveOrReject(Future<Result<void>?> Function({required Iterable<Snowflake> objects, required ApplicationState state}) coro) async {
     await _actionLock.run(
       () async {
         _notification = Builder(
@@ -63,11 +64,18 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
         refresh();
 
         try {
-          if (await coro(state: state, objects: _selected)) {
+          final result = await coro(state: state, objects: _selected);
+          if (result == null) {
             _selected.clear();
+            _notification = const SizedBox.square(dimension: 0);
+          } else {
+            _notification = Builder(
+              builder: (context) => Text(
+                AppLocale.errorMessage(result.code).getString(context),
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
           }
-
-          _notification = const SizedBox.square(dimension: 0);
         } catch (e) {
           await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
           _notification = Builder(
@@ -370,9 +378,12 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                             style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
+                            // Save current values for restoration
                             final nameSearch = _nameSearch.text;
                             final roomSearch = _roomSearch.text;
                             final usernameSearch = _usernameSearch.text;
+
+                            final formKey = GlobalKey<FormState>();
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
@@ -380,6 +391,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
                                   Form(
+                                    key: formKey,
                                     child: Column(
                                       children: [
                                         TextFormField(
@@ -422,6 +434,7 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                             Navigator.pop(context, true);
                                             offset = 0;
                                           },
+                                          validator: (value) => usernameValidator(context, required: false, value: value),
                                         ),
                                         const SizedBox.square(dimension: 10),
                                         Row(
@@ -432,8 +445,10 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                                 icon: const Icon(Icons.done_outlined),
                                                 label: Text(AppLocale.Search.getString(context)),
                                                 onPressed: () {
-                                                  Navigator.pop(context, true);
-                                                  offset = 0;
+                                                  if (formKey.currentState?.validate() ?? false) {
+                                                    Navigator.pop(context, true);
+                                                    offset = 0;
+                                                  }
                                                 },
                                               ),
                                             ),

@@ -3,29 +3,81 @@ import "dart:convert";
 import "results.dart";
 import "../state.dart";
 
-class RoomData {
+class _BaseRoom {
   final int room;
+
+  _BaseRoom({required this.room});
+
+  Future<Result<void>?> delete({
+    required ApplicationState state,
+  }) async {
+    final response = await state.post(
+      "/api/v1/admin/rooms/delete",
+      body: json.encode([room]),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    if (response.statusCode == 204) {
+      return null;
+    }
+
+    final data = json.decode(utf8.decode(response.bodyBytes));
+    return Result(data["code"], null);
+  }
+}
+
+class RoomData extends _BaseRoom {
   final double area;
   final int motorbike;
   final int car;
 
   RoomData({
-    required this.room,
+    required super.room,
     required this.area,
     required this.motorbike,
     required this.car,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "room": room,
+      "area": area,
+      "motorbike": motorbike,
+      "car": car,
+    };
+  }
+
+  static Future<Result<void>?> update({
+    required ApplicationState state,
+    required List<RoomData> rooms,
+  }) async {
+    if (!state.loggedInAsAdmin) {
+      return Result(-1, null);
+    }
+
+    final response = await state.post(
+      "/api/v1/admin/rooms/update",
+      body: json.encode(List<Map<String, dynamic>>.from(rooms.map((r) => r.toJson()))),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    if (response.statusCode == 204) {
+      return null;
+    }
+
+    final data = json.decode(utf8.decode(response.bodyBytes));
+    return Result(data["code"], null);
+  }
 }
 
-class Room {
-  final int room;
+class Room extends _BaseRoom {
   final double? area;
   final int? motorbike;
   final int? car;
   final int residents;
 
   Room({
-    required this.room,
+    required super.room,
     required this.area,
     required this.motorbike,
     required this.car,
@@ -33,11 +85,13 @@ class Room {
   });
 
   Room.fromJson(dynamic data)
-      : room = data["room"],
-        area = data["area"],
-        motorbike = data["motorbike"],
-        car = data["car"],
-        residents = data["residents"];
+      : this(
+          room: data["room"],
+          area: data["area"],
+          motorbike: data["motorbike"],
+          car: data["car"],
+          residents: data["residents"],
+        );
 
   int get floor => room ~/ 100;
 

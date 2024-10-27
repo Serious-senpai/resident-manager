@@ -72,7 +72,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
             authorization: Authorization(username: username, password: password),
           );
 
-          if (result == 0) {
+          if (result.code == 0) {
             _notification = Builder(
               builder: (context) => Text(
                 AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context),
@@ -82,7 +82,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
           } else {
             _notification = Builder(
               builder: (context) => Text(
-                AppLocale.errorMessage(result).getString(context),
+                AppLocale.errorMessage(result.code).getString(context),
                 style: const TextStyle(color: Colors.red),
               ),
             );
@@ -186,7 +186,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   contentPadding: const EdgeInsets.all(8.0),
                   label: FieldLabel(AppLocale.Username.getString(context), required: true),
                 ),
-                validator: (value) => usernameValidator(context, value: value),
+                validator: (value) => usernameValidator(context, required: true, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -196,7 +196,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                   label: FieldLabel(AppLocale.Password.getString(context), required: true),
                 ),
                 obscureText: true,
-                validator: (value) => passwordValidator(context, value: value),
+                validator: (value) => passwordValidator(context, required: true, value: value),
               ),
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,

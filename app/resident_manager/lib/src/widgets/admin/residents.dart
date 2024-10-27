@@ -256,234 +256,238 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                       headerCeil(AppLocale.Option.getString(context)),
                     ],
                   ),
-                ];
-
-                for (final resident in _residents) {
-                  rows.add(
-                    TableRow(
-                      children: [
-                        Checkbox.adaptive(
-                          value: _selected.contains(resident),
-                          onChanged: (state) {
-                            if (state != null) {
-                              if (state) {
-                                _selected.add(resident);
-                              } else {
-                                _selected.remove(resident);
+                  ...List<TableRow>.from(
+                    _residents.map(
+                      (resident) => TableRow(
+                        children: [
+                          Checkbox.adaptive(
+                            value: _selected.contains(resident),
+                            onChanged: (state) {
+                              if (state != null) {
+                                if (state) {
+                                  _selected.add(resident);
+                                } else {
+                                  _selected.remove(resident);
+                                }
                               }
-                            }
 
-                            refresh();
-                          },
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.name),
+                              refresh();
+                            },
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.room.toString()),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.name),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.birthday?.toLocal().formatDate() ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.room.toString()),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.phone ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.birthday?.toLocal().formatDate() ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.email ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.phone ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.createdAt.toLocal().toString()),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.email ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(resident.username ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.createdAt.toLocal().toString()),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () async {
-                                    final formKey = GlobalKey<FormState>();
-                                    final nameController = TextEditingController(text: resident.name);
-                                    final roomController = TextEditingController(text: resident.room.toString());
-                                    final birthdayController = TextEditingController(text: resident.birthday?.toLocal().formatDate() ?? "");
-                                    final phoneController = TextEditingController(text: resident.phone ?? "");
-                                    final emailController = TextEditingController(text: resident.email ?? "");
-                                    final submitted = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => SimpleDialog(
-                                        contentPadding: const EdgeInsets.all(10),
-                                        title: Text(AppLocale.EditPersonalInfo.getString(context)),
-                                        children: [
-                                          Form(
-                                            key: formKey,
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                TextFormField(
-                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                  controller: nameController,
-                                                  decoration: InputDecoration(
-                                                    contentPadding: const EdgeInsets.all(8.0),
-                                                    label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
-                                                  ),
-                                                  validator: (value) => nameValidator(context, required: true, value: value),
-                                                ),
-                                                TextFormField(
-                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                  controller: roomController,
-                                                  decoration: InputDecoration(
-                                                    contentPadding: const EdgeInsets.all(8.0),
-                                                    label: FieldLabel(AppLocale.Room.getString(context), required: true),
-                                                  ),
-                                                  validator: (value) => roomValidator(context, required: true, value: value),
-                                                ),
-                                                TextFormField(
-                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                  controller: birthdayController,
-                                                  decoration: InputDecoration(
-                                                    contentPadding: const EdgeInsets.all(8.0),
-                                                    label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
-                                                  ),
-                                                  onTap: () async {
-                                                    final birthday = await showDatePicker(
-                                                      context: context,
-                                                      initialDate: DateFormat.fromFormattedDate(birthdayController.text),
-                                                      firstDate: DateTime.utc(1900),
-                                                      lastDate: DateTime.now(),
-                                                    );
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(resident.username ?? "---"),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: () async {
+                                      final nameController = TextEditingController(text: resident.name);
+                                      final roomController = TextEditingController(text: resident.room.toString());
+                                      final birthdayController = TextEditingController(text: resident.birthday?.toLocal().formatDate());
+                                      final phoneController = TextEditingController(text: resident.phone);
+                                      final emailController = TextEditingController(text: resident.email);
 
-                                                    if (birthday != null) {
-                                                      birthdayController.text = birthday.toLocal().formatDate();
-                                                    } else {
-                                                      birthdayController.clear();
-                                                    }
-                                                  },
-                                                  readOnly: true, // no need for validator
-                                                ),
-                                                TextFormField(
-                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                  controller: phoneController,
-                                                  decoration: InputDecoration(
-                                                    contentPadding: const EdgeInsets.all(8.0),
-                                                    label: FieldLabel(AppLocale.Phone.getString(context)),
+                                      final formKey = GlobalKey<FormState>();
+                                      final submitted = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => SimpleDialog(
+                                          contentPadding: const EdgeInsets.all(10),
+                                          title: Text(AppLocale.EditPersonalInfo.getString(context)),
+                                          children: [
+                                            Form(
+                                              key: formKey,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: nameController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
+                                                    ),
+                                                    validator: (value) => nameValidator(context, required: true, value: value),
                                                   ),
-                                                  validator: (value) => phoneValidator(context, value: value),
-                                                ),
-                                                TextFormField(
-                                                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                                                  controller: emailController,
-                                                  decoration: InputDecoration(
-                                                    contentPadding: const EdgeInsets.all(8.0),
-                                                    label: FieldLabel(AppLocale.Email.getString(context)),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: roomController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                                                    ),
+                                                    validator: (value) => roomValidator(context, required: true, value: value),
                                                   ),
-                                                  validator: (value) => emailValidator(context, value: value),
-                                                ),
-                                                const SizedBox.square(dimension: 10),
-                                                Container(
-                                                  padding: const EdgeInsets.all(5),
-                                                  width: double.infinity,
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.done_outlined),
-                                                    label: Text(AppLocale.Confirm.getString(context)),
-                                                    onPressed: () => Navigator.pop(context, true),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: birthdayController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
+                                                    ),
+                                                    onTap: () async {
+                                                      final birthday = await showDatePicker(
+                                                        context: context,
+                                                        initialDate: DateFormat.fromFormattedDate(birthdayController.text),
+                                                        firstDate: DateTime.utc(1900),
+                                                        lastDate: DateTime.now(),
+                                                      );
 
-                                    if (submitted != null) {
-                                      final check = formKey.currentState?.validate() ?? false;
-                                      if (check) {
-                                        await _actionLock.run(
-                                          () async {
-                                            _notification = Builder(
-                                              builder: (context) => Text(
-                                                AppLocale.Loading.getString(context),
-                                                style: const TextStyle(color: Colors.blue),
+                                                      if (birthday != null) {
+                                                        birthdayController.text = birthday.toLocal().formatDate();
+                                                      } else {
+                                                        birthdayController.clear();
+                                                      }
+                                                    },
+                                                    readOnly: true, // no need for validator
+                                                  ),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: phoneController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Phone.getString(context)),
+                                                    ),
+                                                    validator: (value) => phoneValidator(context, value: value),
+                                                  ),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: emailController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Email.getString(context)),
+                                                    ),
+                                                    validator: (value) => emailValidator(context, value: value),
+                                                  ),
+                                                  const SizedBox.square(dimension: 10),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(5),
+                                                    width: double.infinity,
+                                                    child: TextButton.icon(
+                                                      icon: const Icon(Icons.done_outlined),
+                                                      label: Text(AppLocale.Confirm.getString(context)),
+                                                      onPressed: () {
+                                                        if (formKey.currentState?.validate() ?? false) {
+                                                          Navigator.pop(context, true);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            );
-                                            refresh();
+                                            ),
+                                          ],
+                                        ),
+                                      );
 
-                                            try {
-                                              final result = await resident.update(
-                                                state: state,
-                                                info: PersonalInfo(
-                                                  name: nameController.text,
-                                                  room: int.parse(roomController.text),
-                                                  birthday: birthdayController.text.isEmpty ? null : DateFormat.fromFormattedDate(birthdayController.text),
-                                                  phone: phoneController.text,
-                                                  email: emailController.text,
+                                      if (submitted != null) {
+                                        final check = formKey.currentState?.validate() ?? false;
+                                        if (check) {
+                                          await _actionLock.run(
+                                            () async {
+                                              _notification = Builder(
+                                                builder: (context) => Text(
+                                                  AppLocale.Loading.getString(context),
+                                                  style: const TextStyle(color: Colors.blue),
                                                 ),
                                               );
+                                              refresh();
 
-                                              if (result.code != 0) {
+                                              try {
+                                                final result = await resident.update(
+                                                  state: state,
+                                                  info: PersonalInfo(
+                                                    name: nameController.text,
+                                                    room: int.parse(roomController.text),
+                                                    birthday: birthdayController.text.isEmpty ? null : DateFormat.fromFormattedDate(birthdayController.text),
+                                                    phone: phoneController.text,
+                                                    email: emailController.text,
+                                                  ),
+                                                );
+
+                                                if (result.code != 0) {
+                                                  _notification = Builder(
+                                                    builder: (context) => Text(
+                                                      AppLocale.errorMessage(result.code).getString(context),
+                                                      style: const TextStyle(color: Colors.red),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  _notification = const SizedBox.square(dimension: 0);
+                                                }
+                                              } catch (e) {
+                                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
                                                 _notification = Builder(
                                                   builder: (context) => Text(
-                                                    AppLocale.errorMessage(result.code).getString(context),
+                                                    AppLocale.ConnectionError.getString(context),
                                                     style: const TextStyle(color: Colors.red),
                                                   ),
                                                 );
-                                              } else {
-                                                _notification = const SizedBox.square(dimension: 0);
-                                              }
-                                            } catch (e) {
-                                              await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-                                              _notification = Builder(
-                                                builder: (context) => Text(
-                                                  AppLocale.ConnectionError.getString(context),
-                                                  style: const TextStyle(color: Colors.red),
-                                                ),
-                                              );
 
-                                              if (!(e is SocketException || e is TimeoutException)) {
-                                                rethrow;
+                                                if (!(e is SocketException || e is TimeoutException)) {
+                                                  rethrow;
+                                                }
+                                              } finally {
+                                                _queryFuture = null;
+                                                refresh();
                                               }
-                                            } finally {
-                                              _queryFuture = null;
-                                              refresh();
-                                            }
-                                          },
-                                        );
+                                            },
+                                          );
+                                        }
                                       }
-                                    }
-                                  },
-                                ),
-                              ],
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        )
-                      ],
+                        ],
+                      ),
                     ),
-                  );
-                }
+                  ),
+                ];
 
                 return Column(
                   children: [
@@ -539,9 +543,12 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                             style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
+                            // Save current values for restoration
                             final nameSearch = _nameSearch.text;
                             final roomSearch = _roomSearch.text;
                             final usernameSearch = _usernameSearch.text;
+
+                            final formKey = GlobalKey<FormState>();
                             final submitted = await showDialog<bool>(
                               context: context,
                               builder: (context) => SimpleDialog(
@@ -549,6 +556,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
                                   Form(
+                                    key: formKey,
                                     child: Column(
                                       children: [
                                         TextFormField(
@@ -591,6 +599,7 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                             Navigator.pop(context, true);
                                             offset = 0;
                                           },
+                                          validator: (value) => usernameValidator(context, required: false, value: value),
                                         ),
                                         const SizedBox.square(dimension: 10),
                                         Row(
@@ -601,8 +610,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                 icon: const Icon(Icons.done_outlined),
                                                 label: Text(AppLocale.Search.getString(context)),
                                                 onPressed: () {
-                                                  Navigator.pop(context, true);
-                                                  offset = 0;
+                                                  if (formKey.currentState?.validate() ?? false) {
+                                                    Navigator.pop(context, true);
+                                                    offset = 0;
+                                                  }
                                                 },
                                               ),
                                             ),

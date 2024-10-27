@@ -66,6 +66,12 @@ class AppLocale {
   static const String RetypeNewPassword = "RetypeNewPassword";
   static const String GeneralInformation = "GeneralInformation";
   static const String AuthorizationInformation = "AuthorizationInformation";
+  static const String MissingRoomArea = "MissingRoomArea";
+  static const String InvalidRoomArea = "InvalidRoomArea";
+  static const String MissingMotorbikesCount = "MissingMotorbikesCount";
+  static const String InvalidMotorbikesCount = "InvalidMotorbikesCount";
+  static const String MissingCarsCount = "MissingCarsCount";
+  static const String InvalidCarsCount = "InvalidCarsCount";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -80,6 +86,9 @@ class AppLocale {
   static const String Error301 = "Error301";
   static const String Error401 = "Error401";
   static const String Error402 = "Error402";
+  static const String Error501 = "Error501";
+  static const String Error502 = "Error502";
+  static const String Error503 = "Error503";
   static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
@@ -150,6 +159,12 @@ class AppLocale {
     RetypeNewPassword: "Retype new password",
     GeneralInformation: "General information",
     AuthorizationInformation: "Authorization information",
+    MissingRoomArea: "Missing room area",
+    InvalidRoomArea: "Room area must be in range 0-21474835",
+    MissingMotorbikesCount: "Missing motorbikes count",
+    InvalidMotorbikesCount: "Motorbikes count must be in range 0-255",
+    MissingCarsCount: "Missing cars count",
+    InvalidCarsCount: "Cars count must be in range 0-255",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -164,6 +179,9 @@ class AppLocale {
     Error301: "Unable to update a non-existing resident.",
     Error401: "You must log in as an administrator to perform this action.",
     Error402: "You must log in as a resident to perform this action.",
+    Error501: "The provided room area is invalid.",
+    Error502: "The provided motorbikes count is invalid.",
+    Error503: "The provided cars count is invalid.",
     ErrorUnknown: "An unknown error occurred.",
   };
 
@@ -200,7 +218,7 @@ class AppLocale {
     MissingName: "Thiếu họ và tên",
     InvalidNameLength: "Họ và tên phải có độ dài 0-255 ký tự",
     MissingRoomNumber: "Thiếu số phòng",
-    InvalidRoomNumber: "Số phòng trong phạm vi 0 - 32767",
+    InvalidRoomNumber: "Số phòng trong phạm vi 0-32767",
     InvalidDateOfBirth: "Ngày sinh không hợp lệ",
     InvalidPhoneNumber: "Số điện thoại không hợp lệ",
     InvalidEmail: "Email không hợp lệ",
@@ -235,6 +253,12 @@ class AppLocale {
     RetypeNewPassword: "Nhập lại mật khẩu mới",
     GeneralInformation: "Thông tin cơ bản",
     AuthorizationInformation: "Thông tin đăng nhập",
+    MissingRoomArea: "Thiếu diện tích phòng",
+    InvalidRoomArea: "Diện tích phòng trong phạm vi 0-21474835",
+    MissingMotorbikesCount: "Thiếu số lượng xe máy",
+    InvalidMotorbikesCount: "Số lượng xe máy trong phạm vi 0-255",
+    MissingCarsCount: "Thiếu số lượng ô tô",
+    InvalidCarsCount: "Số lượng ô tô trong phạm vi 0-255",
 
     // Error codes
     Error0: "Thao tác thành công.",
@@ -249,6 +273,9 @@ class AppLocale {
     Error301: "Không thể cập nhật thông tin của cư dân không tồn tại.",
     Error401: "Yêu cầu đăng nhập với tài khoản quản trị viên.",
     Error402: "Yêu cầu đăng nhập với tài khoản cư dân.",
+    Error501: "Diện tích phòng không hợp lệ.",
+    Error502: "Số lượng xe máy không hợp lệ.",
+    Error503: "Số lượng ô tô không hợp lệ.",
     ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
 

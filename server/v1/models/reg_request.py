@@ -127,8 +127,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             return
 
         async with Database.instance.pool.acquire() as connection:
-            temp_fmt = ", ".join("?" for _ in objects)
-
+            temp_fmt = ", ".join(itertools.repeat("?", len(objects)))
             async with connection.cursor() as cursor:
                 await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *[o.id for o in objects])
 

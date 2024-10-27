@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:io";
 import "dart:math";
 
+import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -26,6 +27,9 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
 
   Future<int?>? _queryFuture;
   Future<int?>? _countFuture;
+  Widget _notification = const SizedBox.square(dimension: 0);
+
+  final _actionLock = Lock();
 
   final _roomSearch = TextEditingController();
   final _floorSearch = TextEditingController();
@@ -153,69 +157,259 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                       headerCeil(AppLocale.CarsCount.getString(context)),
                       headerCeil(AppLocale.ResidentsCount.getString(context)),
                       headerCeil(AppLocale.Search.getString(context)),
+                      headerCeil(AppLocale.Option.getString(context)),
                     ],
                   ),
-                ];
-
-                for (final room in _rooms) {
-                  rows.add(
-                    TableRow(
-                      children: [
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.room.toString()),
+                  ...List<TableRow>.from(
+                    _rooms.map(
+                      (room) => TableRow(
+                        children: [
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.room.toString()),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.floor.toString()),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.floor.toString()),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.area?.toString() ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.area?.toString() ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.motorbike?.toString() ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.motorbike?.toString() ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.car?.toString() ?? "---"),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.car?.toString() ?? "---"),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(room.residents.toString()),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Text(room.residents.toString()),
+                            ),
                           ),
-                        ),
-                        TableCell(
-                          child: HoverContainer(
-                            onHover: Colors.grey.shade200,
-                            child: GestureDetector(
-                              onTap: () async {
-                                state.extras["room-search"] = room;
-                                await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(5),
-                                child: Text("→"),
+                          TableCell(
+                            child: HoverContainer(
+                              onHover: Colors.grey.shade200,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  state.extras["room-search"] = room;
+                                  await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(5),
+                                  child: Text("→"),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: () async {
+                                      final roomController = TextEditingController(text: room.room.toString());
+                                      final areaController = TextEditingController(text: room.area?.toString());
+                                      final motorbikeController = TextEditingController(text: room.motorbike?.toString());
+                                      final carController = TextEditingController(text: room.car?.toString());
+
+                                      final formKey = GlobalKey<FormState>();
+                                      final submitted = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => SimpleDialog(
+                                          contentPadding: const EdgeInsets.all(10),
+                                          title: Text(AppLocale.EditPersonalInfo.getString(context)),
+                                          children: [
+                                            Form(
+                                              key: formKey,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: roomController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                                                    ),
+                                                    enabled: false,
+                                                    validator: (value) => roomValidator(context, required: true, value: value),
+                                                  ),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: areaController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.Area1.getString(context), required: true),
+                                                    ),
+                                                    validator: (value) => roomAreaValidator(context, required: true, value: value),
+                                                  ),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: motorbikeController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.MotorbikesCount.getString(context), required: true),
+                                                    ),
+                                                    validator: (value) => motorbikesCountValidator(context, required: true, value: value),
+                                                  ),
+                                                  TextFormField(
+                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                    controller: carController,
+                                                    decoration: InputDecoration(
+                                                      contentPadding: const EdgeInsets.all(8.0),
+                                                      label: FieldLabel(AppLocale.CarsCount.getString(context), required: true),
+                                                    ),
+                                                    validator: (value) => carsCountValidator(context, required: true, value: value),
+                                                  ),
+                                                  const SizedBox.square(dimension: 10),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(5),
+                                                    width: double.infinity,
+                                                    child: TextButton.icon(
+                                                      icon: const Icon(Icons.done_outlined),
+                                                      label: Text(AppLocale.Confirm.getString(context)),
+                                                      onPressed: () {
+                                                        if (formKey.currentState?.validate() ?? false) {
+                                                          Navigator.pop(context, true);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (submitted != null) {
+                                        final check = formKey.currentState?.validate() ?? false;
+                                        if (check) {
+                                          await _actionLock.run(
+                                            () async {
+                                              _notification = Builder(
+                                                builder: (context) => Text(
+                                                  AppLocale.Loading.getString(context),
+                                                  style: const TextStyle(color: Colors.blue),
+                                                ),
+                                              );
+                                              refresh();
+
+                                              try {
+                                                final result = await RoomData.update(
+                                                  state: state,
+                                                  rooms: [
+                                                    RoomData(
+                                                      room: room.room,
+                                                      area: double.parse(areaController.text),
+                                                      motorbike: int.parse(motorbikeController.text),
+                                                      car: int.parse(carController.text),
+                                                    ),
+                                                  ],
+                                                );
+
+                                                if (result != null) {
+                                                  _notification = Builder(
+                                                    builder: (context) => Text(
+                                                      AppLocale.errorMessage(result.code).getString(context),
+                                                      style: const TextStyle(color: Colors.red),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  _notification = const SizedBox.square(dimension: 0);
+                                                }
+                                              } catch (e) {
+                                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                                                _notification = Builder(
+                                                  builder: (context) => Text(
+                                                    AppLocale.ConnectionError.getString(context),
+                                                    style: const TextStyle(color: Colors.red),
+                                                  ),
+                                                );
+
+                                                if (!(e is SocketException || e is TimeoutException)) {
+                                                  rethrow;
+                                                }
+                                              } finally {
+                                                _queryFuture = null;
+                                                refresh();
+                                              }
+                                            },
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outlined),
+                                    onPressed: () async {
+                                      await _actionLock.run(
+                                        () async {
+                                          _notification = Builder(
+                                            builder: (context) => Text(
+                                              AppLocale.Loading.getString(context),
+                                              style: const TextStyle(color: Colors.blue),
+                                            ),
+                                          );
+                                          refresh();
+
+                                          try {
+                                            final result = await room.delete(state: state);
+                                            if (result != null) {
+                                              _notification = Builder(
+                                                builder: (context) => Text(
+                                                  AppLocale.errorMessage(result.code).getString(context),
+                                                  style: const TextStyle(color: Colors.red),
+                                                ),
+                                              );
+                                            } else {
+                                              _notification = const SizedBox.square(dimension: 0);
+                                            }
+                                          } catch (e) {
+                                            await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                                            _notification = Builder(
+                                              builder: (context) => Text(
+                                                AppLocale.ConnectionError.getString(context),
+                                                style: const TextStyle(color: Colors.red),
+                                              ),
+                                            );
+
+                                            if (!(e is SocketException || e is TimeoutException)) {
+                                              rethrow;
+                                            }
+                                          } finally {
+                                            _queryFuture = null;
+                                            refresh();
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  );
-                }
+                  ),
+                ];
 
                 return Column(
                   children: [
@@ -260,8 +454,11 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                             style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
                           ),
                           onPressed: () async {
+                            // Save current values for restoration
                             final roomSearch = _roomSearch.text;
                             final floorSearch = _floorSearch.text;
+
+                            final formKey = GlobalKey<FormState>();
                             final submitted = await showDialog(
                               context: context,
                               builder: (context) => SimpleDialog(
@@ -269,6 +466,7 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                 title: Text(AppLocale.Search.getString(context)),
                                 children: [
                                   Form(
+                                    key: formKey,
                                     child: Column(
                                       children: [
                                         TextFormField(
@@ -294,8 +492,10 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                             label: Text(AppLocale.Floor.getString(context)),
                                           ),
                                           onFieldSubmitted: (_) {
-                                            Navigator.pop(context, true);
-                                            offset = 0;
+                                            if (formKey.currentState?.validate() ?? false) {
+                                              Navigator.pop(context, true);
+                                              offset = 0;
+                                            }
                                           },
                                         ),
                                         const SizedBox.square(dimension: 10),
@@ -343,6 +543,8 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                         ),
                       ],
                     ),
+                    const SizedBox.square(dimension: 5),
+                    _notification,
                     const SizedBox.square(dimension: 5),
                     Expanded(
                       child: Scrollbar(

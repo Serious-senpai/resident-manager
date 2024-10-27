@@ -151,9 +151,13 @@ String? emailValidator(BuildContext context, {required String? value}) {
   return null;
 }
 
-String? usernameValidator(BuildContext context, {required String? value}) {
+String? usernameValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
-    return AppLocale.MissingUsername.getString(context);
+    if (required) {
+      return AppLocale.MissingUsername.getString(context);
+    }
+
+    return null;
   }
 
   if (value.length > 255) {
@@ -163,13 +167,83 @@ String? usernameValidator(BuildContext context, {required String? value}) {
   return null;
 }
 
-String? passwordValidator(BuildContext context, {required String? value}) {
+String? passwordValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
-    return AppLocale.MissingPassword.getString(context);
+    if (required) {
+      return AppLocale.MissingPassword.getString(context);
+    }
+
+    return null;
   }
 
   if (value.length < 8 || value.length > 255) {
     return AppLocale.InvalidPasswordLength.getString(context);
+  }
+
+  return null;
+}
+
+String? roomAreaValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRoomArea.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,9}$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidRoomArea.getString(context);
+  }
+
+  final roomAreaInt = int.parse(value);
+  if (roomAreaInt < 0 || roomAreaInt > 21474835) {
+    return AppLocale.InvalidRoomArea.getString(context);
+  }
+
+  return null;
+}
+
+String? motorbikesCountValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingMotorbikesCount.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,4}$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidMotorbikesCount.getString(context);
+  }
+
+  final motorbikesCountInt = int.parse(value);
+  if (motorbikesCountInt < 0 || motorbikesCountInt > 255) {
+    return AppLocale.InvalidMotorbikesCount.getString(context);
+  }
+
+  return null;
+}
+
+String? carsCountValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingCarsCount.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,4}$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidCarsCount.getString(context);
+  }
+
+  final carsCountInt = int.parse(value);
+  if (carsCountInt < 0 || carsCountInt > 255) {
+    return AppLocale.InvalidCarsCount.getString(context);
   }
 
   return null;

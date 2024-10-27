@@ -161,7 +161,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                   contentPadding: const EdgeInsets.all(8.0),
                   label: FieldLabel(AppLocale.Username.getString(context), required: true),
                 ),
-                validator: (value) => usernameValidator(context, value: value),
+                validator: (value) => usernameValidator(context, required: true, value: value),
               ),
             ),
             _InfoCard(
@@ -173,7 +173,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                   label: FieldLabel(AppLocale.NewPassword.getString(context), required: true),
                 ),
                 obscureText: true,
-                validator: (value) => passwordValidator(context, value: value),
+                validator: (value) => passwordValidator(context, required: false, value: value),
               ),
             ),
             _InfoCard(

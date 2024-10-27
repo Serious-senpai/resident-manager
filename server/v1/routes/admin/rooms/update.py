@@ -34,7 +34,11 @@ async def admin_rooms_update(
     rooms: List[RoomData],
 ) -> Optional[Result[None]]:
     if admin.admin:
-        await RoomData.update_many(rooms)
+        result = await RoomData.update_many(rooms)
+        if result is not None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return result
+
         return None
 
     response.status_code = status.HTTP_400_BAD_REQUEST
