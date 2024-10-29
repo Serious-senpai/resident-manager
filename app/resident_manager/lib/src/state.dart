@@ -65,7 +65,8 @@ class ApplicationState {
   }) async {
     final response = await post(
       isAdmin ? "/api/v1/admin/login" : "/api/v1/login",
-      body: {"username": username, "password": password},
+      body: "username=${Uri.encodeComponent(username)}&password=${Uri.encodeComponent(password)}",
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
       authorize: false,
     );
 
