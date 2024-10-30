@@ -84,85 +84,133 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   }
 
   Future<void> _residentRegister() async {
-    await Navigator.pushReplacementNamed(context, ApplicationRoute.register);
+    await Navigator.pushNamed(context, ApplicationRoute.register);
   }
 
   @override
   Scaffold buildScaffold(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final padding = mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20.0;
 
     return Scaffold(
       key: scaffoldKey,
       appBar: createAppBar(context, title: AppLocale.Login.getString(context)),
-      body: Padding(
-        padding: EdgeInsets.only(left: padding, right: padding),
-        child: Center(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage("assets/luxury-apartment.webp"),
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.7),
+              BlendMode.srcOver,
+            ),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20,
+            right: mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20,
+            top: 20,
+            bottom: 20,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextField(
-                autofocus: true,
-                controller: _username,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.all(8.0),
-                  label: Text(AppLocale.Username.getString(context)),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextField(
+                      autofocus: true,
+                      controller: _username,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: Text(
+                          AppLocale.Username.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      enabled: !_actionLock.locked,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    TextField(
+                      controller: _password,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: Text(
+                          AppLocale.Password.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      enabled: !_actionLock.locked,
+                      obscureText: true,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
                 ),
-                enabled: !_actionLock.locked,
               ),
-              TextField(
-                controller: _password,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.all(8.0),
-                  label: Text(AppLocale.Password.getString(context)),
-                ),
-                enabled: !_actionLock.locked,
-                obscureText: true,
-              ),
-              const SizedBox.square(dimension: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox.adaptive(
-                    value: _remember,
-                    onChanged: (state) {
-                      if (state != null) {
-                        _remember = state;
-                      }
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox.square(dimension: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox.adaptive(
+                          value: _remember,
+                          onChanged: (state) {
+                            if (state != null) {
+                              _remember = state;
+                            }
 
-                      refresh();
-                    },
-                  ),
-                  Text(AppLocale.RememberMe.getString(context)),
-                ],
-              ),
-              const SizedBox.square(dimension: 5),
-              _notification,
-              Container(
-                padding: const EdgeInsets.all(5),
-                width: double.infinity,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.login_outlined),
-                  label: Text(AppLocale.LoginAsResident.getString(context)),
-                  onPressed: _actionLock.locked ? null : () => _login(false),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                width: double.infinity,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.how_to_reg_outlined),
-                  label: Text(AppLocale.RegisterAsResident.getString(context)),
-                  onPressed: _actionLock.locked ? null : () => _residentRegister(),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                width: double.infinity,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.admin_panel_settings_outlined),
-                  label: Text(AppLocale.LoginAsAdministrator.getString(context)),
-                  onPressed: _actionLock.locked ? null : () => _login(true),
+                            refresh();
+                          },
+                        ),
+                        Text(
+                          AppLocale.RememberMe.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox.square(dimension: 5),
+                    _notification,
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.login_outlined, color: Colors.white),
+                        label: Text(
+                          AppLocale.LoginAsResident.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        onPressed: _actionLock.locked ? null : () => _login(false),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.how_to_reg_outlined, color: Colors.white),
+                        label: Text(
+                          AppLocale.RegisterAsResident.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        onPressed: _actionLock.locked ? null : () => _residentRegister(),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white),
+                        label: Text(
+                          AppLocale.LoginAsAdministrator.getString(context),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        onPressed: _actionLock.locked ? null : () => _login(true),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

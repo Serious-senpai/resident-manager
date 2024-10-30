@@ -11,9 +11,7 @@ abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> 
   ApplicationState get state => widget.state;
 
   void refresh() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -35,9 +33,6 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
   /// The [GlobalKey] for the [Scaffold] returned by the [build] method
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// Whether this route can be popped when pressing the "Back" button
-  bool get canPop => true;
-
   /// Open the [Scaffold.drawer]
   void openDrawer() {
     final state = scaffoldKey.currentState;
@@ -50,11 +45,18 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
     if (state != null) state.closeDrawer();
   }
 
-  AppBar createAppBar(BuildContext context, {Icon icon = const Icon(Icons.menu_outlined), required String title}) {
+  AppBar createAppBar(BuildContext context, {required String title}) {
+    final canPop = Navigator.canPop(context);
     return AppBar(
       leading: IconButton(
-        onPressed: openDrawer,
-        icon: icon,
+        onPressed: () {
+          if (canPop) {
+            Navigator.pop(context);
+          } else {
+            openDrawer();
+          }
+        },
+        icon: canPop ? const Icon(Icons.arrow_back_outlined) : const Icon(Icons.menu_outlined),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
@@ -62,11 +64,15 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
 
   /// Create a default [Drawer] for all pages within this application
   Drawer createDrawer(BuildContext context) {
-    var currentRoute = ModalRoute.of(context)?.settings.name;
-
+    final currentRoute = ModalRoute.of(context)?.settings.name;
     final navigator = <Widget>[
       const DrawerHeader(
-        decoration: BoxDecoration(image: DecorationImage(image: AssetImage("assets/vector-background-green.jpg"), fit: BoxFit.cover)),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/vector-background-green.jpg"),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: null,
       ),
     ];
@@ -75,6 +81,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
       required Icon leading,
       required String title,
       required String route,
+      required bool popAll,
     }) =>
         ListTile(
           leading: leading,
@@ -82,55 +89,70 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
             title,
             style: currentRoute == route ? const TextStyle(color: Colors.blue) : null,
           ),
-          onTap: () => currentRoute == route
-              ? Navigator.pop(context)
-              : Navigator.pushReplacementNamed(
-                  context,
-                  route,
-                ),
+          onTap: () {
+            closeDrawer();
+            if (currentRoute != route) {
+              if (popAll) {
+                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.pushReplacementNamed(context, route);
+              } else {
+                Navigator.pushNamed(context, route);
+              }
+            }
+          },
         );
 
     if (!state.loggedIn) {
+      // Not yet logged in
       navigator.add(
         routeTile(
           leading: const Icon(Icons.lock_outlined),
           title: AppLocale.Login.getString(context),
           route: ApplicationRoute.login,
+          popAll: true,
         ),
       );
     } else {
+      // Logged in...
       if (state.loggedInAsAdmin) {
+        // ... as admin
         navigator.addAll(
           [
             routeTile(
               leading: const Icon(Icons.how_to_reg_outlined),
               title: AppLocale.RegisterQueue.getString(context),
               route: ApplicationRoute.adminRegisterQueue,
+              popAll: false,
             ),
             routeTile(
               leading: const Icon(Icons.people_outlined),
               title: AppLocale.ResidentsList.getString(context),
               route: ApplicationRoute.adminResidentsPage,
+              popAll: false,
             ),
             routeTile(
               leading: const Icon(Icons.room_outlined),
               title: AppLocale.RoomsList.getString(context),
               route: ApplicationRoute.adminRoomsPage,
+              popAll: false,
             ),
           ],
         );
       } else {
+        // ... as resident
         navigator.addAll(
           [
             routeTile(
               leading: const Icon(Icons.home_outlined),
               title: AppLocale.Home.getString(context),
               route: ApplicationRoute.home,
+              popAll: false,
             ),
             routeTile(
               leading: const Icon(Icons.person_outlined),
               title: AppLocale.PersonalInfo.getString(context),
               route: ApplicationRoute.personalInfo,
+              popAll: false,
             ),
           ],
         );
@@ -143,6 +165,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
           onTap: () async {
             await state.deauthorize();
             if (context.mounted) {
+              Navigator.popUntil(context, (route) => route.isFirst);
               await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
             }
           },
@@ -186,10 +209,8 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
   @override
   Widget build(BuildContext context) {
     final scaffold = buildScaffold(context);
-    assert(scaffold.key == scaffoldKey);
-    assert(scaffold.drawer != null);
     return PopScope(
-      canPop: canPop,
+      canPop: Navigator.canPop(context),
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
           openDrawer();

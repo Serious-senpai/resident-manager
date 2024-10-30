@@ -392,10 +392,10 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                 children: [
                                   Form(
                                     key: formKey,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                     child: Column(
                                       children: [
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _nameSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
@@ -409,7 +409,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                           validator: (value) => nameValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _roomSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
@@ -423,7 +422,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
                                           validator: (value) => roomValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _usernameSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),

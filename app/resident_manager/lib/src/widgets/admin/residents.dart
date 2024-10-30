@@ -339,11 +339,11 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           children: [
                                             Form(
                                               key: formKey,
+                                              autovalidateMode: AutovalidateMode.onUserInteraction,
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: nameController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -352,7 +352,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                     validator: (value) => nameValidator(context, required: true, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: roomController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -361,7 +360,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                     validator: (value) => roomValidator(context, required: true, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: birthdayController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -384,7 +382,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                     readOnly: true, // no need for validator
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: phoneController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -393,7 +390,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                                     validator: (value) => phoneValidator(context, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: emailController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -557,10 +553,10 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                 children: [
                                   Form(
                                     key: formKey,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                     child: Column(
                                       children: [
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _nameSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
@@ -574,7 +570,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           validator: (value) => nameValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _roomSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
@@ -588,7 +583,6 @@ class ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonS
                                           validator: (value) => roomValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _usernameSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),

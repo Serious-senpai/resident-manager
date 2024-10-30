@@ -73,10 +73,12 @@ extension DateFormat on DateTime {
 
 class FieldLabel extends StatelessWidget {
   final String _label;
+  final TextStyle? _style;
   final bool _required;
 
-  const FieldLabel(String label, {super.key, bool required = false})
+  const FieldLabel(String label, {super.key, TextStyle? style, bool required = false})
       : _label = label,
+        _style = style,
         _required = required;
 
   @override
@@ -84,7 +86,7 @@ class FieldLabel extends StatelessWidget {
     return RichText(
       text: TextSpan(
         text: _label,
-        style: const TextStyle(color: Colors.black),
+        style: _style,
         children: _required ? const [TextSpan(text: " *", style: TextStyle(color: Colors.red))] : [],
       ),
     );

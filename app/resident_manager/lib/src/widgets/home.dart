@@ -73,7 +73,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                   child: TextButton.icon(
                     icon: const Icon(Icons.person_outlined),
                     label: Text(AppLocale.PersonalInfo.getString(context)),
-                    onPressed: () => Navigator.pushReplacementNamed(context, ApplicationRoute.personalInfo),
+                    onPressed: () => Navigator.pushNamed(context, ApplicationRoute.personalInfo),
                   ),
                 ),
                 Expanded(

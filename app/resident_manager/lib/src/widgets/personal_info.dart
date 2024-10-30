@@ -65,7 +65,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
           final generalItems = [
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _name,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -76,7 +75,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _room,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -87,7 +85,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _birthday,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -112,7 +109,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _phone,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -123,7 +119,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _email,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -155,7 +150,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
           final authorizationItems = [
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _username,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -166,7 +160,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _newPassword,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -178,7 +171,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
             _InfoCard(
               child: TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: _newPasswordRetype,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
@@ -222,6 +214,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
 
           return Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
               child: Column(
                 children: List<Widget>.from(

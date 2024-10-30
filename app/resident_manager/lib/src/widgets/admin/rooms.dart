@@ -8,7 +8,6 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
-import "../utils.dart";
 import "../../config.dart";
 import "../../routes.dart";
 import "../../translations.dart";
@@ -156,7 +155,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                       headerCeil(AppLocale.MotorbikesCount.getString(context)),
                       headerCeil(AppLocale.CarsCount.getString(context)),
                       headerCeil(AppLocale.ResidentsCount.getString(context)),
-                      headerCeil(AppLocale.Search.getString(context)),
                       headerCeil(AppLocale.Option.getString(context)),
                     ],
                   ),
@@ -201,25 +199,17 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                             ),
                           ),
                           TableCell(
-                            child: HoverContainer(
-                              onHover: Colors.grey.shade200,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  state.extras["room-search"] = room;
-                                  await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(5),
-                                  child: Text("→"),
-                                ),
-                              ),
-                            ),
-                          ),
-                          TableCell(
                             child: Padding(
                               padding: const EdgeInsets.all(5),
                               child: Row(
                                 children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.search_outlined),
+                                    onPressed: () async {
+                                      state.extras["room-search"] = room;
+                                      await Navigator.pushNamed(context, ApplicationRoute.adminResidentsPage);
+                                    },
+                                  ),
                                   IconButton(
                                     icon: const Icon(Icons.edit_outlined),
                                     onPressed: () async {
@@ -237,11 +227,11 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                           children: [
                                             Form(
                                               key: formKey,
+                                              autovalidateMode: AutovalidateMode.onUserInteraction,
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: roomController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -251,7 +241,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                                     validator: (value) => roomValidator(context, required: true, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: areaController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -260,7 +249,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                                     validator: (value) => roomAreaValidator(context, required: true, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: motorbikeController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -269,7 +257,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                                     validator: (value) => motorbikesCountValidator(context, required: true, value: value),
                                                   ),
                                                   TextFormField(
-                                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                                     controller: carController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
@@ -467,10 +454,10 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                 children: [
                                   Form(
                                     key: formKey,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
                                     child: Column(
                                       children: [
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _roomSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
@@ -484,7 +471,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
                                           validator: (value) => roomValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
-                                          autovalidateMode: AutovalidateMode.onUserInteraction,
                                           controller: _floorSearch,
                                           decoration: InputDecoration(
                                             contentPadding: const EdgeInsets.all(8.0),
