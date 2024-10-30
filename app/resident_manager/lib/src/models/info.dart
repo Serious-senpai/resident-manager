@@ -37,6 +37,14 @@ class PersonalInfo {
     };
   }
 
+  /// Generates a map containing personal information query parameters.
+  ///
+  /// This method returns a [Map] where the keys and values are both [String]s.
+  /// The keys represent the parameter names, and the values represent the
+  /// corresponding parameter values.
+  ///
+  /// Returns:
+  ///   A map containing the personal information query parameters.
   Map<String, String> personalInfoQuery() {
     return {
       "name": name,

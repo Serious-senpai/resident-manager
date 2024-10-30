@@ -19,9 +19,23 @@ class Resident extends PublicInfo {
     super.hashedPassword,
   });
 
+  /// Creates a `Resident` instance from a JSON object.
+  ///
+  /// The constructor takes a JSON object and initializes the `Resident`
+  /// instance by calling the `fromJson` method of the superclass.
+  ///
+  /// - Parameter data: A JSON object containing the resident data.
   Resident.fromJson(super.data) : super.fromJson();
 
   @override
+
+  /// Converts the Resident object to a JSON map.
+  ///
+  /// This method serializes the Resident object into a map of key-value pairs,
+  /// where the keys are strings and the values are dynamic. This is useful for
+  /// encoding the object to be sent over a network or to be stored in a database.
+  ///
+  /// Returns a `Map<String, dynamic>` representing the JSON serialization of the Resident object.
   Map<String, dynamic> toJson() => {
         "id": id,
         "name": name,
@@ -31,6 +45,31 @@ class Resident extends PublicInfo {
         "email": email,
       };
 
+  /// Updates a resident's information.
+  ///
+  /// Returns a [Result] containing the updated [Resident] if the update is successful,
+  /// or `null` if the update fails.
+  ///
+  /// The [update] method takes the following named parameters:
+  /// - `id`: The unique identifier of the resident to be updated.
+  /// - `name`: The new name of the resident.
+  /// - `age`: The new age of the resident.
+  /// - `address`: The new address of the resident.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// final result = await update(
+  ///   id: "123",
+  ///   name: "John Doe",
+  ///   age: 30,
+  ///   address: "123 Main St",
+  /// );
+  /// if (result.code == 0) {
+  ///   print("Resident updated successfully");
+  /// } else {
+  ///   print("Failed to update resident");
+  /// }
+  /// ```
   Future<Result<Resident?>> update({
     required ApplicationState state,
     required PersonalInfo info,
@@ -51,6 +90,17 @@ class Resident extends PublicInfo {
     return Result(result["code"], null);
   }
 
+  /// Deletes a resident.
+  ///
+  /// This method deletes a resident from the database.
+  ///
+  /// Returns a [Future] that completes with a boolean value indicating
+  /// whether the deletion was successful.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// bool success = await delete();
+  /// ```
   static Future<bool> delete({
     required ApplicationState state,
     required Iterable<Snowflake> objects,
@@ -62,6 +112,15 @@ class Resident extends PublicInfo {
     return response.statusCode == 204;
   }
 
+  /// Queries the list of residents.
+  ///
+  /// Returns a [Result] containing a list of [Resident] objects or `null`.
+  ///
+  /// The query can be customized using the provided parameters.
+  ///
+  /// Returns:
+  /// - A [Result] object containing a list of [Resident] objects if the query is successful.
+  /// - A [Result] object containing null if the query fails.
   static Future<Result<List<Resident>?>> query({
     required ApplicationState state,
     required int offset,
