@@ -54,12 +54,12 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
   }
 
   @override
-  Scaffold buildScaffold(BuildContext context) {
+  CommonScaffold<PersonalInfoPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: createAppBar(context, title: AppLocale.PersonalInfo.getString(context)),
+    return CommonScaffold(
+      state: this,
+      title: Text(AppLocale.PersonalInfo.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: Builder(
         builder: (context) {
           final generalItems = [
@@ -68,7 +68,11 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _name,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
+                  label: FieldLabel(
+                    AppLocale.Fullname.getString(context),
+                    required: true,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 validator: (value) => nameValidator(context, required: true, value: value),
               ),
@@ -78,7 +82,11 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _room,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                  label: FieldLabel(
+                    AppLocale.Room.getString(context),
+                    required: true,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 validator: (value) => roomValidator(context, required: true, value: value),
               ),
@@ -88,7 +96,10 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _birthday,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
+                  label: FieldLabel(
+                    AppLocale.DateOfBirth.getString(context),
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 onTap: () async {
                   final birthday = await showDatePicker(
@@ -112,7 +123,10 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _phone,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.Phone.getString(context)),
+                  label: FieldLabel(
+                    AppLocale.Phone.getString(context),
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 validator: (value) => phoneValidator(context, value: value),
               ),
@@ -122,7 +136,10 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _email,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.Email.getString(context)),
+                  label: FieldLabel(
+                    AppLocale.Email.getString(context),
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 validator: (value) => emailValidator(context, value: value),
               ),
@@ -153,7 +170,11 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _username,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.Username.getString(context), required: true),
+                  label: FieldLabel(
+                    AppLocale.Username.getString(context),
+                    required: true,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 validator: (value) => usernameValidator(context, required: true, value: value),
               ),
@@ -163,7 +184,11 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _newPassword,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.NewPassword.getString(context), required: true),
+                  label: FieldLabel(
+                    AppLocale.NewPassword.getString(context),
+                    required: true,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 obscureText: true,
                 validator: (value) => passwordValidator(context, required: false, value: value),
@@ -174,7 +199,11 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                 controller: _newPasswordRetype,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.all(8.0),
-                  label: FieldLabel(AppLocale.RetypeNewPassword.getString(context), required: true),
+                  label: FieldLabel(
+                    AppLocale.RetypeNewPassword.getString(context),
+                    required: true,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -230,7 +259,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
           );
         },
       ),
-      drawer: createDrawer(context),
     );
   }
 }

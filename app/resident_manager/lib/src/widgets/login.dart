@@ -88,12 +88,12 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   }
 
   @override
-  Scaffold buildScaffold(BuildContext context) {
+  CommonScaffold<LoginPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: createAppBar(context, title: AppLocale.Login.getString(context)),
+    return CommonScaffold(
+      state: this,
+      title: Text(AppLocale.Login.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: DecoratedBox(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -120,7 +120,6 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextField(
-                      autofocus: true,
                       controller: _username,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.all(8.0),
@@ -217,7 +216,6 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           ),
         ),
       ),
-      drawer: createDrawer(context),
     );
   }
 }

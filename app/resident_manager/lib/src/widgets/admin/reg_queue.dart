@@ -21,10 +21,10 @@ class RegisterQueuePage extends StateAwareWidget {
   const RegisterQueuePage({super.key, required super.state});
 
   @override
-  RegisterQueuePageState createState() => RegisterQueuePageState();
+  AbstractCommonState<RegisterQueuePage> createState() => _RegisterQueuePageState();
 }
 
-class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
+class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
   List<RegisterRequest> _requests = [];
 
   Future<int?>? _queryFuture;
@@ -160,14 +160,14 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
   final _horizontalController = ScrollController();
 
   @override
-  Scaffold buildScaffold(BuildContext context) {
+  CommonScaffold<RegisterQueuePage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     _queryFuture ??= _query();
     _countFuture ??= _count();
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: createAppBar(context, title: AppLocale.RegisterQueue.getString(context)),
+    return CommonScaffold(
+      state: this,
+      title: Text(AppLocale.RegisterQueue.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {
@@ -524,7 +524,6 @@ class RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with
           }
         },
       ),
-      drawer: createDrawer(context),
     );
   }
 }

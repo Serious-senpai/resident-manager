@@ -164,17 +164,14 @@ void main() {
       await tester.enterText(registrationFields.at(5), username);
       await tester.enterText(registrationFields.at(6), password);
       await tester.enterText(registrationFields.at(7), password);
+      await tester.pumpAndSettle();
 
       // Tap the "Register" button
       await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
       await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
-
-      // Open login menu
-      await tester.tap(find.byIcon(Icons.lock_outlined));
+      // Return to login menu
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
       expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
@@ -185,6 +182,7 @@ void main() {
 
       await tester.enterText(adminLoginFields.at(0), DEFAULT_ADMIN_USERNAME);
       await tester.enterText(adminLoginFields.at(1), DEFAULT_ADMIN_PASSWORD);
+      await tester.pumpAndSettle();
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
@@ -292,6 +290,8 @@ void main() {
       await tester.enterText(editFields.at(1), room.toString());
       await tester.enterText(editFields.at(3), phone);
       await tester.enterText(editFields.at(4), email);
+      await tester.pumpAndSettle();
+
       await tester.tap(find.descendant(of: editDialog, matching: find.byIcon(Icons.done_outlined)));
       await tester.pumpAndSettle(MAX_WAIT_DURATION);
 

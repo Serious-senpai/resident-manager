@@ -53,6 +53,7 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
         overscroll: false,
       ),
       supportedLocales: state.localization.supportedLocales,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

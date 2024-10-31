@@ -40,79 +40,77 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
       () async {
         final check = _formKey.currentState?.validate();
         if (check ?? false) {
-          return;
-        }
-
-        _notification = Builder(
-          builder: (context) => Text(
-            AppLocale.Loading.getString(context),
-            style: const TextStyle(color: Colors.blue),
-          ),
-        );
-        refresh();
-
-        final name = _name.text;
-        final room = int.parse(_room.text);
-        final birthday = _birthday.text.isEmpty ? null : DateFormat.fromFormattedDate(_birthday.text);
-        final phone = _phone.text;
-        final email = _email.text;
-        final username = _username.text;
-        final password = _password.text;
-
-        try {
-          final result = await RegisterRequest.create(
-            state: state,
-            info: PersonalInfo(
-              name: name,
-              room: room,
-              birthday: birthday,
-              phone: phone,
-              email: email,
+          _notification = Builder(
+            builder: (context) => Text(
+              AppLocale.Loading.getString(context),
+              style: const TextStyle(color: Colors.blue),
             ),
-            authorization: Authorization(username: username, password: password),
           );
+          refresh();
 
-          if (result.code == 0) {
-            _notification = Builder(
-              builder: (context) => Text(
-                AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context),
-                style: const TextStyle(color: Colors.blue),
+          final name = _name.text;
+          final room = int.parse(_room.text);
+          final birthday = _birthday.text.isEmpty ? null : DateFormat.fromFormattedDate(_birthday.text);
+          final phone = _phone.text;
+          final email = _email.text;
+          final username = _username.text;
+          final password = _password.text;
+
+          try {
+            final result = await RegisterRequest.create(
+              state: state,
+              info: PersonalInfo(
+                name: name,
+                room: room,
+                birthday: birthday,
+                phone: phone,
+                email: email,
               ),
+              authorization: Authorization(username: username, password: password),
             );
-          } else {
-            _notification = Builder(
-              builder: (context) => Text(
-                AppLocale.errorMessage(result.code).getString(context),
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
+
+            if (result.code == 0) {
+              _notification = Builder(
+                builder: (context) => Text(
+                  AppLocale.SuccessfullyRegisteredWaitForAdmin.getString(context),
+                  style: const TextStyle(color: Colors.blue),
+                ),
+              );
+            } else {
+              _notification = Builder(
+                builder: (context) => Text(
+                  AppLocale.errorMessage(result.code).getString(context),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            }
+          } catch (e) {
+            if (e is SocketException || e is TimeoutException) {
+              _notification = Builder(
+                builder: (context) => Text(
+                  AppLocale.ConnectionError.getString(context),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            } else {
+              rethrow;
+            }
           }
-        } catch (e) {
-          if (e is SocketException || e is TimeoutException) {
-            _notification = Builder(
-              builder: (context) => Text(
-                AppLocale.ConnectionError.getString(context),
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          } else {
-            rethrow;
-          }
+
+          refresh();
         }
-
-        refresh();
       },
     );
   }
 
   @override
-  Scaffold buildScaffold(BuildContext context) {
+  CommonScaffold<RegisterPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final padding = mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20.0;
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: createAppBar(context, title: AppLocale.Register.getString(context)),
+    return CommonScaffold(
+      state: this,
+      title: Text(AppLocale.Register.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: DecoratedBox(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -281,7 +279,6 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
           ),
         ),
       ),
-      drawer: createDrawer(context),
     );
   }
 }

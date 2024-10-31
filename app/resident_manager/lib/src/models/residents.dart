@@ -55,21 +55,6 @@ class Resident extends PublicInfo {
   /// - `name`: The new name of the resident.
   /// - `age`: The new age of the resident.
   /// - `address`: The new address of the resident.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final result = await update(
-  ///   id: "123",
-  ///   name: "John Doe",
-  ///   age: 30,
-  ///   address: "123 Main St",
-  /// );
-  /// if (result.code == 0) {
-  ///   print("Resident updated successfully");
-  /// } else {
-  ///   print("Failed to update resident");
-  /// }
-  /// ```
   Future<Result<Resident?>> update({
     required ApplicationState state,
     required PersonalInfo info,

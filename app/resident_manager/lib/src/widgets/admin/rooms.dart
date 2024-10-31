@@ -18,10 +18,10 @@ class RoomsPage extends StateAwareWidget {
   const RoomsPage({super.key, required super.state});
 
   @override
-  RoomsPageState createState() => RoomsPageState();
+  AbstractCommonState<RoomsPage> createState() => _RoomsPageState();
 }
 
-class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
   List<Room> _rooms = [];
 
   Future<int?>? _queryFuture;
@@ -104,14 +104,14 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
   final _horizontalController = ScrollController();
 
   @override
-  Scaffold buildScaffold(BuildContext context) {
+  CommonScaffold<RoomsPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     _queryFuture ??= _query();
     _countFuture ??= _count();
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: createAppBar(context, title: AppLocale.RoomsList.getString(context)),
+    return CommonScaffold(
+      state: this,
+      title: Text(AppLocale.RoomsList.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {
@@ -570,7 +570,6 @@ class RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixi
           }
         },
       ),
-      drawer: createDrawer(context),
     );
   }
 }
