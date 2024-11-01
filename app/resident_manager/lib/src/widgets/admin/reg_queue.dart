@@ -166,7 +166,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
     _countFuture ??= _count();
 
     return CommonScaffold(
-      state: this,
+      widgetState: this,
       title: Text(AppLocale.RegisterQueue.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: FutureBuilder(
         future: _queryFuture,

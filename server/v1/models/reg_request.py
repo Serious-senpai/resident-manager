@@ -181,6 +181,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                         @Email NVARCHAR(255) = ?,
                         @Username NVARCHAR(255) = ?,
                         @HashedPassword NVARCHAR(255) = ?
+
                     IF NOT EXISTS (
                         SELECT 1 FROM residents WHERE username = @Username
                         UNION ALL

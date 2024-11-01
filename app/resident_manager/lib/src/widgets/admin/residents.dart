@@ -6,13 +6,13 @@ import "dart:math";
 import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
-import "package:resident_manager/src/models/info.dart";
 
 import "../common.dart";
 import "../state.dart";
 import "../../config.dart";
 import "../../translations.dart";
 import "../../utils.dart";
+import "../../models/info.dart";
 import "../../models/residents.dart";
 import "../../models/rooms.dart";
 
@@ -169,7 +169,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
     _countFuture ??= _count();
 
     return CommonScaffold(
-      state: this,
+      widgetState: this,
       title: Text(AppLocale.ResidentsList.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: FutureBuilder(
         future: _queryFuture,

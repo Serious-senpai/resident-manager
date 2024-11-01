@@ -2,27 +2,13 @@ from __future__ import annotations
 
 from typing import Annotated, Optional
 
-import pydantic
-from fastapi import Depends, Header, Response, status
+from fastapi import Depends, Response, status
 
 from ...app import api_v1
 from ...models import PersonalInfo, Resident, Result
 
 
 __all__ = ("residents_update",)
-
-
-class _Authorization(pydantic.BaseModel):
-    """Data model for updated authorization credentials."""
-
-    username: Annotated[
-        Optional[str],
-        pydantic.Field(description="New username for authorization, leave None to keep the value unchanged"),
-    ]
-    password: Annotated[
-        Optional[str],
-        pydantic.Field(description="New password for authorization, leave None to keep the value unchanged"),
-    ]
 
 
 @api_v1.post(
@@ -46,13 +32,12 @@ async def residents_update(
     response: Response,
     id: int,
     info: PersonalInfo,
-    headers: Annotated[_Authorization, Header(description="Authorization headers")]
 ) -> Result[Optional[Resident]]:
     if resident.data is None or resident.data.id != id:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return Result(code=402, data=None)
 
-    result = await Resident.update(id=id, info=info, username=headers.username, password=headers.password)
+    result = await Resident.update(id=id, info=info)
     if result.data is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
 

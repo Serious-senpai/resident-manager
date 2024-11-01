@@ -72,6 +72,7 @@ class AppLocale {
   static const String InvalidMotorbikesCount = "InvalidMotorbikesCount";
   static const String MissingCarsCount = "MissingCarsCount";
   static const String InvalidCarsCount = "InvalidCarsCount";
+  static const String SaveGeneralInformation = "SaveGeneralInformations";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -165,6 +166,7 @@ class AppLocale {
     InvalidMotorbikesCount: "Motorbikes count must be in range 0-255",
     MissingCarsCount: "Missing cars count",
     InvalidCarsCount: "Cars count must be in range 0-255",
+    SaveGeneralInformation: "Save general information",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -259,6 +261,7 @@ class AppLocale {
     InvalidMotorbikesCount: "Số lượng xe máy trong phạm vi 0-255",
     MissingCarsCount: "Thiếu số lượng ô tô",
     InvalidCarsCount: "Số lượng ô tô trong phạm vi 0-255",
+    SaveGeneralInformation: "Lưu thông tin cơ bản",
 
     // Error codes
     Error0: "Thao tác thành công.",

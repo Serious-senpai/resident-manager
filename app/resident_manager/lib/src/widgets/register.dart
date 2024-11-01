@@ -109,7 +109,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
     final padding = mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20.0;
 
     return CommonScaffold(
-      state: this,
+      widgetState: this,
       title: Text(AppLocale.Register.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: DecoratedBox(
         decoration: BoxDecoration(

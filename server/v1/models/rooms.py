@@ -64,10 +64,12 @@ class RoomData(pydantic.BaseModel):
                 cursor._impl.fast_executemany = True
                 await cursor.executemany(
                     """
-                    DECLARE @Room SMALLINT = ?
-                    DECLARE @Area INT = ?
-                    DECLARE @Motorbike TINYINT = ?
-                    DECLARE @Car TINYINT = ?
+                    DECLARE
+                        @Room SMALLINT = ?,
+                        @Area INT = ?,
+                        @Motorbike TINYINT = ?,
+                        @Car TINYINT = ?
+
                     IF EXISTS (SELECT 1 FROM rooms WHERE room = @Room)
                         UPDATE rooms
                         SET area = @Area, motorbike = @Motorbike, car = @Car

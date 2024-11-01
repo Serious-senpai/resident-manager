@@ -1,4 +1,7 @@
--- Some params are required for substitution, search for "?" in this script
+-- Some params are required for substitution:
+DECLARE
+    @DefaultAdminUsername NVARCHAR(255) = ?,
+    @DefaultAdminHashedPassword NVARCHAR(255) = ?
 
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'residents' AND type = 'U')
     CREATE TABLE residents (
@@ -30,8 +33,8 @@ BEGIN
         name NVARCHAR(255) PRIMARY KEY,
         value NVARCHAR(255) NOT NULL
     )
-    INSERT INTO config VALUES ('admin_username', ?)
-    INSERT INTO config VALUES ('admin_hashed_password', ?)
+    INSERT INTO config VALUES ('admin_username', @DefaultAdminUsername)
+    INSERT INTO config VALUES ('admin_hashed_password', @DefaultAdminHashedPassword)
 END
 
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'fee' AND type = 'U')

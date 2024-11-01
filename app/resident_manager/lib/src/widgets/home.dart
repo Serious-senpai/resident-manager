@@ -22,7 +22,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
     final mediaQuery = MediaQuery.of(context);
 
     return CommonScaffold(
-      state: this,
+      widgetState: this,
       title: Text(AppLocale.Home.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: Builder(
         builder: (context) {
@@ -53,7 +53,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                               "${AppLocale.Welcome.getString(context)}, ${state.resident?.name ?? "---"}!",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: mediaQuery.size.width < ScreenWidth.SMALL ? 24 : 48,
+                                fontSize: mediaQuery.size.width < ScreenWidth.LARGE ? 24 : 48,
                                 fontWeight: FontWeight.bold,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -74,7 +74,12 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                     child: TextButton.icon(
                       icon: const Icon(Icons.person_outlined),
                       label: Text(AppLocale.PersonalInfo.getString(context)),
-                      onPressed: () => Navigator.pushNamed(context, ApplicationRoute.personalInfo),
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, ApplicationRoute.personalInfo);
+
+                        // After the user coming back from the personal info page, their data might have been changed
+                        refresh();
+                      },
                     ),
                   ),
                   Expanded(

@@ -34,12 +34,19 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
 }
 
 class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
-  final CommonStateMixin<T> state;
+  final CommonStateMixin<T> widgetState;
   final Widget title;
   final Widget body;
 
   /// The [GlobalKey] for the underlying [Scaffold]
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  CommonScaffold({
+    super.key,
+    required this.widgetState,
+    required this.title,
+    required this.body,
+  });
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -52,13 +59,6 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
     final state = scaffoldKey.currentState;
     if (state != null) state.closeDrawer();
   }
-
-  CommonScaffold({
-    super.key,
-    required this.state,
-    required this.title,
-    required this.body,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                 },
               );
 
-          if (!state.state.loggedIn) {
+          if (!widgetState.state.loggedIn) {
             // Not yet logged in
             navigator.add(
               routeTile(
@@ -140,7 +140,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
             );
           } else {
             // Logged in...
-            if (state.state.loggedInAsAdmin) {
+            if (widgetState.state.loggedInAsAdmin) {
               // ... as admin
               navigator.addAll(
                 [
@@ -189,7 +189,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                 leading: const Icon(Icons.logout_outlined),
                 title: Text(AppLocale.Logout.getString(context)),
                 onTap: () async {
-                  await state.state.deauthorize();
+                  await widgetState.state.deauthorize();
                   if (context.mounted) {
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
@@ -211,14 +211,14 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                       IconButton(
                         icon: Image.asset("assets/flags/en.png", height: 20, width: 20),
                         iconSize: 20,
-                        onPressed: () => state.state.localization.translate("en"),
+                        onPressed: () => widgetState.state.localization.translate("en"),
                         padding: EdgeInsets.zero,
                       ),
                       const SizedBox.square(dimension: 20),
                       IconButton(
                         icon: Image.asset("assets/flags/vi.png", height: 20, width: 20),
                         iconSize: 20,
-                        onPressed: () => state.state.localization.translate("vi"),
+                        onPressed: () => widgetState.state.localization.translate("vi"),
                         padding: EdgeInsets.zero,
                       ),
                     ],

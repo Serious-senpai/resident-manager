@@ -49,12 +49,6 @@ class Resident extends PublicInfo {
   ///
   /// Returns a [Result] containing the updated [Resident] if the update is successful,
   /// or `null` if the update fails.
-  ///
-  /// The [update] method takes the following named parameters:
-  /// - `id`: The unique identifier of the resident to be updated.
-  /// - `name`: The new name of the resident.
-  /// - `age`: The new age of the resident.
-  /// - `address`: The new address of the resident.
   Future<Result<Resident?>> update({
     required ApplicationState state,
     required PersonalInfo info,
@@ -81,11 +75,6 @@ class Resident extends PublicInfo {
   ///
   /// Returns a [Future] that completes with a boolean value indicating
   /// whether the deletion was successful.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// bool success = await delete();
-  /// ```
   static Future<bool> delete({
     required ApplicationState state,
     required Iterable<Snowflake> objects,

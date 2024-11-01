@@ -92,7 +92,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
     final mediaQuery = MediaQuery.of(context);
 
     return CommonScaffold(
-      state: this,
+      widgetState: this,
       title: Text(AppLocale.Login.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       body: DecoratedBox(
         decoration: BoxDecoration(

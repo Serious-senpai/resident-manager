@@ -4,6 +4,7 @@ import itertools
 from typing import Annotated, Any, List, Literal, Optional, TypeVar
 
 import jwt
+import pyodbc  # type: ignore
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import PyJWTError
@@ -17,6 +18,7 @@ from ..utils import (
     check_password,
     hash_password,
     validate_name,
+    validate_password,
     validate_room,
     validate_username,
 )
@@ -31,6 +33,49 @@ class Resident(PublicInfo, HashedAuthorization):
     """Data model for objects holding information about a resident.
 
     Each object of this class corresponds to a database row."""
+
+    async def update_authorization(self, username: str, password: str) -> Result[None]:
+        if not validate_username(username):
+            return Result(code=105, data=None)
+
+        if not validate_password(password):
+            return Result(code=106, data=None)
+
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                    DECLARE
+                        @ResidentId BIGINT = ?,
+                        @Username NVARCHAR(255) = ?,
+                        @HashedPassword NVARCHAR(255) = ?
+
+                    IF NOT EXISTS (
+                        SELECT 1 FROM residents WHERE resident_id != @ResidentId AND username = @Username
+                        UNION ALL
+                        SELECT 1 FROM register_queue WHERE username = @Username
+                    )
+                        UPDATE residents
+                        SET
+                            username = @Username,
+                            hashed_password = @HashedPassword
+                        OUTPUT INSERTED.*
+                        WHERE resident_id = @ResidentId
+                    """,
+                    self.id,
+                    username,
+                    hash_password(password),
+                )
+
+                try:
+                    row = await cursor.fetchone()
+                    if row is not None:
+                        return Result(data=None)
+
+                except pyodbc.ProgrammingError:
+                    pass
+
+        return Result(code=301, data=None)
 
     @classmethod
     def from_row(cls, row: Any) -> Resident:
@@ -185,14 +230,7 @@ class Resident(PublicInfo, HashedAuthorization):
         return Result(code=201, data=None)
 
     @classmethod
-    async def update(
-        cls,
-        *,
-        id: int,
-        info: PersonalInfo,
-        username: Optional[str],
-        password: Optional[str],
-    ) -> Result[Optional[Resident]]:
+    async def update(cls, *, id: int, info: PersonalInfo) -> Result[Optional[Resident]]:
         result = info.validate_info()
         if result is not None:
             return result
@@ -207,25 +245,17 @@ class Resident(PublicInfo, HashedAuthorization):
                             @Room SMALLINT = ?,
                             @Birthday DATETIME = ?,
                             @Phone NVARCHAR(15) = ?,
-                            @Email NVARCHAR(255) = ?,
-                            @Username NVARCHAR(255) = ?,
-                            @HashedPassword NVARCHAR(255) = ?
-                        IF NOT EXISTS (
-                            SELECT 1 FROM residents WHERE username = @Username
-                            UNION ALL
-                            SELECT 1 FROM register_queue WHERE username = @Username
-                        )
-                            UPDATE residents
-                            SET
-                                name = @Name,
-                                room = @Room,
-                                birthday = @Birthday,
-                                phone = @Phone,
-                                email = @Email,
-                                username = IIF(@Username IS NULL, username, @Username),
-                                hashed_password = IIF(@HashedPassword IS NULL, hashed_password, @HashedPassword)
-                            OUTPUT INSERTED.*
-                            WHERE resident_id = @ResidentId
+                            @Email NVARCHAR(255) = ?
+
+                        UPDATE residents
+                        SET
+                            name = @Name,
+                            room = @Room,
+                            birthday = @Birthday,
+                            phone = @Phone,
+                            email = @Email
+                        OUTPUT INSERTED.*
+                        WHERE resident_id = @ResidentId
                     """,
                     id,
                     info.name,
@@ -233,8 +263,6 @@ class Resident(PublicInfo, HashedAuthorization):
                     info.birthday,
                     info.phone,
                     info.email,
-                    username,
-                    None if password is None else hash_password(password),
                 )
 
                 row = await cursor.fetchone()
