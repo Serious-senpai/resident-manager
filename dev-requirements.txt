@@ -36,7 +36,7 @@ PyJWT==2.9.0
 pyodbc==5.2.0
 pytest==8.3.3
 python-dotenv==1.0.1
-python-multipart==0.0.16
+python-multipart==0.0.17
 PyYAML==6.0.2
 rich==13.9.3
 shellingham==1.5.4
