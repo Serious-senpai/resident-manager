@@ -34,7 +34,7 @@ class Resident(PublicInfo, HashedAuthorization):
 
     Each object of this class corresponds to a database row."""
 
-    async def update_authorization(self, username: str, password: str) -> Result[None]:
+    async def update_authorization(self, username: str, password: str) -> Result[Optional[Resident]]:
         if not validate_username(username):
             return Result(code=105, data=None)
 
@@ -70,12 +70,12 @@ class Resident(PublicInfo, HashedAuthorization):
                 try:
                     row = await cursor.fetchone()
                     if row is not None:
-                        return Result(data=None)
+                        return Result(data=Resident.from_row(row))
 
                 except pyodbc.ProgrammingError:
                     pass
 
-        return Result(code=301, data=None)
+        return Result(code=107, data=None)
 
     @classmethod
     def from_row(cls, row: Any) -> Resident:

@@ -53,12 +53,37 @@ class Resident extends PublicInfo {
     required ApplicationState state,
     required PersonalInfo info,
   }) async {
-    final headers = {"content-type": "application/json"};
     final response = await state.post(
       state.loggedInAsAdmin ? "/api/v1/admin/residents/update" : "/api/v1/residents/update",
       queryParameters: {"id": id.toString()},
-      headers: headers,
+      headers: {"content-type": "application/json"},
       body: json.encode(info.toJson()),
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    if (response.statusCode == 200) {
+      return Result(0, Resident.fromJson(result["data"]));
+    }
+
+    return Result(result["code"], null);
+  }
+
+  Future<Result?> updateAuthorization({
+    required ApplicationState state,
+    required String newUsername,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final response = await state.post(
+      "/api/v1/residents/update-authorization",
+      headers: {"content-type": "application/json"},
+      body: json.encode(
+        {
+          "new_username": newUsername,
+          "old_password": oldPassword,
+          "new_password": newPassword,
+        },
+      ),
     );
     final result = json.decode(utf8.decode(response.bodyBytes));
 

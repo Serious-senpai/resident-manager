@@ -7,6 +7,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
 import "state.dart";
+import "../routes.dart";
 import "../translations.dart";
 import "../utils.dart";
 import "../models/info.dart";
@@ -43,6 +44,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _username = TextEditingController();
+  final _oldPassword = TextEditingController();
   final _newPassword = TextEditingController();
   final _newPasswordRetype = TextEditingController();
 
@@ -52,7 +54,8 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
   Widget _generalNotification = const SizedBox.square(dimension: 0);
   Widget _authNotification = const SizedBox.square(dimension: 0);
 
-  final _actionLock = Lock();
+  final _generalLock = Lock();
+  final _authLock = Lock();
 
   @override
   void initState() {
@@ -182,6 +185,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             ),
           ),
           _generalNotification,
+          const SizedBox.square(dimension: 5),
           Row(
             children: [
               Expanded(
@@ -194,10 +198,10 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                     AppLocale.SaveGeneralInformation.getString(context),
                     style: const TextStyle(color: Colors.yellow),
                   ),
-                  onPressed: _actionLock.locked
+                  onPressed: _generalLock.locked
                       ? null
                       : () async {
-                          await _actionLock.run(
+                          await _generalLock.run(
                             () async {
                               _generalNotification = Builder(
                                 builder: (context) => Text(
@@ -228,7 +232,12 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                                   );
                                 } else {
                                   state.resident = result.data;
-                                  _generalNotification = const SizedBox.square(dimension: 0);
+                                  _generalNotification = Builder(
+                                    builder: (context) => Text(
+                                      AppLocale.Successful.getString(context),
+                                      style: const TextStyle(color: Colors.blue),
+                                    ),
+                                  );
                                 }
                               } catch (e) {
                                 await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -276,12 +285,27 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
       ),
       _InfoCard(
         child: TextFormField(
+          controller: _oldPassword,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.all(8.0),
+            label: FieldLabel(
+              AppLocale.OldPassword.getString(context),
+              required: true,
+              style: const TextStyle(color: Colors.black),
+            ),
+          ),
+          obscureText: true,
+          // No need to validate old password
+          // validator: (value) => passwordValidator(context, required: false, value: value),
+        ),
+      ),
+      _InfoCard(
+        child: TextFormField(
           controller: _newPassword,
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.all(8.0),
             label: FieldLabel(
               AppLocale.NewPassword.getString(context),
-              required: true,
               style: const TextStyle(color: Colors.black),
             ),
           ),
@@ -296,7 +320,6 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
             contentPadding: const EdgeInsets.all(8.0),
             label: FieldLabel(
               AppLocale.RetypeNewPassword.getString(context),
-              required: true,
               style: const TextStyle(color: Colors.black),
             ),
           ),
@@ -318,11 +341,85 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
       child: Column(
         children: [
           Text(
-            AppLocale.GeneralInformation.getString(context),
+            AppLocale.AuthorizationInformation.getString(context),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           ...List<Widget>.from(items.map((item) => Row(children: [item]))),
           _authNotification,
+          const SizedBox.square(dimension: 5),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: Colors.yellow,
+                  ),
+                  label: Text(
+                    AppLocale.SaveAuthorizationInformation.getString(context),
+                    style: const TextStyle(color: Colors.yellow),
+                  ),
+                  onPressed: _authLock.locked
+                      ? null
+                      : () async {
+                          await _authLock.run(
+                            () async {
+                              _authNotification = Builder(
+                                builder: (context) => Text(
+                                  AppLocale.Loading.getString(context),
+                                  style: const TextStyle(color: Colors.blue),
+                                ),
+                              );
+                              refresh();
+
+                              try {
+                                final result = await state.resident?.updateAuthorization(
+                                  state: state,
+                                  newUsername: _username.text,
+                                  oldPassword: _oldPassword.text,
+
+                                  // If the user doesn't fill out the new password, keep the old one
+                                  newPassword: _newPassword.text.isEmpty ? _oldPassword.text : _newPassword.text,
+                                );
+
+                                if (result == null || result.code != 0) {
+                                  _authNotification = Builder(
+                                    builder: (context) => Text(
+                                      AppLocale.errorMessage(result?.code ?? -1).getString(context),
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  );
+                                } else {
+                                  // Authorization info updated. Logout.
+                                  await state.deauthorize();
+                                  if (context.mounted) {
+                                    Navigator.popUntil(context, (route) => route.isFirst);
+                                    await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
+                                  }
+                                }
+                              } catch (e) {
+                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                                _authNotification = Builder(
+                                  builder: (context) => Text(
+                                    AppLocale.ConnectionError.getString(context),
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                );
+
+                                if (!(e is SocketException || e is TimeoutException)) {
+                                  rethrow;
+                                }
+                              } finally {
+                                refresh();
+                              }
+                            },
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

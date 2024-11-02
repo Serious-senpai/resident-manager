@@ -84,11 +84,9 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                   ),
                   Expanded(
                     child: TextButton.icon(
-                      icon: const Icon(Icons.settings_outlined),
-                      label: Text(AppLocale.Settings.getString(context)),
-                      onPressed: () {
-                        // TODO: Implement this
-                      },
+                      icon: const Icon(Icons.construction_outlined),
+                      label: Text(AppLocale.ComingSoon.getString(context)),
+                      onPressed: null,
                     ),
                   ),
                   Expanded(

@@ -62,6 +62,7 @@ class AppLocale {
   static const String Settings = "Settings";
   static const String ComingSoon = "ComingSoon";
   static const String EditPersonalInfo = "EditPersonalInfo";
+  static const String OldPassword = "OldPassword";
   static const String NewPassword = "NewPassword";
   static const String RetypeNewPassword = "RetypeNewPassword";
   static const String GeneralInformation = "GeneralInformation";
@@ -72,7 +73,9 @@ class AppLocale {
   static const String InvalidMotorbikesCount = "InvalidMotorbikesCount";
   static const String MissingCarsCount = "MissingCarsCount";
   static const String InvalidCarsCount = "InvalidCarsCount";
-  static const String SaveGeneralInformation = "SaveGeneralInformations";
+  static const String SaveGeneralInformation = "SaveGeneralInformation";
+  static const String SaveAuthorizationInformation = "SaveAuthorizationInformation";
+  static const String Successful = "Successful";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -156,6 +159,7 @@ class AppLocale {
     Settings: "Settings",
     ComingSoon: "Coming soon",
     EditPersonalInfo: "Edit personal information",
+    OldPassword: "Old password",
     NewPassword: "New password",
     RetypeNewPassword: "Retype new password",
     GeneralInformation: "General information",
@@ -167,6 +171,8 @@ class AppLocale {
     MissingCarsCount: "Missing cars count",
     InvalidCarsCount: "Cars count must be in range 0-255",
     SaveGeneralInformation: "Save general information",
+    SaveAuthorizationInformation: "Save authorization information",
+    Successful: "Successful",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -251,6 +257,7 @@ class AppLocale {
     Settings: "Cài đặt",
     ComingSoon: "Sắp ra mắt",
     EditPersonalInfo: "Chỉnh sửa thông tin cá nhân",
+    OldPassword: "Mật khẩu cũ",
     NewPassword: "Mật khẩu mới",
     RetypeNewPassword: "Nhập lại mật khẩu mới",
     GeneralInformation: "Thông tin cơ bản",
@@ -262,6 +269,8 @@ class AppLocale {
     MissingCarsCount: "Thiếu số lượng ô tô",
     InvalidCarsCount: "Số lượng ô tô trong phạm vi 0-255",
     SaveGeneralInformation: "Lưu thông tin cơ bản",
+    SaveAuthorizationInformation: "Lưu thông tin đăng nhập",
+    Successful: "Thành công",
 
     // Error codes
     Error0: "Thao tác thành công.",
