@@ -84,135 +84,126 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
   }
 
   Future<void> _residentRegister() async {
-    await Navigator.pushNamed(context, ApplicationRoute.register);
+    await pushNamedAndRefresh(context, ApplicationRoute.register);
   }
 
   @override
   CommonScaffold<LoginPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
-    return CommonScaffold(
+    return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.Login.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage("assets/luxury-apartment.webp"),
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.7),
-              BlendMode.srcOver,
+      sliver: SliverFillRemaining(
+        hasScrollBody: false,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: const AssetImage("assets/luxury-apartment.webp"),
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.7),
+                BlendMode.srcOver,
+              ),
+              fit: BoxFit.cover,
             ),
-            fit: BoxFit.cover,
           ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20,
-            right: mediaQuery.orientation == Orientation.landscape ? 0.25 * mediaQuery.size.width : 20,
-            top: 20,
-            bottom: 20,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextField(
-                      controller: _username,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(8.0),
-                        label: Text(
-                          AppLocale.Username.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: mediaQuery.size.width > ScreenWidth.MEDIUM ? 0.25 * mediaQuery.size.width : 20,
+              right: mediaQuery.size.width > ScreenWidth.MEDIUM ? 0.25 * mediaQuery.size.width : 20,
+              top: 20,
+              bottom: 20,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: _username,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8.0),
+                      label: Text(
+                        AppLocale.Username.getString(context),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                      enabled: !_actionLock.locked,
-                      style: const TextStyle(color: Colors.white),
                     ),
-                    TextField(
-                      controller: _password,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(8.0),
-                        label: Text(
-                          AppLocale.Password.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                    enabled: !_actionLock.locked,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  TextField(
+                    controller: _password,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8.0),
+                      label: Text(
+                        AppLocale.Password.getString(context),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                      enabled: !_actionLock.locked,
-                      obscureText: true,
-                      style: const TextStyle(color: Colors.white),
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox.square(dimension: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Checkbox.adaptive(
-                          value: _remember,
-                          onChanged: (state) {
-                            if (state != null) {
-                              _remember = state;
-                            }
+                    enabled: !_actionLock.locked,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox.square(dimension: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Checkbox.adaptive(
+                        value: _remember,
+                        onChanged: (state) {
+                          if (state != null) {
+                            _remember = state;
+                          }
 
-                            refresh();
-                          },
-                        ),
-                        Text(
-                          AppLocale.RememberMe.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox.square(dimension: 5),
-                    _notification,
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.login_outlined, color: Colors.white),
-                        label: Text(
-                          AppLocale.LoginAsResident.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onPressed: _actionLock.locked ? null : () => _login(false),
+                          refresh();
+                        },
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.how_to_reg_outlined, color: Colors.white),
-                        label: Text(
-                          AppLocale.RegisterAsResident.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onPressed: _actionLock.locked ? null : () => _residentRegister(),
+                      Text(
+                        AppLocale.RememberMe.getString(context),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white),
-                        label: Text(
-                          AppLocale.LoginAsAdministrator.getString(context),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onPressed: _actionLock.locked ? null : () => _login(true),
+                    ],
+                  ),
+                  const SizedBox.square(dimension: 5),
+                  _notification,
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.login_outlined, color: Colors.white),
+                      label: Text(
+                        AppLocale.LoginAsResident.getString(context),
+                        style: const TextStyle(color: Colors.white),
                       ),
+                      onPressed: _actionLock.locked ? null : () => _login(false),
                     ),
-                  ],
-                ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.how_to_reg_outlined, color: Colors.white),
+                      label: Text(
+                        AppLocale.RegisterAsResident.getString(context),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      onPressed: _actionLock.locked ? null : () => _residentRegister(),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white),
+                      label: Text(
+                        AppLocale.LoginAsAdministrator.getString(context),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      onPressed: _actionLock.locked ? null : () => _login(true),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

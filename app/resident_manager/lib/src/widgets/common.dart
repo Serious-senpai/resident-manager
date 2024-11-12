@@ -13,6 +13,22 @@ abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> 
     if (mounted) setState(() {});
   }
 
+  /// Push a named route, wait for it to return and refresh our current state.
+  ///
+  /// Use this method instead of the usual [Navigator.pushNamed] inside [StatefulWidget] states.
+  ///
+  /// Why do we need to refresh the current state? Suppose we are at initial route A and perform a `Navigator.pushNamed` to
+  /// route B. At this point, the Navigator stack will be [A, B]. Now, if the user resizes the current window (other
+  /// actions may also trigger this effect), *the entire navigation stack will be rebuilt*. This means that route A
+  /// will evaluate `canPop = Navigator.canPop(context)` to `true`, thus create a back button in its app bar. When popping
+  /// route B, if we don't rebuild route A, the back button will still be there, and clicking it will empty the navigation
+  /// stack, leaving the user with a blank screen. This is why we need to refresh the current state when returning from B.
+  Future<RT?> pushNamedAndRefresh<RT extends Object?>(BuildContext context, String route) async {
+    final result = await Navigator.pushNamed<RT>(context, route);
+    refresh();
+    return result;
+  }
+
   @override
   @mustCallSuper
   void initState() {
@@ -36,7 +52,7 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
 class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
   final CommonStateMixin<T> widgetState;
   final Widget title;
-  final Widget body;
+  final List<Widget> slivers;
 
   /// The [GlobalKey] for the underlying [Scaffold]
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -45,8 +61,15 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
     super.key,
     required this.widgetState,
     required this.title,
-    required this.body,
+    required this.slivers,
   });
+
+  CommonScaffold.single({
+    super.key,
+    required this.widgetState,
+    required this.title,
+    required Widget sliver,
+  }) : slivers = [sliver];
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -65,29 +88,36 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
     final canPop = Navigator.canPop(context);
     return Scaffold(
       key: scaffoldKey,
-      appBar: AppBar(
-        actions: [
-          if (canPop)
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: IconButton(
-                onPressed: () => openDrawer(),
-                icon: const Icon(Icons.menu_outlined),
-              ),
-            ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            actions: [
+              if (canPop)
+                Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: IconButton(
+                    onPressed: () => openDrawer(),
+                    icon: const Icon(Icons.menu_outlined),
+                  ),
+                ),
+            ],
+            floating: true,
+            pinned: false,
+            snap: false,
+            leading: canPop
+                ? IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_outlined),
+                  )
+                : IconButton(
+                    onPressed: () => openDrawer(),
+                    icon: const Icon(Icons.menu_outlined),
+                  ),
+            title: title,
+          ),
+          ...slivers,
         ],
-        leading: canPop
-            ? IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_outlined),
-              )
-            : IconButton(
-                onPressed: () => openDrawer(),
-                icon: const Icon(Icons.menu_outlined),
-              ),
-        title: title,
       ),
-      body: body,
       drawer: Builder(
         builder: (context) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
@@ -122,7 +152,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.pushReplacementNamed(context, route);
                     } else {
-                      Navigator.pushNamed(context, route);
+                      widgetState.pushNamedAndRefresh(context, route);
                     }
                   }
                 },

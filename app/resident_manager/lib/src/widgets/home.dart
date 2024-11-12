@@ -21,52 +21,51 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
   CommonScaffold<HomePage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
-    return CommonScaffold(
+    return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.Home.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      body: Builder(
-        builder: (context) {
-          final children = [
+      sliver: SliverPadding(
+        padding: const EdgeInsets.all(5),
+        sliver: SliverList.list(
+          children: [
             LayoutBuilder(
               builder: (context, constraints) {
                 return Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
-                      image: const AssetImage("assets/landscape.png"),
+                      image: const AssetImage("assets/vector-background-blue.png"),
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.3),
+                        BlendMode.srcOver,
+                      ),
                       fit: BoxFit.cover,
                     ),
                   ),
                   height: min(0.5 * mediaQuery.size.height, 9 / 16 * constraints.maxWidth),
+                  padding: const EdgeInsets.all(20),
                   width: constraints.maxWidth,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      // Alignment hack: https://stackoverflow.com/a/54174185
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Builder(
-                          builder: (context) {
-                            return Text(
-                              "${AppLocale.Welcome.getString(context)}, ${state.resident?.name ?? "---"}!",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: mediaQuery.size.width < ScreenWidth.LARGE ? 24 : 48,
-                                fontWeight: FontWeight.bold,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              textAlign: TextAlign.right,
-                            );
-                          },
+                  child: Column(
+                    // Alignment hack: https://stackoverflow.com/a/54174185
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "${AppLocale.Welcome.getString(context)}, ${state.resident?.name ?? "---"}!",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: mediaQuery.size.width < ScreenWidth.LARGE ? 24 : 36,
+                          fontWeight: FontWeight.bold,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ],
                   ),
                 );
               },
             ),
+            const SizedBox.square(dimension: 10),
             Builder(
               builder: (context) {
                 final items = [
@@ -75,10 +74,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                       icon: const Icon(Icons.person_outlined),
                       label: Text(AppLocale.PersonalInfo.getString(context)),
                       onPressed: () async {
-                        await Navigator.pushNamed(context, ApplicationRoute.personalInfo);
-
-                        // After the user coming back from the personal info page, their data might have been changed
-                        refresh();
+                        await pushNamedAndRefresh(context, ApplicationRoute.personalInfo);
                       },
                     ),
                   ),
@@ -136,19 +132,8 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                 );
               },
             ),
-          ];
-
-          return Column(
-            children: List<Widget>.from(
-              children.map(
-                (w) => Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: w,
-                ),
-              ),
-            ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

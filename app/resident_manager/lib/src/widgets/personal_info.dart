@@ -427,19 +427,17 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
 
   @override
   CommonScaffold<PersonalInfoPage> build(BuildContext context) {
-    return CommonScaffold(
+    return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.PersonalInfo.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(5),
-          child: Column(
-            children: [
-              generalInfoForm(context),
-              const SizedBox.square(dimension: 10),
-              authorizationInfoForm(context),
-            ],
-          ),
+      sliver: SliverPadding(
+        padding: const EdgeInsets.all(5),
+        sliver: SliverList.list(
+          children: [
+            generalInfoForm(context),
+            const SizedBox.square(dimension: 10),
+            authorizationInfoForm(context),
+          ],
         ),
       ),
     );

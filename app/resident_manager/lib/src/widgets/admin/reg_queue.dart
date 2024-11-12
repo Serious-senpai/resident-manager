@@ -165,27 +165,30 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
     _queryFuture ??= _query();
     _countFuture ??= _count();
 
-    return CommonScaffold(
+    return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.RegisterQueue.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      body: FutureBuilder(
+      sliver: FutureBuilder(
         future: _queryFuture,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
             case ConnectionState.waiting:
             case ConnectionState.active:
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox.square(
-                      dimension: 50,
-                      child: CircularProgressIndicator(),
-                    ),
-                    const SizedBox.square(dimension: 5),
-                    Text(AppLocale.Loading.getString(context)),
-                  ],
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox.square(
+                        dimension: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                      const SizedBox.square(dimension: 5),
+                      Text(AppLocale.Loading.getString(context)),
+                    ],
+                  ),
                 ),
               );
 
@@ -319,182 +322,189 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                   );
                 }
 
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.done_outlined),
-                          label: Text("${AppLocale.Approve.getString(context)} (${_selected.length})"),
-                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.approve),
+                return SliverMainAxisGroup(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(5),
+                      sliver: SliverToBoxAdapter(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              icon: const Icon(Icons.done_outlined),
+                              label: Text("${AppLocale.Approve.getString(context)} (${_selected.length})"),
+                              onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.approve),
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.close_outlined),
+                              label: Text("${AppLocale.Reject.getString(context)} (${_selected.length})"),
+                              onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.reject),
+                            ),
+                          ],
                         ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.close_outlined),
-                          label: Text("${AppLocale.Reject.getString(context)} (${_selected.length})"),
-                          onPressed: _actionLock.locked || _selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.reject),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox.square(dimension: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.chevron_left_outlined),
-                          onPressed: () {
-                            if (offset > 0) {
-                              offset--;
-                            }
-                            refresh();
-                          },
-                        ),
-                        FutureBuilder(
-                          future: _countFuture,
-                          builder: (context, _) {
-                            return Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}");
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.chevron_right_outlined),
-                          onPressed: () {
-                            if (_offset < _offsetLimit) {
-                              offset++;
-                            }
-                            refresh();
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.refresh_outlined),
-                          onPressed: () {
-                            offset = 0;
-                            refresh();
-                          },
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.search_outlined),
-                          label: Text(
-                            _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                            style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
-                          ),
-                          onPressed: () async {
-                            // Save current values for restoration
-                            final nameSearch = _nameSearch.text;
-                            final roomSearch = _roomSearch.text;
-                            final usernameSearch = _usernameSearch.text;
+                    SliverPadding(
+                      padding: const EdgeInsets.all(5),
+                      sliver: SliverToBoxAdapter(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left_outlined),
+                              onPressed: () {
+                                if (offset > 0) {
+                                  offset--;
+                                }
+                                refresh();
+                              },
+                            ),
+                            FutureBuilder(
+                              future: _countFuture,
+                              builder: (context, _) {
+                                return Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}");
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right_outlined),
+                              onPressed: () {
+                                if (_offset < _offsetLimit) {
+                                  offset++;
+                                }
+                                refresh();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.refresh_outlined),
+                              onPressed: () {
+                                offset = 0;
+                                refresh();
+                              },
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.search_outlined),
+                              label: Text(
+                                _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
+                              ),
+                              onPressed: () async {
+                                // Save current values for restoration
+                                final nameSearch = _nameSearch.text;
+                                final roomSearch = _roomSearch.text;
+                                final usernameSearch = _usernameSearch.text;
 
-                            final formKey = GlobalKey<FormState>();
-                            final submitted = await showDialog(
-                              context: context,
-                              builder: (context) => SimpleDialog(
-                                contentPadding: const EdgeInsets.all(10),
-                                title: Text(AppLocale.Search.getString(context)),
-                                children: [
-                                  Form(
-                                    key: formKey,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    child: Column(
-                                      children: [
-                                        TextFormField(
-                                          controller: _nameSearch,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.badge_outlined),
-                                            label: Text(AppLocale.Fullname.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) {
-                                            Navigator.pop(context, true);
-                                            offset = 0;
-                                          },
-                                          validator: (value) => nameValidator(context, required: false, value: value),
-                                        ),
-                                        TextFormField(
-                                          controller: _roomSearch,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.room_outlined),
-                                            label: Text(AppLocale.Room.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) {
-                                            Navigator.pop(context, true);
-                                            offset = 0;
-                                          },
-                                          validator: (value) => roomValidator(context, required: false, value: value),
-                                        ),
-                                        TextFormField(
-                                          controller: _usernameSearch,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.person_outlined),
-                                            label: Text(AppLocale.Username.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) {
-                                            Navigator.pop(context, true);
-                                            offset = 0;
-                                          },
-                                          validator: (value) => usernameValidator(context, required: false, value: value),
-                                        ),
-                                        const SizedBox.square(dimension: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                final formKey = GlobalKey<FormState>();
+                                final submitted = await showDialog(
+                                  context: context,
+                                  builder: (context) => SimpleDialog(
+                                    contentPadding: const EdgeInsets.all(10),
+                                    title: Text(AppLocale.Search.getString(context)),
+                                    children: [
+                                      Form(
+                                        key: formKey,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        child: Column(
                                           children: [
-                                            Expanded(
-                                              child: TextButton.icon(
-                                                icon: const Icon(Icons.done_outlined),
-                                                label: Text(AppLocale.Search.getString(context)),
-                                                onPressed: () {
-                                                  if (formKey.currentState?.validate() ?? false) {
-                                                    Navigator.pop(context, true);
-                                                    offset = 0;
-                                                  }
-                                                },
+                                            TextFormField(
+                                              controller: _nameSearch,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.badge_outlined),
+                                                label: Text(AppLocale.Fullname.getString(context)),
                                               ),
+                                              onFieldSubmitted: (_) {
+                                                Navigator.pop(context, true);
+                                                offset = 0;
+                                              },
+                                              validator: (value) => nameValidator(context, required: false, value: value),
                                             ),
-                                            Expanded(
-                                              child: TextButton.icon(
-                                                icon: const Icon(Icons.clear_outlined),
-                                                label: Text(AppLocale.ClearAll.getString(context)),
-                                                onPressed: () {
-                                                  _nameSearch.clear();
-                                                  _roomSearch.clear();
-                                                  _usernameSearch.clear();
-
-                                                  Navigator.pop(context, true);
-                                                  offset = 0;
-                                                },
+                                            TextFormField(
+                                              controller: _roomSearch,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.room_outlined),
+                                                label: Text(AppLocale.Room.getString(context)),
                                               ),
+                                              onFieldSubmitted: (_) {
+                                                Navigator.pop(context, true);
+                                                offset = 0;
+                                              },
+                                              validator: (value) => roomValidator(context, required: false, value: value),
+                                            ),
+                                            TextFormField(
+                                              controller: _usernameSearch,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.person_outlined),
+                                                label: Text(AppLocale.Username.getString(context)),
+                                              ),
+                                              onFieldSubmitted: (_) {
+                                                Navigator.pop(context, true);
+                                                offset = 0;
+                                              },
+                                              validator: (value) => usernameValidator(context, required: false, value: value),
+                                            ),
+                                            const SizedBox.square(dimension: 10),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    icon: const Icon(Icons.done_outlined),
+                                                    label: Text(AppLocale.Search.getString(context)),
+                                                    onPressed: () {
+                                                      if (formKey.currentState?.validate() ?? false) {
+                                                        Navigator.pop(context, true);
+                                                        offset = 0;
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    icon: const Icon(Icons.clear_outlined),
+                                                    label: Text(AppLocale.ClearAll.getString(context)),
+                                                    onPressed: () {
+                                                      _nameSearch.clear();
+                                                      _roomSearch.clear();
+                                                      _usernameSearch.clear();
+
+                                                      Navigator.pop(context, true);
+                                                      offset = 0;
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
+                                );
 
-                            if (submitted == null) {
-                              // Dialog dismissed. Restore field values
-                              _nameSearch.text = nameSearch;
-                              _roomSearch.text = roomSearch;
-                              _usernameSearch.text = usernameSearch;
-                            }
-                          },
+                                if (submitted == null) {
+                                  // Dialog dismissed. Restore field values
+                                  _nameSearch.text = nameSearch;
+                                  _roomSearch.text = roomSearch;
+                                  _usernameSearch.text = usernameSearch;
+                                }
+                              },
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                    const SizedBox.square(dimension: 5),
-                    _notification,
-                    const SizedBox.square(dimension: 5),
-                    Expanded(
-                      child: Scrollbar(
-                        controller: _horizontalController,
-                        thumbVisibility: true,
-                        child: SingleChildScrollView(
+                    SliverToBoxAdapter(child: _notification),
+                    SliverPadding(
+                      padding: const EdgeInsets.all(5),
+                      sliver: SliverToBoxAdapter(
+                        child: Scrollbar(
                           controller: _horizontalController,
-                          scrollDirection: Axis.horizontal,
+                          thumbVisibility: true,
                           child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
+                            controller: _horizontalController,
+                            scrollDirection: Axis.horizontal,
                             child: Container(
                               width: max(mediaQuery.size.width, 1000),
                               padding: const EdgeInsets.all(5),
@@ -508,17 +518,20 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                 );
               }
 
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox.square(
-                      dimension: 50,
-                      child: Icon(Icons.highlight_off_outlined),
-                    ),
-                    const SizedBox.square(dimension: 5),
-                    Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
-                  ],
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox.square(
+                        dimension: 50,
+                        child: Icon(Icons.highlight_off_outlined),
+                      ),
+                      const SizedBox.square(dimension: 5),
+                      Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
+                    ],
+                  ),
                 ),
               );
           }
