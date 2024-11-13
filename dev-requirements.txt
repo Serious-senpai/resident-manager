@@ -9,7 +9,7 @@ coverage==7.6.4
 dnspython==2.7.0
 email_validator==2.2.0
 exceptiongroup==1.2.2
-fastapi==0.115.4
+fastapi==0.115.5
 fastapi-cli==0.0.5
 flake8==7.1.1
 h11==0.14.0
