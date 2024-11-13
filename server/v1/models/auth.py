@@ -64,8 +64,8 @@ class AdminPermission(pydantic.BaseModel):
     @classmethod
     def from_token(cls, token: Annotated[str, Depends(Token.oauth2_admin)]) -> AdminPermission:
         try:
-            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM])
+            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM], options={"require": ["exp"]})
             return cls(admin=payload.get("admin", False))
 
-        except jwt.PyJWTError:
+        except Exception:
             return cls(admin=False)

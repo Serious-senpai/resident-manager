@@ -7,7 +7,6 @@ import jwt
 import pyodbc  # type: ignore
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from jwt.exceptions import PyJWTError
 
 from .auth import HashedAuthorization, Token
 from .info import PersonalInfo, PublicInfo
@@ -217,14 +216,14 @@ class Resident(PublicInfo, HashedAuthorization):
     @classmethod
     async def from_token(cls, token: Annotated[str, Depends(Token.oauth2_resident)]) -> Result[Optional[Resident]]:
         try:
-            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM])
+            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM], options={"require": ["exp"]})
             snowflake = Snowflake.model_validate(payload)
 
             residents = await Resident.query(id=snowflake.id)
             if len(residents) == 1:
                 return Result(data=residents[0])
 
-        except PyJWTError:
+        except Exception:
             pass
 
         return Result(code=201, data=None)

@@ -29,7 +29,7 @@ from .v1 import api_v1
 __all__ = ("global_app",)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn")
 subapps: OrderedDict[str, FastAPI] = OrderedDict()
 subapps["/api/v1"] = api_v1
 
