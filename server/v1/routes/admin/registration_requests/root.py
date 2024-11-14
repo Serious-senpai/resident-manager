@@ -36,7 +36,7 @@ async def admin_reg_request(
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-    order_by: Literal["request_id", "name", "room", "username"] = "request_id",
+    order_by: Literal["id", "name", "room", "username"] = "id",
     ascending: bool = True,
 ) -> Result[Optional[List[RegisterRequest]]]:
     if admin.admin:

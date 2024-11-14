@@ -36,7 +36,7 @@ async def admin_residents(
     name: Optional[str] = None,
     room: Optional[int] = None,
     username: Optional[str] = None,
-    order_by: Literal["resident_id", "name", "room", "username"] = "resident_id",
+    order_by: Literal["id", "name", "room", "username"] = "id",
     ascending: bool = True,
 ) -> Result[Optional[List[Resident]]]:
     if admin.admin:

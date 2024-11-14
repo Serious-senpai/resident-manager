@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import Annotated, Any, List, Literal, Optional, TypeVar
 
 import jwt
@@ -44,22 +43,18 @@ class Resident(PublicInfo, HashedAuthorization):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                    DECLARE
-                        @ResidentId BIGINT = ?,
-                        @Username NVARCHAR(255) = ?,
-                        @HashedPassword NVARCHAR(255) = ?
+                        DECLARE
+                            @Id BIGINT = ?,
+                            @Username NVARCHAR(255) = ?,
+                            @HashedPassword NVARCHAR(255) = ?
 
-                    IF NOT EXISTS (
-                        SELECT 1 FROM residents WHERE resident_id != @ResidentId AND username = @Username
-                        UNION ALL
-                        SELECT 1 FROM register_queue WHERE username = @Username
-                    )
-                        UPDATE residents
-                        SET
-                            username = @Username,
-                            hashed_password = @HashedPassword
-                        OUTPUT INSERTED.*
-                        WHERE resident_id = @ResidentId
+                        IF NOT EXISTS (SELECT 1 FROM accounts WHERE id != @Id AND username = @Username)
+                            UPDATE accounts
+                            SET
+                                username = @Username,
+                                hashed_password = @HashedPassword
+                            OUTPUT INSERTED.*
+                            WHERE id = @Id AND approved = 1
                     """,
                     self.id,
                     username,
@@ -98,18 +93,18 @@ class Resident(PublicInfo, HashedAuthorization):
         name: Optional[str] = None,
         room: Optional[int] = None,
         username: Optional[str] = None,
-        order_by: Literal["resident_id", "name", "room", "username"] = "resident_id",
+        order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[Resident]:
-        where: List[str] = []
+        where = ["approved = 1"]
         params: List[Any] = []
 
         if id is not None:
-            where.append("resident_id = ?")
+            where.append("id = ?")
             params.append(id)
 
         if name is not None:
-            if len(name) == 0 or len(name) > 255:
+            if not validate_name(name):
                 return []
 
             where.append("CHARINDEX(?, name) > 0")
@@ -129,12 +124,13 @@ class Resident(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT * FROM residents"]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
+        query = [
+            "SELECT * FROM accounts",
+            "WHERE " + " AND ".join(where),
+        ]
 
-        if order_by not in {"resident_id", "name", "room", "username"}:
-            order_by = "resident_id"
+        if order_by not in {"id", "name", "room", "username"}:
+            order_by = "id"
 
         asc_desc = "ASC" if ascending else "DESC"
         query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
@@ -151,10 +147,13 @@ class Resident(PublicInfo, HashedAuthorization):
         if len(objects) == 0:
             return
 
-        temp_fmt = ", ".join(itertools.repeat("?", len(objects)))
+        id_array = "(" + ", ".join("?" * len(objects)) + ")"
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM residents WHERE resident_id IN ({temp_fmt})", *[o.id for o in objects])
+                await cursor.execute(
+                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = 1",
+                    *[o.id for o in objects],
+                )
 
     @staticmethod
     async def count(
@@ -164,11 +163,11 @@ class Resident(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where: List[str] = []
+        where = ["approved = 1"]
         params: List[Any] = []
 
         if id is not None:
-            where.append("resident_id = ?")
+            where.append("id = ?")
             params.append(id)
 
         if name is not None:
@@ -192,9 +191,10 @@ class Resident(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT COUNT(resident_id) FROM residents"]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
+        query = [
+            "SELECT COUNT(1) FROM accounts",
+            "WHERE " + " AND ".join(where),
+        ]
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
@@ -239,14 +239,14 @@ class Resident(PublicInfo, HashedAuthorization):
                 await cursor.execute(
                     """
                         DECLARE
-                            @ResidentId BIGINT = ?,
+                            @Id BIGINT = ?,
                             @Name NVARCHAR(255) = ?,
                             @Room SMALLINT = ?,
                             @Birthday DATETIME = ?,
                             @Phone NVARCHAR(15) = ?,
                             @Email NVARCHAR(255) = ?
 
-                        UPDATE residents
+                        UPDATE accounts
                         SET
                             name = @Name,
                             room = @Room,
@@ -254,7 +254,7 @@ class Resident(PublicInfo, HashedAuthorization):
                             phone = @Phone,
                             email = @Email
                         OUTPUT INSERTED.*
-                        WHERE resident_id = @ResidentId
+                        WHERE id = @Id AND approved = 1
                     """,
                     id,
                     info.name,

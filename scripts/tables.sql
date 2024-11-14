@@ -3,28 +3,17 @@ DECLARE
     @DefaultAdminUsername NVARCHAR(255) = ?,
     @DefaultAdminHashedPassword NVARCHAR(255) = ?
 
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'residents' AND type = 'U')
-    CREATE TABLE residents (
-        resident_id BIGINT PRIMARY KEY,
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'accounts' AND type = 'U')
+    CREATE TABLE accounts (
+        id BIGINT PRIMARY KEY,
         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
         room SMALLINT NOT NULL,
         birthday DATETIME,
         phone NVARCHAR(15),
         email NVARCHAR(255),
         username NVARCHAR(255) UNIQUE NOT NULL,
-        hashed_password NVARCHAR(255) NOT NULL
-    )
-
-IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'register_queue' AND type = 'U')
-    CREATE TABLE register_queue (
-        request_id BIGINT PRIMARY KEY,
-        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
-        room SMALLINT NOT NULL,
-        birthday DATETIME,
-        phone NVARCHAR(15),
-        email NVARCHAR(255),
-        username NVARCHAR(255) UNIQUE NOT NULL,
-        hashed_password NVARCHAR(255) NOT NULL
+        hashed_password NVARCHAR(255) NOT NULL,
+        approved BIT NOT NULL
     )
 
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'config' AND type = 'U')
@@ -46,7 +35,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'fee' AND type = 'U')
         date DATETIME NOT NULL,
         description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8,
         flags TINYINT NOT NULL,
-        CHECK (lower <= upper),
+        CHECK (lower <= upper)
     )
 
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'rooms' AND type = 'U')
@@ -54,7 +43,7 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'rooms' AND type = 'U')
         room SMALLINT PRIMARY KEY,
         area INT NOT NULL, -- area = 100 * [area in square meters]
         motorbike TINYINT NOT NULL,
-        car TINYINT NOT NULL,
+        car TINYINT NOT NULL
     )
 
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'payments' AND type = 'U')
@@ -62,4 +51,5 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'payments' AND type = 'U')
         payment_id BIGINT PRIMARY KEY,
         room SMALLINT NOT NULL,
         amount INT NOT NULL, -- amount = 100 * [amount in VND]
+        fee_id BIGINT NOT NULL
     )

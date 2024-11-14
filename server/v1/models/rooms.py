@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import Annotated, Any, List, Optional
 
 import pydantic
@@ -97,10 +96,10 @@ class RoomData(pydantic.BaseModel):
         if len(rooms) == 0:
             return
 
-        temp_fmt = ", ".join(itertools.repeat("?", len(rooms)))
+        array = "(" + ", ".join("?" * len(rooms)) + ")"
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM rooms WHERE room IN ({temp_fmt})", *rooms)
+                await cursor.execute(f"DELETE FROM rooms WHERE room IN {array}", *rooms)
 
 
 class Room(pydantic.BaseModel):
@@ -145,17 +144,17 @@ class Room(pydantic.BaseModel):
 
         query = [
             """
-            WITH rooms_union AS (
-                SELECT r1.room FROM rooms r1
-                UNION ALL
-                SELECT DISTINCT r2.room FROM residents r2
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM rooms
-                    WHERE rooms.room = r2.room
+                WITH rooms_union AS (
+                    SELECT t1.room FROM rooms t1
+                    UNION ALL
+                    SELECT DISTINCT t2.room FROM accounts t2
+                    WHERE t2.approved = 1 AND NOT EXISTS (
+                        SELECT 1
+                        FROM rooms
+                        WHERE rooms.room = t2.room
+                    )
                 )
-            )
-            SELECT count(room) FROM rooms_union
+                SELECT COUNT(1) FROM rooms_union
             """,
         ]
         if len(where) > 0:
@@ -206,22 +205,22 @@ class Room(pydantic.BaseModel):
 
                 query = [
                     """
-                    WITH rooms_union AS (
-                        SELECT r1.room, r1.area, r1.motorbike, r1.car
-                        FROM rooms r1
-                        UNION ALL
-                        SELECT DISTINCT r2.room, NULL AS area, NULL AS motorbike, NULL AS car
-                        FROM residents r2
-                        WHERE NOT EXISTS (
-                            SELECT 1
-                            FROM rooms
-                            WHERE rooms.room = r2.room
+                        WITH rooms_union (room, area, motorbike, car) AS (
+                            SELECT t1.room, t1.area, t1.motorbike, t1.car
+                            FROM rooms t1
+                            UNION ALL
+                            SELECT DISTINCT t2.room, NULL, NULL, NULL
+                            FROM accounts t2
+                            WHERE t2.approved = 1 AND NOT EXISTS (
+                                SELECT 1
+                                FROM rooms
+                                WHERE rooms.room = t2.room
+                            )
                         )
-                    )
-                    SELECT ru.room, ru.area, ru.motorbike, ru.car, COUNT(residents.resident_id) AS residents
-                    FROM rooms_union ru
-                    LEFT JOIN residents ON ru.room = residents.room
-                    GROUP BY ru.room, ru.area, ru.motorbike, ru.car
+                        SELECT ru.room, ru.area, ru.motorbike, ru.car, COUNT(1) AS residents
+                        FROM rooms_union ru
+                        LEFT JOIN accounts ON ru.room = accounts.room
+                        GROUP BY ru.room, ru.area, ru.motorbike, ru.car
                     """,
                 ]
 
