@@ -7,7 +7,7 @@ from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Final, Optional, Type, TYPE_CHECKING
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 try:
@@ -92,6 +92,12 @@ async def root() -> RedirectResponse:
 async def loop() -> str:
     """Return current asyncio event loop"""
     return str(asyncio.get_event_loop())
+
+
+@global_app.get("/ip", include_in_schema=False)
+async def ip(request: Request) -> str:
+    """Echo client IP address"""
+    return str(request.client)
 
 
 @global_app.get("/docs", include_in_schema=False)
