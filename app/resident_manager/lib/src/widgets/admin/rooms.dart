@@ -226,7 +226,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                         context: context,
                                         builder: (context) => SimpleDialog(
                                           contentPadding: const EdgeInsets.all(10),
-                                          title: Text(AppLocale.EditPersonalInfo.getString(context)),
+                                          title: Text(AppLocale.EditRoomInfo.getString(context)),
                                           children: [
                                             Form(
                                               key: formKey,
@@ -238,7 +238,11 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     controller: roomController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.Room.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     enabled: false,
                                                     validator: (value) => roomValidator(context, required: true, value: value),
@@ -247,7 +251,11 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     controller: areaController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Area1.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.Area1.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     validator: (value) => roomAreaValidator(context, required: true, value: value),
                                                   ),
@@ -255,7 +263,11 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     controller: motorbikeController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.MotorbikesCount.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.MotorbikesCount.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     validator: (value) => motorbikesCountValidator(context, required: true, value: value),
                                                   ),
@@ -263,7 +275,11 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     controller: carController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.CarsCount.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.CarsCount.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     validator: (value) => carsCountValidator(context, required: true, value: value),
                                                   ),
@@ -537,7 +553,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: _notification),
+                    SliverToBoxAdapter(child: Center(child: _notification)),
                     SliverPadding(
                       padding: const EdgeInsets.all(5),
                       sliver: SliverToBoxAdapter(

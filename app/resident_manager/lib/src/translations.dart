@@ -76,6 +76,7 @@ class AppLocale {
   static const String SaveGeneralInformation = "SaveGeneralInformation";
   static const String SaveAuthorizationInformation = "SaveAuthorizationInformation";
   static const String Successful = "Successful";
+  static const String EditRoomInfo = "EditRoomInfo";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -173,6 +174,7 @@ class AppLocale {
     SaveGeneralInformation: "Save general information",
     SaveAuthorizationInformation: "Save authorization information",
     Successful: "Successful",
+    EditRoomInfo: "Edit room information",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -271,6 +273,7 @@ class AppLocale {
     SaveGeneralInformation: "Lưu thông tin cơ bản",
     SaveAuthorizationInformation: "Lưu thông tin đăng nhập",
     Successful: "Thành công",
+    EditRoomInfo: "Chỉnh sửa thông tin phòng",
 
     // Error codes
     Error0: "Thao tác thành công.",

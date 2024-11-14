@@ -350,7 +350,11 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     controller: nameController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Fullname.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.Fullname.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     validator: (value) => nameValidator(context, required: true, value: value),
                                                   ),
@@ -358,7 +362,11 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     controller: roomController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Room.getString(context), required: true),
+                                                      label: FieldLabel(
+                                                        AppLocale.Room.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                        required: true,
+                                                      ),
                                                     ),
                                                     validator: (value) => roomValidator(context, required: true, value: value),
                                                   ),
@@ -366,7 +374,10 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     controller: birthdayController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.DateOfBirth.getString(context)),
+                                                      label: FieldLabel(
+                                                        AppLocale.DateOfBirth.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                      ),
                                                     ),
                                                     onTap: () async {
                                                       final birthday = await showDatePicker(
@@ -388,7 +399,10 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     controller: phoneController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Phone.getString(context)),
+                                                      label: FieldLabel(
+                                                        AppLocale.Phone.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                      ),
                                                     ),
                                                     validator: (value) => phoneValidator(context, value: value),
                                                   ),
@@ -396,7 +410,10 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     controller: emailController,
                                                     decoration: InputDecoration(
                                                       contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(AppLocale.Email.getString(context)),
+                                                      label: FieldLabel(
+                                                        AppLocale.Email.getString(context),
+                                                        style: const TextStyle(color: Colors.black),
+                                                      ),
                                                     ),
                                                     validator: (value) => emailValidator(context, value: value),
                                                   ),
@@ -656,7 +673,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: _notification),
+                    SliverToBoxAdapter(child: Center(child: _notification)),
                     SliverPadding(
                       padding: const EdgeInsets.all(5),
                       sliver: SliverToBoxAdapter(
