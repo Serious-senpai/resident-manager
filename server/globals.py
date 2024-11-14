@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
-from typing import Final, Optional, Type, TYPE_CHECKING
+from typing import Dict, Final, Optional, Type, TYPE_CHECKING
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
@@ -98,6 +98,12 @@ async def loop() -> str:
 async def ip(request: Request) -> str:
     """Echo client IP address"""
     return str(request.client)
+
+
+@global_app.get("/headers", include_in_schema=False)
+async def headers(request: Request) -> Dict[str, str]:
+    """Echo client headers"""
+    return dict(request.headers)
 
 
 @global_app.get("/docs", include_in_schema=False)
