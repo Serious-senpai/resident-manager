@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import Annotated, Any, List, Optional
 
 import pydantic

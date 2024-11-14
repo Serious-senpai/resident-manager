@@ -99,7 +99,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"UPDATE acounts SET approved = 1 WHERE id IN {id_array} AND approved = 0",
+                    f"UPDATE accounts SET approved = 1 WHERE id IN {id_array} AND approved = 0",
                     *[o.id for o in objects],
                 )
 

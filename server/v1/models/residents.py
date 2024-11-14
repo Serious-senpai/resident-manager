@@ -54,7 +54,7 @@ class Resident(PublicInfo, HashedAuthorization):
                                 username = @Username,
                                 hashed_password = @HashedPassword
                             OUTPUT INSERTED.*
-                            WHERE id = @Id
+                            WHERE id = @Id AND approved = 1
                     """,
                     self.id,
                     username,
@@ -254,7 +254,7 @@ class Resident(PublicInfo, HashedAuthorization):
                             phone = @Phone,
                             email = @Email
                         OUTPUT INSERTED.*
-                        WHERE id = @Id
+                        WHERE id = @Id AND approved = 1
                     """,
                     id,
                     info.name,
