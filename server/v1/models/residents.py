@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import Annotated, Any, List, Literal, Optional, TypeVar
 
 import jwt
@@ -97,7 +96,7 @@ class Resident(PublicInfo, HashedAuthorization):
         order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[Resident]:
-        where = ["approved = TRUE"]
+        where = ["approved = 1"]
         params: List[Any] = []
 
         if id is not None:
@@ -152,7 +151,7 @@ class Resident(PublicInfo, HashedAuthorization):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = TRUE",
+                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = 1",
                     *[o.id for o in objects],
                 )
 
@@ -164,7 +163,7 @@ class Resident(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where = ["approved = TRUE"]
+        where = ["approved = 1"]
         params: List[Any] = []
 
         if id is not None:

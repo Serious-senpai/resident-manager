@@ -97,10 +97,10 @@ class RoomData(pydantic.BaseModel):
         if len(rooms) == 0:
             return
 
-        temp_fmt = ", ".join(itertools.repeat("?", len(rooms)))
+        array = "(" + ", ".join("?" * len(rooms)) + ")"
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM rooms WHERE room IN ({temp_fmt})", *rooms)
+                await cursor.execute(f"DELETE FROM rooms WHERE room IN {array}", *rooms)
 
 
 class Room(pydantic.BaseModel):
@@ -149,7 +149,7 @@ class Room(pydantic.BaseModel):
                     SELECT t1.room FROM rooms t1
                     UNION ALL
                     SELECT DISTINCT t2.room FROM accounts t2
-                    WHERE t2.approved = TRUE AND NOT EXISTS (
+                    WHERE t2.approved = 1 AND NOT EXISTS (
                         SELECT 1
                         FROM rooms
                         WHERE rooms.room = t2.room
@@ -212,7 +212,7 @@ class Room(pydantic.BaseModel):
                             UNION ALL
                             SELECT DISTINCT t2.room, NULL, NULL, NULL
                             FROM accounts t2
-                            WHERE t2.approved = TRUE AND NOT EXISTS (
+                            WHERE t2.approved = 1 AND NOT EXISTS (
                                 SELECT 1
                                 FROM rooms
                                 WHERE rooms.room = t2.room

@@ -52,7 +52,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where = ["approved = FALSE"]
+        where = ["approved = 0"]
         params: List[Any] = []
 
         if id is not None:
@@ -99,7 +99,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"UPDATE acounts SET approved = TRUE WHERE id IN {id_array} AND approved = FALSE",
+                    f"UPDATE acounts SET approved = 1 WHERE id IN {id_array} AND approved = 0",
                     *[o.id for o in objects],
                 )
 
@@ -112,7 +112,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = FALSE",
+                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = 0",
                     *[o.id for o in objects],
                 )
 
@@ -179,7 +179,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                                 @Email,
                                 @Username,
                                 @HashedPassword,
-                                FALSE
+                                0
                             )
                     """,
                     generate_id(),
@@ -214,7 +214,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[RegisterRequest]:
-        where = ["approved = FALSE"]
+        where = ["approved = 0"]
         params: List[Any] = []
 
         if id is not None:
