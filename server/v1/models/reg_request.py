@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from datetime import datetime
 from typing import Any, List, Literal, Optional
 
@@ -53,11 +52,11 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where: List[str] = []
+        where = ["approved = FALSE"]
         params: List[Any] = []
 
         if id is not None:
-            where.append("request_id = ?")
+            where.append("id = ?")
             params.append(id)
 
         if name is not None:
@@ -81,9 +80,10 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT COUNT(request_id) FROM register_queue"]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
+        query = [
+            "SELECT COUNT(1) FROM accounts",
+            "WHERE " + " AND ".join(where),
+        ]
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
@@ -95,30 +95,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         if len(objects) == 0:
             return
 
+        id_array = "(" + ", ".join("?" * len(objects)) + ")"
         async with Database.instance.pool.acquire() as connection:
-            mapping = [(generate_id(), o.id) for o in objects]
-            temp_fmt = ", ".join("(?, ?)" for _ in mapping)
-            temp_decl = f"(VALUES {temp_fmt}) temp(resident_id, request_id)"
-
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"""
-                    DELETE FROM register_queue
-                    OUTPUT
-                        temp.resident_id,
-                        DELETED.name,
-                        DELETED.room,
-                        DELETED.birthday,
-                        DELETED.phone,
-                        DELETED.email,
-                        DELETED.username,
-                        DELETED.hashed_password
-                    INTO residents
-                    FROM register_queue
-                    INNER JOIN {temp_decl}
-                    ON register_queue.request_id = temp.request_id
-                    """,
-                    *itertools.chain(*mapping),
+                    f"UPDATE acounts SET approved = TRUE WHERE id IN {id_array} AND approved = FALSE",
+                    *[o.id for o in objects],
                 )
 
     @classmethod
@@ -126,10 +108,13 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         if len(objects) == 0:
             return
 
+        id_array = "(" + ", ".join("?" * len(objects)) + ")"
         async with Database.instance.pool.acquire() as connection:
-            temp_fmt = ", ".join(itertools.repeat("?", len(objects)))
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM register_queue WHERE request_id IN ({temp_fmt})", *[o.id for o in objects])
+                await cursor.execute(
+                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = FALSE",
+                    *[o.id for o in objects],
+                )
 
     @classmethod
     async def create(
@@ -172,33 +157,30 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                    DECLARE
-                        @RequestId BIGINT = ?,
-                        @Name NVARCHAR(255) = ?,
-                        @Room SMALLINT = ?,
-                        @Birthday DATETIME = ?,
-                        @Phone NVARCHAR(15) = ?,
-                        @Email NVARCHAR(255) = ?,
-                        @Username NVARCHAR(255) = ?,
-                        @HashedPassword NVARCHAR(255) = ?
+                        DECLARE
+                            @Id BIGINT = ?,
+                            @Name NVARCHAR(255) = ?,
+                            @Room SMALLINT = ?,
+                            @Birthday DATETIME = ?,
+                            @Phone NVARCHAR(15) = ?,
+                            @Email NVARCHAR(255) = ?,
+                            @Username NVARCHAR(255) = ?,
+                            @HashedPassword NVARCHAR(255) = ?
 
-                    IF NOT EXISTS (
-                        SELECT 1 FROM residents WHERE username = @Username
-                        UNION ALL
-                        SELECT 1 FROM register_queue WHERE username = @Username
-                    )
-                        INSERT INTO register_queue
-                        OUTPUT INSERTED.*
-                        VALUES (
-                            @RequestId,
-                            @Name,
-                            @Room,
-                            @Birthday,
-                            @Phone,
-                            @Email,
-                            @Username,
-                            @HashedPassword
-                        )
+                        IF NOT EXISTS (SELECT 1 FROM accounts WHERE username = @Username)
+                            INSERT INTO accounts
+                            OUTPUT INSERTED.*
+                            VALUES (
+                                @Id,
+                                @Name,
+                                @Room,
+                                @Birthday,
+                                @Phone,
+                                @Email,
+                                @Username,
+                                @HashedPassword,
+                                FALSE
+                            )
                     """,
                     generate_id(),
                     name,
@@ -229,14 +211,14 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         name: Optional[str] = None,
         room: Optional[int] = None,
         username: Optional[str] = None,
-        order_by: Literal["request_id", "name", "room", "username"] = "request_id",
+        order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[RegisterRequest]:
-        where: List[str] = []
+        where = ["approved = FALSE"]
         params: List[Any] = []
 
         if id is not None:
-            where.append("request_id = ?")
+            where.append("id = ?")
             params.append(id)
 
         if name is not None:
@@ -260,12 +242,13 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
             where.append("username = ?")
             params.append(username)
 
-        query = ["SELECT * FROM register_queue"]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
+        query = [
+            "SELECT * FROM accounts",
+            "WHERE " + " AND ".join(where),
+        ]
 
-        if order_by not in {"request_id", "name", "room", "username"}:
-            order_by = "request_id"
+        if order_by not in {"id", "name", "room", "username"}:
+            order_by = "id"
 
         asc_desc = "ASC" if ascending else "DESC"
         query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")

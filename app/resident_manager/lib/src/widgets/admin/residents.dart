@@ -36,7 +36,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
   final _usernameSearch = TextEditingController();
-  String orderBy = "resident_id";
+  String orderBy = "id";
   bool ascending = false;
 
   int _offset = 0;
@@ -254,7 +254,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                       headerCeil(AppLocale.DateOfBirth.getString(context)),
                       headerCeil(AppLocale.Phone.getString(context)),
                       headerCeil(AppLocale.Email.getString(context)),
-                      headerCeil(AppLocale.CreationTime.getString(context), "resident_id"),
+                      headerCeil(AppLocale.CreationTime.getString(context), "id"),
                       headerCeil(AppLocale.Username.getString(context), "username"),
                       headerCeil(AppLocale.Option.getString(context)),
                     ],

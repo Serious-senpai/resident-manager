@@ -37,7 +37,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
   final _nameSearch = TextEditingController();
   final _roomSearch = TextEditingController();
   final _usernameSearch = TextEditingController();
-  String orderBy = "request_id";
+  String orderBy = "id";
   bool ascending = false;
 
   int _offset = 0;
@@ -251,7 +251,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                       headerCeil(AppLocale.DateOfBirth.getString(context)),
                       headerCeil(AppLocale.Phone.getString(context)),
                       headerCeil(AppLocale.Email.getString(context)),
-                      headerCeil(AppLocale.CreationTime.getString(context), "request_id"),
+                      headerCeil(AppLocale.CreationTime.getString(context), "id"),
                       headerCeil(AppLocale.Username.getString(context), "username"),
                     ],
                   ),
