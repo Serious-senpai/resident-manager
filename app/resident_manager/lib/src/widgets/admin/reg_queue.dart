@@ -290,7 +290,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                         TableCell(
                           child: Padding(
                             padding: const EdgeInsets.all(5),
-                            child: Text(request.birthday?.toLocal().formatDate() ?? "---"),
+                            child: Text(request.birthday?.format("dd/mm/yyyy") ?? "---"),
                           ),
                         ),
                         TableCell(
@@ -321,13 +321,6 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                     ),
                   );
                 }
-
-                _notification = Builder(
-                  builder: (context) => Text(
-                    AppLocale.Loading.getString(context),
-                    style: const TextStyle(color: Colors.blue),
-                  ),
-                );
 
                 return SliverMainAxisGroup(
                   slivers: [

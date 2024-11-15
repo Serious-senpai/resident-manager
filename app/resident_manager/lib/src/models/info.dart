@@ -1,5 +1,7 @@
 import "snowflake.dart";
 
+import "../utils.dart";
+
 /// Data model for objects holding personal information.
 class PersonalInfo {
   /// The target's full name.
@@ -9,7 +11,7 @@ class PersonalInfo {
   final int room;
 
   /// The target's date of birth.
-  final DateTime? birthday;
+  final Date? birthday;
 
   /// The target's phone number.
   final String? phone;
@@ -31,7 +33,7 @@ class PersonalInfo {
     return {
       "name": name,
       "room": room,
-      "birthday": birthday?.toIso8601String(),
+      "birthday": birthday?.toJson(),
       "phone": phone,
       "email": email,
     };
@@ -49,7 +51,7 @@ class PersonalInfo {
     return {
       "name": name,
       "room": room.toString(),
-      if (birthday != null) "birthday": birthday!.toIso8601String(),
+      if (birthday != null) "birthday": birthday!.toJson(),
       if (phone != null) "phone": phone!,
       if (email != null) "email": email!,
     };
@@ -85,7 +87,7 @@ class PublicInfo extends PersonalInfo with Snowflake {
           id: data["id"] as int,
           name: data["name"] as String,
           room: data["room"] as int,
-          birthday: data["birthday"] == null ? null : DateTime.parse(data["birthday"] as String),
+          birthday: data["birthday"] == null ? null : Date.parse(data["birthday"] as String),
           phone: data["phone"] as String?,
           email: data["email"] as String?,
           username: data["username"] as String?,

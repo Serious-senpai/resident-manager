@@ -62,7 +62,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
     super.initState();
     _name.text = state.resident?.name ?? "";
     _room.text = state.resident?.room.toString() ?? "";
-    _birthday.text = state.resident?.birthday?.toLocal().formatDate() ?? "";
+    _birthday.text = state.resident?.birthday?.format("dd/mm/yyyy") ?? "";
     _phone.text = state.resident?.phone ?? "";
     _email.text = state.resident?.email ?? "";
     _username.text = state.resident?.username ?? "";
@@ -112,13 +112,13 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
           onTap: () async {
             final birthday = await showDatePicker(
               context: context,
-              initialDate: DateFormat.fromFormattedDate(_birthday.text),
+              initialDate: Date.parseFriendly(_birthday.text)?.toDateTime(),
               firstDate: DateTime.utc(1900),
               lastDate: DateTime.now(),
             );
 
             if (birthday != null) {
-              _birthday.text = birthday.toLocal().formatDate();
+              _birthday.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
             } else {
               _birthday.clear();
             }
@@ -217,7 +217,7 @@ class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with C
                                   info: PersonalInfo(
                                     name: _name.text,
                                     room: int.parse(_room.text),
-                                    birthday: DateFormat.fromFormattedDate(_birthday.text),
+                                    birthday: Date.parseFriendly(_birthday.text),
                                     phone: _phone.text,
                                     email: _email.text,
                                   ),

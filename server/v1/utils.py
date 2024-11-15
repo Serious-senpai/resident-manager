@@ -106,3 +106,7 @@ def validate_username(username: str) -> bool:
 
 def validate_password(password: str) -> bool:
     return len(password) >= 8 and len(password) < 256
+
+
+def validate_fee_name(name: str) -> bool:
+    return len(name) > 0 and len(name) < 256

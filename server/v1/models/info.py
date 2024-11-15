@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date
 from typing import Annotated, Optional
 
 import pydantic
@@ -23,7 +23,7 @@ class PersonalInfo(pydantic.BaseModel):
 
     name: Annotated[str, pydantic.Field(description="The full name of the resident")]
     room: Annotated[int, pydantic.Field(description="The room number of the resident")]
-    birthday: Annotated[Optional[datetime], pydantic.Field(description="The resident's date of birth")] = None
+    birthday: Annotated[Optional[date], pydantic.Field(description="The resident's date of birth")] = None
     phone: Annotated[Optional[str], pydantic.Field(description="The resident's phone number")] = None
     email: Annotated[Optional[str], pydantic.Field(description="The resident's email")] = None
 

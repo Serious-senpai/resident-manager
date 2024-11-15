@@ -292,7 +292,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                           TableCell(
                             child: Padding(
                               padding: const EdgeInsets.all(5),
-                              child: Text(resident.birthday?.toLocal().formatDate() ?? "---"),
+                              child: Text(resident.birthday?.format("dd/mm/yyyy") ?? "---"),
                             ),
                           ),
                           TableCell(
@@ -329,7 +329,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                     onPressed: () async {
                                       final nameController = TextEditingController(text: resident.name);
                                       final roomController = TextEditingController(text: resident.room.toString());
-                                      final birthdayController = TextEditingController(text: resident.birthday?.toLocal().formatDate());
+                                      final birthdayController = TextEditingController(text: resident.birthday?.format("dd/mm/yyyy"));
                                       final phoneController = TextEditingController(text: resident.phone);
                                       final emailController = TextEditingController(text: resident.email);
 
@@ -382,13 +382,13 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     onTap: () async {
                                                       final birthday = await showDatePicker(
                                                         context: context,
-                                                        initialDate: DateFormat.fromFormattedDate(birthdayController.text),
+                                                        initialDate: Date.parseFriendly(birthdayController.text)?.toDateTime(),
                                                         firstDate: DateTime.utc(1900),
                                                         lastDate: DateTime.now(),
                                                       );
 
                                                       if (birthday != null) {
-                                                        birthdayController.text = birthday.toLocal().formatDate();
+                                                        birthdayController.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
                                                       } else {
                                                         birthdayController.clear();
                                                       }
@@ -457,7 +457,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                   info: PersonalInfo(
                                                     name: nameController.text,
                                                     room: int.parse(roomController.text),
-                                                    birthday: birthdayController.text.isEmpty ? null : DateFormat.fromFormattedDate(birthdayController.text),
+                                                    birthday: birthdayController.text.isEmpty ? null : Date.parseFriendly(birthdayController.text),
                                                     phone: phoneController.text,
                                                     email: emailController.text,
                                                   ),

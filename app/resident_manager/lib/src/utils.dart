@@ -14,6 +14,61 @@ class ScreenWidth {
   static const EXTRA_EXTRA_LARGE = 1400;
 }
 
+class Date {
+  final int year;
+  final int month;
+  final int day;
+
+  const Date(this.year, this.month, this.day);
+
+  Date.fromDateTime(DateTime datetime)
+      : year = datetime.year,
+        month = datetime.month,
+        day = datetime.day;
+
+  Date.now() : this.fromDateTime(DateTime.now());
+
+  String format(String fmt) {
+    fmt = fmt.replaceAll("yyyy", year.toString());
+    fmt = fmt.replaceAll("mm", month.toString().padLeft(2, "0"));
+    fmt = fmt.replaceAll("dd", day.toString().padLeft(2, "0"));
+    return fmt;
+  }
+
+  String toJson() => format("yyyy-mm-dd");
+
+  DateTime toDateTime() => DateTime(year, month, day);
+
+  @override
+  String toString() => format("yyyy-mm-dd");
+
+  /// Parse string in format `yyyy*mm*dd`.
+  static Date? parse(String str) {
+    try {
+      return Date(
+        int.parse(str.substring(0, 4)),
+        int.parse(str.substring(5, 7)),
+        int.parse(str.substring(8, 10)),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Parse string in format `dd*mm*yyyy`.
+  static Date? parseFriendly(String str) {
+    try {
+      return Date(
+        int.parse(str.substring(6, 10)),
+        int.parse(str.substring(3, 5)),
+        int.parse(str.substring(0, 2)),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 Future<bool> showToastSafe({
   required String msg,
   Toast? toastLength,
@@ -54,21 +109,6 @@ DateTime fromEpoch(Duration dt) {
 
 DateTime snowflakeTime(int id) {
   return fromEpoch(Duration(milliseconds: id >> (8 * 3)));
-}
-
-extension DateFormat on DateTime {
-  String formatDate() {
-    return "$day/$month/$year";
-  }
-
-  static DateTime? fromFormattedDate(String s) {
-    try {
-      final parts = s.split("/");
-      return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
-    } catch (_) {
-      return null;
-    }
-  }
 }
 
 class FieldLabel extends StatelessWidget {

@@ -27,8 +27,6 @@ class Resident extends PublicInfo {
   /// - Parameter data: A JSON object containing the resident data.
   Resident.fromJson(super.data) : super.fromJson();
 
-  @override
-
   /// Converts the Resident object to a JSON map.
   ///
   /// This method serializes the Resident object into a map of key-value pairs,
@@ -36,11 +34,12 @@ class Resident extends PublicInfo {
   /// encoding the object to be sent over a network or to be stored in a database.
   ///
   /// Returns a `Map<String, dynamic>` representing the JSON serialization of the Resident object.
+  @override
   Map<String, dynamic> toJson() => {
         "id": id,
         "name": name,
         "room": room,
-        "birthday": birthday?.toIso8601String(),
+        "birthday": birthday?.toJson(),
         "phone": phone,
         "email": email,
       };

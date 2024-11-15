@@ -50,7 +50,7 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
 
           final name = _name.text;
           final room = int.parse(_room.text);
-          final birthday = _birthday.text.isEmpty ? null : DateFormat.fromFormattedDate(_birthday.text);
+          final birthday = Date.parseFriendly(_birthday.text);
           final phone = _phone.text;
           final email = _email.text;
           final username = _username.text;
@@ -174,13 +174,13 @@ class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSta
                     onTap: () async {
                       final birthday = await showDatePicker(
                         context: context,
-                        initialDate: DateFormat.fromFormattedDate(_birthday.text),
+                        initialDate: Date.parseFriendly(_birthday.text)?.toDateTime(),
                         firstDate: DateTime.utc(1900),
                         lastDate: DateTime.now(),
                       );
 
                       if (birthday != null) {
-                        _birthday.text = birthday.toLocal().formatDate();
+                        _birthday.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
                       } else {
                         _birthday.clear();
                       }
