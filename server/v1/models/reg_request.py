@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date
 from typing import Any, List, Literal, Optional
 
 import pyodbc  # type: ignore
@@ -122,7 +122,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         *,
         name: str,
         room: int,
-        birthday: Optional[datetime],
+        birthday: Optional[date],
         phone: Optional[str],
         email: Optional[str],
         username: str,
@@ -170,17 +170,7 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
                         IF NOT EXISTS (SELECT 1 FROM accounts WHERE username = @Username)
                             INSERT INTO accounts
                             OUTPUT INSERTED.*
-                            VALUES (
-                                @Id,
-                                @Name,
-                                @Room,
-                                @Birthday,
-                                @Phone,
-                                @Email,
-                                @Username,
-                                @HashedPassword,
-                                0
-                            )
+                            VALUES (@Id, @Name, @Room, @Birthday, @Phone, @Email, @Username, @HashedPassword, 0)
                     """,
                     generate_id(),
                     name,
