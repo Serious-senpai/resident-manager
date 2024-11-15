@@ -1,23 +1,22 @@
 from __future__ import annotations
 
-from typing import Annotated, Any, List, Literal, Optional, TypeVar
+from typing import Annotated, List, Literal, Optional, TypeVar
 
 import jwt
 import pyodbc  # type: ignore
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .auth import HashedAuthorization, Token
-from .info import PersonalInfo, PublicInfo
+from .accounts import Account
+from .auth import Token
+from .info import PersonalInfo
 from .results import Result
 from .snowflake import Snowflake
 from ..database import Database
 from ..utils import (
     check_password,
     hash_password,
-    validate_name,
     validate_password,
-    validate_room,
     validate_username,
 )
 from ...config import DB_PAGINATION_QUERY
@@ -27,7 +26,7 @@ __all__ = ("Resident",)
 T = TypeVar("T")
 
 
-class Resident(PublicInfo, HashedAuthorization):
+class Resident(Account):
     """Data model for objects holding information about a resident.
 
     Each object of this class corresponds to a database row."""
@@ -72,19 +71,6 @@ class Resident(PublicInfo, HashedAuthorization):
         return Result(code=107, data=None)
 
     @classmethod
-    def from_row(cls, row: Any) -> Resident:
-        return cls(
-            id=row[0],
-            name=row[1],
-            room=row[2],
-            birthday=row[3],
-            phone=row[4],
-            email=row[5],
-            username=row[6],
-            hashed_password=row[7],
-        )
-
-    @classmethod
     async def query(
         cls,
         *,
@@ -96,33 +82,12 @@ class Resident(PublicInfo, HashedAuthorization):
         order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[Resident]:
-        where = ["approved = 1"]
-        params: List[Any] = []
+        _packed = Account.build_sql_condition(id=id, name=name, room=room, username=username)
+        if _packed is None:
+            return []
 
-        if id is not None:
-            where.append("id = ?")
-            params.append(id)
-
-        if name is not None:
-            if not validate_name(name):
-                return []
-
-            where.append("CHARINDEX(?, name) > 0")
-            params.append(name)
-
-        if room is not None:
-            if not validate_room(room):
-                return []
-
-            where.append("room = ?")
-            params.append(room)
-
-        if username is not None:
-            if not validate_username(username):
-                return []
-
-            where.append("username = ?")
-            params.append(username)
+        where, params = _packed
+        where.append("approved = 1")
 
         query = [
             "SELECT * FROM accounts",
@@ -163,33 +128,17 @@ class Resident(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where = ["approved = 1"]
-        params: List[Any] = []
+        _packed = Account.build_sql_condition(id=id, name=name, room=room, username=username)
+        if _packed is None:
+            return 0
 
-        if id is not None:
-            where.append("id = ?")
-            params.append(id)
+        where, params = _packed
+        where.append("approved = 1")
 
-        if name is not None:
-            if not validate_name(name):
-                return 0
-
-            where.append("CHARINDEX(?, name) > 0")
-            params.append(name)
-
-        if room is not None:
-            if not validate_room(room):
-                return 0
-
-            where.append("room = ?")
-            params.append(room)
-
-        if username is not None:
-            if not validate_username(username):
-                return 0
-
-            where.append("username = ?")
-            params.append(username)
+        query = [
+            "SELECT * FROM accounts",
+            "WHERE " + " AND ".join(where),
+        ]
 
         query = [
             "SELECT COUNT(1) FROM accounts",

@@ -1,3 +1,4 @@
+from .accounts import *
 from .auth import *
 from .fee import *
 from .info import *

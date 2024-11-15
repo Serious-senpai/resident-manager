@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Any, List, Literal, Optional
+from typing import List, Literal, Optional
 
 import pyodbc  # type: ignore
 
-from .auth import HashedAuthorization
-from .info import PublicInfo
+from .accounts import Account
 from .results import Result
 from .snowflake import Snowflake
 from ..database import Database
@@ -26,23 +25,10 @@ from ...config import DB_PAGINATION_QUERY
 __all__ = ("RegisterRequest",)
 
 
-class RegisterRequest(PublicInfo, HashedAuthorization):
+class RegisterRequest(Account):
     """Data model for objects holding information about a registration request.
 
     Each object of this class corresponds to a database row."""
-
-    @classmethod
-    def from_row(cls, row: Any) -> RegisterRequest:
-        return cls(
-            id=row[0],
-            name=row[1],
-            room=row[2],
-            birthday=row[3],
-            phone=row[4],
-            email=row[5],
-            username=row[6],
-            hashed_password=row[7],
-        )
 
     @staticmethod
     async def count(
@@ -52,33 +38,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        where = ["approved = 0"]
-        params: List[Any] = []
+        _packed = Account.build_sql_condition(id=id, name=name, room=room, username=username)
+        if _packed is None:
+            return 0
 
-        if id is not None:
-            where.append("id = ?")
-            params.append(id)
-
-        if name is not None:
-            if not validate_name(name):
-                return 0
-
-            where.append("CHARINDEX(?, name) > 0")
-            params.append(name)
-
-        if room is not None:
-            if not validate_room(room):
-                return 0
-
-            where.append("room = ?")
-            params.append(room)
-
-        if username is not None:
-            if not validate_username(username):
-                return 0
-
-            where.append("username = ?")
-            params.append(username)
+        where, params = _packed
+        where.append("approved = 0")
 
         query = [
             "SELECT COUNT(1) FROM accounts",
@@ -204,33 +169,12 @@ class RegisterRequest(PublicInfo, HashedAuthorization):
         order_by: Literal["id", "name", "room", "username"] = "id",
         ascending: bool = True,
     ) -> List[RegisterRequest]:
-        where = ["approved = 0"]
-        params: List[Any] = []
+        _packed = Account.build_sql_condition(id=id, name=name, room=room, username=username)
+        if _packed is None:
+            return []
 
-        if id is not None:
-            where.append("id = ?")
-            params.append(id)
-
-        if name is not None:
-            if not validate_name(name):
-                return []
-
-            where.append("CHARINDEX(?, name) > 0")
-            params.append(name)
-
-        if room is not None:
-            if not validate_room(room):
-                return []
-
-            where.append("room = ?")
-            params.append(room)
-
-        if username is not None:
-            if not validate_username(username):
-                return []
-
-            where.append("username = ?")
-            params.append(username)
+        where, params = _packed
+        where.append("approved = 0")
 
         query = [
             "SELECT * FROM accounts",
