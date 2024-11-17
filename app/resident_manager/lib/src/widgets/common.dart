@@ -126,6 +126,21 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
           ...widget.slivers,
         ],
       ),
+      floatingActionButton: Opacity(
+        opacity: 0.5,
+        child: FloatingActionButton(
+          backgroundColor: Colors.lightBlue,
+          foregroundColor: Colors.white,
+          onPressed: () {
+            _scrollController.animateTo(
+              _scrollController.position.minScrollExtent,
+              curve: Curves.easeOut,
+              duration: const Duration(milliseconds: 500),
+            );
+          },
+          child: const Icon(Icons.arrow_upward_outlined),
+        ),
+      ),
       drawer: Builder(
         builder: (context) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
