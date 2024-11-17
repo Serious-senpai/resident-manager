@@ -23,94 +23,305 @@ class ResidentsPage extends StateAwareWidget {
   AbstractCommonState<ResidentsPage> createState() => _ResidentsPageState();
 }
 
-class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
-  List<Resident> _residents = [];
+class _SearchField {
+  final name = TextEditingController();
+  final room = TextEditingController();
+  final username = TextEditingController();
 
-  Future<int?>? _queryFuture;
-  Future<int?>? _countFuture;
-  Widget _notification = const SizedBox.square(dimension: 0);
+  bool get searching => name.text.isNotEmpty || room.text.isNotEmpty || username.text.isNotEmpty;
 
-  final _selected = SplayTreeSet<Resident>((k1, k2) => k1.id.compareTo(k2.id));
-  final _actionLock = Lock();
+  void dispose() {
+    name.dispose();
+    room.dispose();
+    username.dispose();
+  }
+}
 
-  final _nameSearch = TextEditingController();
-  final _roomSearch = TextEditingController();
-  final _usernameSearch = TextEditingController();
+class _Pagination extends FutureHolder<int?> {
+  int offset = 0;
+  int offsetLimit = 0;
+
+  final _ResidentsPageState _state;
+
+  _Pagination(this._state);
+
+  @override
+  Future<int?> run() async {
+    try {
+      final result = await Resident.count(
+        state: _state.state,
+        name: _state.search.name.text,
+        room: int.tryParse(_state.search.room.text),
+        username: _state.search.username.text,
+      );
+
+      final data = result.data;
+      if (data != null) {
+        offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      } else {
+        offsetLimit = offset;
+      }
+
+      return result.code;
+    } catch (e) {
+      offsetLimit = offset;
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
+        return null;
+      }
+
+      rethrow;
+    } finally {
+      _state.refresh();
+    }
+  }
+}
+
+class _QueryLoader extends FutureHolder<int?> {
+  final residents = <Resident>[];
+  final selected = SplayTreeSet<Resident>((k1, k2) => k1.id.compareTo(k2.id));
+
   String orderBy = "id";
   bool ascending = false;
 
-  int _offset = 0;
-  int _offsetLimit = 0;
-  int get offset => _offset;
-  set offset(int value) {
-    _offset = value;
-    _queryFuture = null;
-    _countFuture = null;
-    refresh();
-  }
+  final _ResidentsPageState _state;
 
-  bool get _searching => _nameSearch.text.isNotEmpty || _roomSearch.text.isNotEmpty || _usernameSearch.text.isNotEmpty;
+  _QueryLoader(this._state);
 
-  Future<int?> _query() async {
+  @override
+  Future<int?> run() async {
     try {
       final result = await Resident.query(
-        state: state,
-        offset: DB_PAGINATION_QUERY * offset,
-        name: _nameSearch.text,
-        room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
+        state: _state.state,
+        offset: DB_PAGINATION_QUERY * _state.pagination.offset,
+        name: _state.search.name.text,
+        room: int.tryParse(_state.search.room.text),
+        username: _state.search.username.text,
         orderBy: orderBy,
         ascending: ascending,
       );
 
       final data = result.data;
       if (data != null) {
-        _residents = data;
-        _residents.removeWhere(_selected.contains);
-        _residents.addAll(_selected);
+        residents.clear();
+        residents.addAll(data);
+        residents.removeWhere(selected.contains);
+        residents.addAll(selected);
       }
 
       return result.code;
     } catch (e) {
       if (e is SocketException || e is TimeoutException) {
-        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
         return null;
       }
 
       rethrow;
     } finally {
-      refresh();
+      _state.refresh();
     }
   }
+}
 
-  Future<int?> _count() async {
-    try {
-      final result = await Resident.count(
-        state: state,
-        name: _nameSearch.text,
-        room: int.tryParse(_roomSearch.text),
-        username: _usernameSearch.text,
-      );
+class _EditButton extends StatelessWidget {
+  final Resident resident;
+  final _ResidentsPageState state;
 
-      final data = result.data;
-      if (data != null) {
-        _offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      } else {
-        _offsetLimit = offset;
-      }
+  const _EditButton(this.resident, this.state);
 
-      return result.code;
-    } catch (e) {
-      _offsetLimit = offset;
-      if (e is SocketException || e is TimeoutException) {
-        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return null;
-      }
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.edit_outlined),
+      onPressed: () async {
+        final nameController = TextEditingController(text: resident.name);
+        final roomController = TextEditingController(text: resident.room.toString());
+        final birthdayController = TextEditingController(text: resident.birthday?.format("dd/mm/yyyy"));
+        final phoneController = TextEditingController(text: resident.phone);
+        final emailController = TextEditingController(text: resident.email);
 
-      rethrow;
-    } finally {
-      refresh();
-    }
+        final formKey = GlobalKey<FormState>();
+        final submitted = await showDialog<bool>(
+          context: context,
+          builder: (context) => SimpleDialog(
+            contentPadding: const EdgeInsets.all(10),
+            title: Text(AppLocale.EditPersonalInfo.getString(context)),
+            children: [
+              Form(
+                key: formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: FieldLabel(
+                          AppLocale.Fullname.getString(context),
+                          style: const TextStyle(color: Colors.black),
+                          required: true,
+                        ),
+                      ),
+                      validator: (value) => nameValidator(context, required: true, value: value),
+                    ),
+                    TextFormField(
+                      controller: roomController,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: FieldLabel(
+                          AppLocale.Room.getString(context),
+                          style: const TextStyle(color: Colors.black),
+                          required: true,
+                        ),
+                      ),
+                      validator: (value) => roomValidator(context, required: true, value: value),
+                    ),
+                    TextFormField(
+                      controller: birthdayController,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: FieldLabel(
+                          AppLocale.DateOfBirth.getString(context),
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                      onTap: () async {
+                        final birthday = await showDatePicker(
+                          context: context,
+                          initialDate: Date.parseFriendly(birthdayController.text)?.toDateTime(),
+                          firstDate: DateTime.utc(1900),
+                          lastDate: DateTime.now(),
+                        );
+
+                        if (birthday != null) {
+                          birthdayController.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
+                        } else {
+                          birthdayController.clear();
+                        }
+                      },
+                      readOnly: true, // no need for validator
+                    ),
+                    TextFormField(
+                      controller: phoneController,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: FieldLabel(
+                          AppLocale.Phone.getString(context),
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                      validator: (value) => phoneValidator(context, value: value),
+                    ),
+                    TextFormField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(8.0),
+                        label: FieldLabel(
+                          AppLocale.Email.getString(context),
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                      validator: (value) => emailValidator(context, value: value),
+                    ),
+                    const SizedBox.square(dimension: 10),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.done_outlined),
+                        label: Text(AppLocale.Confirm.getString(context)),
+                        onPressed: () {
+                          if (formKey.currentState?.validate() ?? false) {
+                            Navigator.pop(context, true);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (submitted != null) {
+          final check = formKey.currentState?.validate() ?? false;
+          if (check) {
+            await state._actionLock.run(
+              () async {
+                state._notification = Builder(
+                  builder: (context) => Text(
+                    AppLocale.Loading.getString(context),
+                    style: const TextStyle(color: Colors.blue),
+                  ),
+                );
+                state.refresh();
+
+                try {
+                  final result = await resident.update(
+                    state: state.state,
+                    info: PersonalInfo(
+                      name: nameController.text,
+                      room: int.parse(roomController.text),
+                      birthday: birthdayController.text.isEmpty ? null : Date.parseFriendly(birthdayController.text),
+                      phone: phoneController.text,
+                      email: emailController.text,
+                    ),
+                  );
+
+                  if (result.code != 0) {
+                    state._notification = Builder(
+                      builder: (context) => Text(
+                        AppLocale.errorMessage(result.code).getString(context),
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  } else {
+                    state._notification = const SizedBox.square(dimension: 0);
+                  }
+                } catch (e) {
+                  await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                  state._notification = Builder(
+                    builder: (context) => Text(
+                      AppLocale.ConnectionError.getString(context),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+
+                  if (!(e is SocketException || e is TimeoutException)) {
+                    rethrow;
+                  }
+                } finally {
+                  state.reload();
+                }
+              },
+            );
+          }
+        }
+      },
+    );
+  }
+}
+
+class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
+  final search = _SearchField();
+
+  _Pagination? _pagination;
+  _Pagination get pagination => _pagination ??= _Pagination(this);
+
+  _QueryLoader? _queryLoader;
+  _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
+
+  Widget _notification = const SizedBox.square(dimension: 0);
+
+  final _actionLock = Lock();
+  final _horizontalController = ScrollController();
+
+  void reload() {
+    pagination.reload();
+    queryLoader.reload();
+    refresh();
   }
 
   Future<void> _deleteAccounts() async {
@@ -125,8 +336,8 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
         refresh();
 
         try {
-          if (await Resident.delete(state: state, objects: _selected)) {
-            _selected.clear();
+          if (await Resident.delete(state: state, objects: queryLoader.selected)) {
+            queryLoader.selected.clear();
           }
 
           _notification = const SizedBox.square(dimension: 0);
@@ -143,7 +354,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
             rethrow;
           }
         } finally {
-          offset = 0;
+          reload();
         }
       },
     );
@@ -153,26 +364,29 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   void initState() {
     final room = state.extras["room-search"] as Room?;
     if (room != null) {
-      _roomSearch.text = room.room.toString();
+      search.room.text = room.room.toString();
       state.extras["room-search"] = null;
     }
 
     super.initState();
   }
 
-  final _horizontalController = ScrollController();
+  @override
+  void dispose() {
+    super.dispose();
+    search.dispose();
+    _horizontalController.dispose();
+  }
 
   @override
   CommonScaffold<ResidentsPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= _query();
-    _countFuture ??= _count();
 
     return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.ResidentsList.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       sliver: FutureBuilder(
-        future: _queryFuture,
+        future: queryLoader.future,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -200,8 +414,8 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
               if (code == 0) {
                 TableCell headerCeil(String text, [String? newOrderBy]) {
                   if (newOrderBy != null) {
-                    if (orderBy == newOrderBy) {
-                      text += ascending ? " ▴" : " ▾";
+                    if (queryLoader.orderBy == newOrderBy) {
+                      text += queryLoader.ascending ? " ▴" : " ▾";
                     } else {
                       text += " ▴▾";
                     }
@@ -213,14 +427,15 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                       child: GestureDetector(
                         onTap: () {
                           if (newOrderBy != null) {
-                            if (newOrderBy == orderBy) {
-                              ascending = !ascending;
+                            if (newOrderBy == queryLoader.orderBy) {
+                              queryLoader.ascending = !queryLoader.ascending;
                             } else {
-                              ascending = true;
+                              queryLoader.ascending = true;
                             }
 
-                            orderBy = newOrderBy;
-                            offset = 0;
+                            queryLoader.orderBy = newOrderBy;
+                            pagination.offset = 0;
+                            reload();
                           }
                         },
                         child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -235,13 +450,13 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                     children: [
                       TableCell(
                         child: Checkbox.adaptive(
-                          value: _selected.containsAll(_residents),
+                          value: queryLoader.selected.containsAll(queryLoader.residents),
                           onChanged: (state) {
                             if (state != null) {
                               if (state) {
-                                _selected.addAll(_residents);
+                                queryLoader.selected.addAll(queryLoader.residents);
                               } else {
-                                _selected.removeAll(_residents);
+                                queryLoader.selected.removeAll(queryLoader.residents);
                               }
                             }
 
@@ -260,17 +475,17 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                     ],
                   ),
                   ...List<TableRow>.from(
-                    _residents.map(
+                    queryLoader.residents.map(
                       (resident) => TableRow(
                         children: [
                           Checkbox.adaptive(
-                            value: _selected.contains(resident),
+                            value: queryLoader.selected.contains(resident),
                             onChanged: (state) {
                               if (state != null) {
                                 if (state) {
-                                  _selected.add(resident);
+                                  queryLoader.selected.add(resident);
                                 } else {
-                                  _selected.remove(resident);
+                                  queryLoader.selected.remove(resident);
                                 }
                               }
 
@@ -323,179 +538,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                             child: Padding(
                               padding: const EdgeInsets.all(5),
                               child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () async {
-                                      final nameController = TextEditingController(text: resident.name);
-                                      final roomController = TextEditingController(text: resident.room.toString());
-                                      final birthdayController = TextEditingController(text: resident.birthday?.format("dd/mm/yyyy"));
-                                      final phoneController = TextEditingController(text: resident.phone);
-                                      final emailController = TextEditingController(text: resident.email);
-
-                                      final formKey = GlobalKey<FormState>();
-                                      final submitted = await showDialog<bool>(
-                                        context: context,
-                                        builder: (context) => SimpleDialog(
-                                          contentPadding: const EdgeInsets.all(10),
-                                          title: Text(AppLocale.EditPersonalInfo.getString(context)),
-                                          children: [
-                                            Form(
-                                              key: formKey,
-                                              autovalidateMode: AutovalidateMode.onUserInteraction,
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  TextFormField(
-                                                    controller: nameController,
-                                                    decoration: InputDecoration(
-                                                      contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(
-                                                        AppLocale.Fullname.getString(context),
-                                                        style: const TextStyle(color: Colors.black),
-                                                        required: true,
-                                                      ),
-                                                    ),
-                                                    validator: (value) => nameValidator(context, required: true, value: value),
-                                                  ),
-                                                  TextFormField(
-                                                    controller: roomController,
-                                                    decoration: InputDecoration(
-                                                      contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(
-                                                        AppLocale.Room.getString(context),
-                                                        style: const TextStyle(color: Colors.black),
-                                                        required: true,
-                                                      ),
-                                                    ),
-                                                    validator: (value) => roomValidator(context, required: true, value: value),
-                                                  ),
-                                                  TextFormField(
-                                                    controller: birthdayController,
-                                                    decoration: InputDecoration(
-                                                      contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(
-                                                        AppLocale.DateOfBirth.getString(context),
-                                                        style: const TextStyle(color: Colors.black),
-                                                      ),
-                                                    ),
-                                                    onTap: () async {
-                                                      final birthday = await showDatePicker(
-                                                        context: context,
-                                                        initialDate: Date.parseFriendly(birthdayController.text)?.toDateTime(),
-                                                        firstDate: DateTime.utc(1900),
-                                                        lastDate: DateTime.now(),
-                                                      );
-
-                                                      if (birthday != null) {
-                                                        birthdayController.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
-                                                      } else {
-                                                        birthdayController.clear();
-                                                      }
-                                                    },
-                                                    readOnly: true, // no need for validator
-                                                  ),
-                                                  TextFormField(
-                                                    controller: phoneController,
-                                                    decoration: InputDecoration(
-                                                      contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(
-                                                        AppLocale.Phone.getString(context),
-                                                        style: const TextStyle(color: Colors.black),
-                                                      ),
-                                                    ),
-                                                    validator: (value) => phoneValidator(context, value: value),
-                                                  ),
-                                                  TextFormField(
-                                                    controller: emailController,
-                                                    decoration: InputDecoration(
-                                                      contentPadding: const EdgeInsets.all(8.0),
-                                                      label: FieldLabel(
-                                                        AppLocale.Email.getString(context),
-                                                        style: const TextStyle(color: Colors.black),
-                                                      ),
-                                                    ),
-                                                    validator: (value) => emailValidator(context, value: value),
-                                                  ),
-                                                  const SizedBox.square(dimension: 10),
-                                                  Container(
-                                                    padding: const EdgeInsets.all(5),
-                                                    width: double.infinity,
-                                                    child: TextButton.icon(
-                                                      icon: const Icon(Icons.done_outlined),
-                                                      label: Text(AppLocale.Confirm.getString(context)),
-                                                      onPressed: () {
-                                                        if (formKey.currentState?.validate() ?? false) {
-                                                          Navigator.pop(context, true);
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-
-                                      if (submitted != null) {
-                                        final check = formKey.currentState?.validate() ?? false;
-                                        if (check) {
-                                          await _actionLock.run(
-                                            () async {
-                                              _notification = Builder(
-                                                builder: (context) => Text(
-                                                  AppLocale.Loading.getString(context),
-                                                  style: const TextStyle(color: Colors.blue),
-                                                ),
-                                              );
-                                              refresh();
-
-                                              try {
-                                                final result = await resident.update(
-                                                  state: state,
-                                                  info: PersonalInfo(
-                                                    name: nameController.text,
-                                                    room: int.parse(roomController.text),
-                                                    birthday: birthdayController.text.isEmpty ? null : Date.parseFriendly(birthdayController.text),
-                                                    phone: phoneController.text,
-                                                    email: emailController.text,
-                                                  ),
-                                                );
-
-                                                if (result.code != 0) {
-                                                  _notification = Builder(
-                                                    builder: (context) => Text(
-                                                      AppLocale.errorMessage(result.code).getString(context),
-                                                      style: const TextStyle(color: Colors.red),
-                                                    ),
-                                                  );
-                                                } else {
-                                                  _notification = const SizedBox.square(dimension: 0);
-                                                }
-                                              } catch (e) {
-                                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-                                                _notification = Builder(
-                                                  builder: (context) => Text(
-                                                    AppLocale.ConnectionError.getString(context),
-                                                    style: const TextStyle(color: Colors.red),
-                                                  ),
-                                                );
-
-                                                if (!(e is SocketException || e is TimeoutException)) {
-                                                  rethrow;
-                                                }
-                                              } finally {
-                                                _queryFuture = null;
-                                                refresh();
-                                              }
-                                            },
-                                          );
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ],
+                                children: [_EditButton(resident, this)],
                               ),
                             ),
                           ),
@@ -515,8 +558,8 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                           children: [
                             TextButton.icon(
                               icon: const Icon(Icons.delete_outlined),
-                              label: Text("${AppLocale.DeleteAccount.getString(context)} (${_selected.length})"),
-                              onPressed: _actionLock.locked || _selected.isEmpty ? null : _deleteAccounts,
+                              label: Text("${AppLocale.DeleteAccount.getString(context)} (${queryLoader.selected.length})"),
+                              onPressed: _actionLock.locked || queryLoader.selected.isEmpty ? null : _deleteAccounts,
                             ),
                           ],
                         ),
@@ -531,47 +574,55 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                             IconButton(
                               icon: const Icon(Icons.chevron_left_outlined),
                               onPressed: () {
-                                if (offset > 0) {
-                                  offset--;
+                                if (pagination.offset > 0) {
+                                  pagination.offset--;
+                                  reload();
                                 }
-                                refresh();
                               },
                             ),
                             FutureBuilder(
-                              future: _countFuture,
+                              future: pagination.future,
                               builder: (context, _) {
-                                return Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}");
+                                final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
+                                return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right_outlined),
                               onPressed: () {
-                                if (_offset < _offsetLimit) {
-                                  offset++;
+                                if (pagination.offset < pagination.offsetLimit) {
+                                  pagination.offset++;
+                                  reload();
                                 }
-                                refresh();
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.refresh_outlined),
                               onPressed: () {
-                                offset = 0;
-                                refresh();
+                                pagination.offset = 0;
+                                reload();
                               },
                             ),
                             TextButton.icon(
                               icon: const Icon(Icons.search_outlined),
                               label: Text(
-                                _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
+                                search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
                               ),
                               onPressed: () async {
                                 // Save current values for restoration
-                                final nameSearch = _nameSearch.text;
-                                final roomSearch = _roomSearch.text;
-                                final usernameSearch = _usernameSearch.text;
+                                final nameSearch = search.name.text;
+                                final roomSearch = search.room.text;
+                                final usernameSearch = search.username.text;
 
                                 final formKey = GlobalKey<FormState>();
+
+                                void onSubmit(BuildContext context) {
+                                  Navigator.pop(context, true);
+                                  pagination.offset = 0;
+                                  reload();
+                                }
+
                                 final submitted = await showDialog<bool>(
                                   context: context,
                                   builder: (context) => SimpleDialog(
@@ -584,42 +635,33 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                         child: Column(
                                           children: [
                                             TextFormField(
-                                              controller: _nameSearch,
+                                              controller: search.name,
                                               decoration: InputDecoration(
                                                 contentPadding: const EdgeInsets.all(8.0),
                                                 icon: const Icon(Icons.badge_outlined),
                                                 label: Text(AppLocale.Fullname.getString(context)),
                                               ),
-                                              onFieldSubmitted: (_) {
-                                                Navigator.pop(context, true);
-                                                offset = 0;
-                                              },
+                                              onFieldSubmitted: (_) => onSubmit(context),
                                               validator: (value) => nameValidator(context, required: false, value: value),
                                             ),
                                             TextFormField(
-                                              controller: _roomSearch,
+                                              controller: search.room,
                                               decoration: InputDecoration(
                                                 contentPadding: const EdgeInsets.all(8.0),
                                                 icon: const Icon(Icons.room_outlined),
                                                 label: Text(AppLocale.Room.getString(context)),
                                               ),
-                                              onFieldSubmitted: (_) {
-                                                Navigator.pop(context, true);
-                                                offset = 0;
-                                              },
+                                              onFieldSubmitted: (_) => onSubmit(context),
                                               validator: (value) => roomValidator(context, required: false, value: value),
                                             ),
                                             TextFormField(
-                                              controller: _usernameSearch,
+                                              controller: search.username,
                                               decoration: InputDecoration(
                                                 contentPadding: const EdgeInsets.all(8.0),
                                                 icon: const Icon(Icons.person_outlined),
                                                 label: Text(AppLocale.Username.getString(context)),
                                               ),
-                                              onFieldSubmitted: (_) {
-                                                Navigator.pop(context, true);
-                                                offset = 0;
-                                              },
+                                              onFieldSubmitted: (_) => onSubmit(context),
                                               validator: (value) => usernameValidator(context, required: false, value: value),
                                             ),
                                             const SizedBox.square(dimension: 10),
@@ -632,8 +674,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     label: Text(AppLocale.Search.getString(context)),
                                                     onPressed: () {
                                                       if (formKey.currentState?.validate() ?? false) {
-                                                        Navigator.pop(context, true);
-                                                        offset = 0;
+                                                        onSubmit(context);
                                                       }
                                                     },
                                                   ),
@@ -643,12 +684,11 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                                     icon: const Icon(Icons.clear_outlined),
                                                     label: Text(AppLocale.ClearAll.getString(context)),
                                                     onPressed: () {
-                                                      _nameSearch.clear();
-                                                      _roomSearch.clear();
-                                                      _usernameSearch.clear();
+                                                      search.name.clear();
+                                                      search.room.clear();
+                                                      search.username.clear();
 
-                                                      Navigator.pop(context, true);
-                                                      offset = 0;
+                                                      onSubmit(context);
                                                     },
                                                   ),
                                                 ),
@@ -663,9 +703,9 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
 
                                 if (submitted == null) {
                                   // Dialog dismissed. Restore field values
-                                  _nameSearch.text = nameSearch;
-                                  _roomSearch.text = roomSearch;
-                                  _usernameSearch.text = usernameSearch;
+                                  search.name.text = nameSearch;
+                                  search.room.text = roomSearch;
+                                  search.username.text = usernameSearch;
                                 }
                               },
                             ),

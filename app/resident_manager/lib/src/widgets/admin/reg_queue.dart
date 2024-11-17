@@ -249,6 +249,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
 
                         queryLoader.orderBy = newOrderBy;
                         pagination.offset = 0;
+                        reload();
                       }
                     },
                     child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -388,8 +389,6 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                               pagination.offset--;
                               reload();
                             }
-
-                            refresh();
                           },
                         ),
                         FutureBuilder(
@@ -406,8 +405,6 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                               pagination.offset++;
                               reload();
                             }
-
-                            refresh();
                           },
                         ),
                         IconButton(
@@ -431,13 +428,11 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
 
                             final formKey = GlobalKey<FormState>();
 
-                            void onSubmit() {
+                            void onSubmit(BuildContext context) {
                               Navigator.pop(context, true);
                               pagination.offset = 0;
                               reload();
                             }
-
-                            void onFieldSubmitted(String _) => onSubmit;
 
                             final submitted = await showDialog(
                               context: context,
@@ -457,7 +452,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                             icon: const Icon(Icons.badge_outlined),
                                             label: Text(AppLocale.Fullname.getString(context)),
                                           ),
-                                          onFieldSubmitted: onFieldSubmitted,
+                                          onFieldSubmitted: (_) => onSubmit(context),
                                           validator: (value) => nameValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
@@ -467,7 +462,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                             icon: const Icon(Icons.room_outlined),
                                             label: Text(AppLocale.Room.getString(context)),
                                           ),
-                                          onFieldSubmitted: onFieldSubmitted,
+                                          onFieldSubmitted: (_) => onSubmit(context),
                                           validator: (value) => roomValidator(context, required: false, value: value),
                                         ),
                                         TextFormField(
@@ -477,7 +472,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                             icon: const Icon(Icons.person_outlined),
                                             label: Text(AppLocale.Username.getString(context)),
                                           ),
-                                          onFieldSubmitted: onFieldSubmitted,
+                                          onFieldSubmitted: (_) => onSubmit(context),
                                           validator: (value) => usernameValidator(context, required: false, value: value),
                                         ),
                                         const SizedBox.square(dimension: 10),
@@ -490,7 +485,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                                 label: Text(AppLocale.Search.getString(context)),
                                                 onPressed: () {
                                                   if (formKey.currentState?.validate() ?? false) {
-                                                    onSubmit();
+                                                    onSubmit(context);
                                                   }
                                                 },
                                               ),
@@ -504,7 +499,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                                   search.room.clear();
                                                   search.username.clear();
 
-                                                  onSubmit();
+                                                  onSubmit(context);
                                                 },
                                               ),
                                             ),
