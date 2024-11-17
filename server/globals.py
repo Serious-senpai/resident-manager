@@ -94,12 +94,6 @@ async def loop() -> str:
     return str(asyncio.get_event_loop())
 
 
-@global_app.get("/ip", include_in_schema=False)
-async def ip(request: Request) -> str:
-    """Echo client IP address"""
-    return str(request.client)
-
-
 @global_app.get("/headers", include_in_schema=False)
 async def headers(request: Request) -> Dict[str, str]:
     """Echo client headers"""

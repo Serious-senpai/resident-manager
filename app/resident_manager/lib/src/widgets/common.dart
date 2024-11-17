@@ -49,15 +49,12 @@ mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
   CommonScaffold<T> build(BuildContext context);
 }
 
-class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
+class CommonScaffold<T extends StateAwareWidget> extends StatefulWidget {
   final CommonStateMixin<T> widgetState;
   final Widget title;
   final List<Widget> slivers;
 
-  /// The [GlobalKey] for the underlying [Scaffold]
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-
-  CommonScaffold({
+  const CommonScaffold({
     super.key,
     required this.widgetState,
     required this.title,
@@ -70,6 +67,16 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
     required this.title,
     required Widget sliver,
   }) : slivers = [sliver];
+
+  @override
+  State<CommonScaffold<T>> createState() => _CommonScaffoldState<T>();
+}
+
+class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaffold<T>> {
+  /// The [GlobalKey] for the underlying [Scaffold]
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final _scrollController = ScrollController();
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -89,6 +96,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
     return Scaffold(
       key: scaffoldKey,
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverAppBar(
             actions: [
@@ -113,9 +121,9 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                     onPressed: () => openDrawer(),
                     icon: const Icon(Icons.menu_outlined),
                   ),
-            title: title,
+            title: widget.title,
           ),
-          ...slivers,
+          ...widget.slivers,
         ],
       ),
       drawer: Builder(
@@ -152,13 +160,13 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.pushReplacementNamed(context, route);
                     } else {
-                      widgetState.pushNamedAndRefresh(context, route);
+                      widget.widgetState.pushNamedAndRefresh(context, route);
                     }
                   }
                 },
               );
 
-          if (!widgetState.state.loggedIn) {
+          if (!widget.widgetState.state.loggedIn) {
             // Not yet logged in
             navigator.add(
               routeTile(
@@ -170,7 +178,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
             );
           } else {
             // Logged in...
-            if (widgetState.state.loggedInAsAdmin) {
+            if (widget.widgetState.state.loggedInAsAdmin) {
               // ... as admin
               navigator.addAll(
                 [
@@ -219,7 +227,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                 leading: const Icon(Icons.logout_outlined),
                 title: Text(AppLocale.Logout.getString(context)),
                 onTap: () async {
-                  await widgetState.state.deauthorize();
+                  await widget.widgetState.state.deauthorize();
                   if (context.mounted) {
                     Navigator.popUntil(context, (route) => route.isFirst);
                     await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
@@ -241,14 +249,14 @@ class CommonScaffold<T extends StateAwareWidget> extends StatelessWidget {
                       IconButton(
                         icon: Image.asset("assets/flags/en.png", height: 20, width: 20),
                         iconSize: 20,
-                        onPressed: () => widgetState.state.localization.translate("en"),
+                        onPressed: () => widget.widgetState.state.localization.translate("en"),
                         padding: EdgeInsets.zero,
                       ),
                       const SizedBox.square(dimension: 20),
                       IconButton(
                         icon: Image.asset("assets/flags/vi.png", height: 20, width: 20),
                         iconSize: 20,
-                        onPressed: () => widgetState.state.localization.translate("vi"),
+                        onPressed: () => widget.widgetState.state.localization.translate("vi"),
                         padding: EdgeInsets.zero,
                       ),
                     ],

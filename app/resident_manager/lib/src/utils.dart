@@ -14,6 +14,62 @@ class ScreenWidth {
   static const EXTRA_EXTRA_LARGE = 1400;
 }
 
+/// The purpose of this class is providing a reliable method to access the
+/// state of the underlying [Future] in a [FutureBuilder]. Using the [AsyncSnapshot]
+/// from [FutureBuilder] is unreliable. Quoting from the
+/// [docs](https://api.flutter.dev/flutter/widgets/FutureBuilder-class.html):
+///
+/// > A side-effect of this is that providing a new but already-completed
+/// future to a [FutureBuilder] will result in a single frame in the
+/// [ConnectionState.waiting] state. This is because there is no way to
+/// synchronously determine that a [Future] has already completed.
+abstract class FutureHolder<T> {
+  Future<T>? _future;
+
+  /// The underlying future.
+  ///
+  /// You can pass this to a [FutureBuilder] constructor.
+  ///
+  /// When called, an instance of the [Future] returned from [run] will be obtained.
+  /// Calling [reload] will create another instance of [Future] from [run].
+  Future<T> get future => _future ??= _runAndSet();
+
+  bool _isLoading = false;
+
+  /// Whether [future] has completed. This serves as a way to synchronously
+  /// determine the [future]'s state.
+  bool get isLoading => _isLoading;
+
+  /// The last data returned by [future], or `null` if no data has been received yet.
+  /// When [run] is executed multiple times, this data can be passed to [FutureBuilder]
+  /// as its `initialData` parameter to avoid the flickering frame mentioned in the
+  /// [docs](https://api.flutter.dev/flutter/widgets/FutureBuilder-class.html).
+  ///
+  /// By combining with the [isLoading] attribute, you can perform building the widget
+  /// inside [FutureBuilder] more reliably.
+  T? lastData;
+
+  /// Reload [future] with another execution of [run].
+  void reload() {
+    _future = null;
+  }
+
+  Future<T> _runAndSet() async {
+    _isLoading = true;
+    try {
+      final result = lastData = await run();
+      return result;
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  /// The underlying asynchronous execution.
+  ///
+  /// Concrete classes should implement this.
+  Future<T> run();
+}
+
 class Date {
   final int year;
   final int month;

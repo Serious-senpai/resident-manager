@@ -29,9 +29,7 @@ class Fee(Snowflake):
 
     @classmethod
     def from_row(cls, row: Any) -> Fee:
-        """This function is a coroutine.
-
-        Create a new `Fee` object from a database row.
+        """Create a new `Fee` object from a database row.
 
         Parameters
         -----
