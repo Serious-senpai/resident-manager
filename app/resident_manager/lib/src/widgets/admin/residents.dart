@@ -316,7 +316,6 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   Widget _notification = const SizedBox.square(dimension: 0);
 
   final _actionLock = Lock();
-  final _horizontalController = ScrollController();
 
   void reload() {
     pagination.reload();
@@ -375,7 +374,6 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   void dispose() {
     super.dispose();
     search.dispose();
-    _horizontalController.dispose();
   }
 
   @override
@@ -717,17 +715,12 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                     SliverPadding(
                       padding: const EdgeInsets.all(5),
                       sliver: SliverToBoxAdapter(
-                        child: Scrollbar(
-                          controller: _horizontalController,
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            controller: _horizontalController,
-                            scrollDirection: Axis.horizontal,
-                            child: Container(
-                              width: max(mediaQuery.size.width, 1000),
-                              padding: const EdgeInsets.all(5),
-                              child: Table(children: rows),
-                            ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Container(
+                            width: max(mediaQuery.size.width, 1000),
+                            padding: const EdgeInsets.all(5),
+                            child: Table(children: rows),
                           ),
                         ),
                       ),
