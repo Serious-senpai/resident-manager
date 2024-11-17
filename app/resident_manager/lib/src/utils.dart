@@ -220,7 +220,7 @@ String? roomValidator(BuildContext context, {required bool required, required St
   }
 
   final roomInt = int.parse(value);
-  if (roomInt < 0 || roomInt > 32767) {
+  if (roomInt > 32767) {
     return AppLocale.InvalidRoomNumber.getString(context);
   }
 
@@ -290,13 +290,13 @@ String? roomAreaValidator(BuildContext context, {required bool required, require
     return null;
   }
 
-  final pattern = RegExp(r"^\d{1,9}$");
+  final pattern = RegExp(r"^\d{1,9}(?:\.\d*)?$");
   if (!pattern.hasMatch(value)) {
     return AppLocale.InvalidRoomArea.getString(context);
   }
 
-  final roomAreaInt = int.parse(value);
-  if (roomAreaInt < 0 || roomAreaInt > 21474835) {
+  final roomAreaDouble = double.parse(value);
+  if (roomAreaDouble > 21474835) {
     return AppLocale.InvalidRoomArea.getString(context);
   }
 
@@ -318,7 +318,7 @@ String? motorbikesCountValidator(BuildContext context, {required bool required, 
   }
 
   final motorbikesCountInt = int.parse(value);
-  if (motorbikesCountInt < 0 || motorbikesCountInt > 255) {
+  if (motorbikesCountInt > 255) {
     return AppLocale.InvalidMotorbikesCount.getString(context);
   }
 
@@ -340,7 +340,7 @@ String? carsCountValidator(BuildContext context, {required bool required, requir
   }
 
   final carsCountInt = int.parse(value);
-  if (carsCountInt < 0 || carsCountInt > 255) {
+  if (carsCountInt > 255) {
     return AppLocale.InvalidCarsCount.getString(context);
   }
 

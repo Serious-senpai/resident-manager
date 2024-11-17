@@ -21,99 +21,130 @@ class RoomsPage extends StateAwareWidget {
   AbstractCommonState<RoomsPage> createState() => _RoomsPageState();
 }
 
-class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
-  List<Room> _rooms = [];
+class _SearchField {
+  final room = TextEditingController();
+  final floor = TextEditingController();
 
-  Future<int?>? _queryFuture;
-  Future<int?>? _countFuture;
+  bool get searching => room.text.isNotEmpty || floor.text.isNotEmpty;
+
+  void dispose() {
+    room.dispose();
+    floor.dispose();
+  }
+}
+
+class _Pagination extends FutureHolder<int?> {
+  int offset = 0;
+  int offsetLimit = 0;
+
+  final _RoomsPageState _state;
+
+  _Pagination(this._state);
+
+  @override
+  Future<int?> run() async {
+    try {
+      final result = await Room.count(
+        state: _state.state,
+        room: int.tryParse(_state.search.room.text),
+        floor: int.tryParse(_state.search.floor.text),
+      );
+
+      final data = result.data;
+      if (data != null) {
+        offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
+      } else {
+        offsetLimit = offset;
+      }
+
+      return result.code;
+    } catch (e) {
+      offsetLimit = offset;
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
+        return null;
+      }
+
+      rethrow;
+    } finally {
+      _state.refresh();
+    }
+  }
+}
+
+class _QueryLoader extends FutureHolder<int?> {
+  final rooms = <Room>[];
+
+  final _RoomsPageState _state;
+
+  _QueryLoader(this._state);
+
+  @override
+  Future<int?> run() async {
+    try {
+      final result = await Room.query(
+        state: _state.state,
+        offset: DB_PAGINATION_QUERY * _state.pagination.offset,
+        room: int.tryParse(_state.search.room.text),
+        floor: int.tryParse(_state.search.floor.text),
+      );
+
+      final data = result.data;
+      if (data != null) {
+        rooms.clear();
+        rooms.addAll(data);
+      }
+
+      return result.code;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
+        return null;
+      }
+
+      rethrow;
+    } finally {
+      _state.refresh();
+    }
+  }
+}
+
+class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+  final search = _SearchField();
+
+  _Pagination? _pagination;
+  _Pagination get pagination => _pagination ??= _Pagination(this);
+
+  _QueryLoader? _queryLoader;
+  _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
+
   Widget _notification = const SizedBox.square(dimension: 0);
 
   final _actionLock = Lock();
+  final _horizontalController = ScrollController();
 
-  final _roomSearch = TextEditingController();
-  final _floorSearch = TextEditingController();
-
-  int _offset = 0;
-  int _offsetLimit = 0;
-  int get offset => _offset;
-  set offset(int value) {
-    _offset = value;
-    _queryFuture = null;
-    _countFuture = null;
+  void reload() {
+    pagination.reload();
+    queryLoader.reload();
     refresh();
   }
 
-  bool get _searching => _roomSearch.text.isNotEmpty || _floorSearch.text.isNotEmpty;
-
-  Future<int?> _query() async {
-    try {
-      final result = await Room.query(
-        state: state,
-        offset: DB_PAGINATION_QUERY * offset,
-        room: int.tryParse(_roomSearch.text),
-        floor: int.tryParse(_floorSearch.text),
-      );
-
-      final data = result.data;
-      if (data != null) {
-        _rooms = data;
-      }
-
-      return result.code;
-    } catch (e) {
-      if (e is SocketException || e is TimeoutException) {
-        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return null;
-      }
-
-      rethrow;
-    } finally {
-      refresh();
-    }
+  @override
+  void dispose() {
+    super.dispose();
+    search.dispose();
+    _horizontalController.dispose();
   }
-
-  Future<int?> _count() async {
-    try {
-      final result = await Room.count(
-        state: state,
-        room: int.tryParse(_roomSearch.text),
-        floor: int.tryParse(_floorSearch.text),
-      );
-
-      final data = result.data;
-      if (data != null) {
-        _offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      } else {
-        _offsetLimit = offset;
-      }
-
-      return result.code;
-    } catch (e) {
-      _offsetLimit = offset;
-      if (e is SocketException || e is TimeoutException) {
-        await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-        return null;
-      }
-
-      rethrow;
-    } finally {
-      refresh();
-    }
-  }
-
-  final _horizontalController = ScrollController();
 
   @override
   CommonScaffold<RoomsPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    _queryFuture ??= _query();
-    _countFuture ??= _count();
 
     return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.RoomsList.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       sliver: FutureBuilder(
-        future: _queryFuture,
+        future: queryLoader.future,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -162,7 +193,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                     ],
                   ),
                   ...List<TableRow>.from(
-                    _rooms.map(
+                    queryLoader.rooms.map(
                       (room) => TableRow(
                         children: [
                           TableCell(
@@ -353,8 +384,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                   rethrow;
                                                 }
                                               } finally {
-                                                _queryFuture = null;
-                                                refresh();
+                                                reload();
                                               }
                                             },
                                           );
@@ -400,8 +430,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                               rethrow;
                                             }
                                           } finally {
-                                            _queryFuture = null;
-                                            refresh();
+                                            reload();
                                           }
                                         },
                                       );
@@ -428,46 +457,54 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                             IconButton(
                               icon: const Icon(Icons.chevron_left_outlined),
                               onPressed: () {
-                                if (offset > 0) {
-                                  offset--;
+                                if (pagination.offset > 0) {
+                                  pagination.offset--;
+                                  reload();
                                 }
-                                refresh();
                               },
                             ),
                             FutureBuilder(
-                              future: _countFuture,
+                              future: pagination.future,
                               builder: (context, _) {
-                                return Text("${offset + 1}/${max(_offset, _offsetLimit) + 1}");
+                                final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
+                                return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right_outlined),
                               onPressed: () {
-                                if (_offset < _offsetLimit) {
-                                  offset++;
+                                if (pagination.offset < pagination.offsetLimit) {
+                                  pagination.offset++;
+                                  reload();
                                 }
-                                refresh();
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.refresh_outlined),
                               onPressed: () {
-                                offset = 0;
-                                refresh();
+                                pagination.offset = 0;
+                                reload();
                               },
                             ),
                             TextButton.icon(
                               icon: const Icon(Icons.search_outlined),
                               label: Text(
-                                _searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: _searching ? TextDecoration.underline : null),
+                                search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
                               ),
                               onPressed: () async {
                                 // Save current values for restoration
-                                final roomSearch = _roomSearch.text;
-                                final floorSearch = _floorSearch.text;
+                                final roomSearch = search.room.text;
+                                final floorSearch = search.floor.text;
 
                                 final formKey = GlobalKey<FormState>();
+
+                                void onSubmit(BuildContext context) {
+                                  Navigator.pop(context, true);
+                                  pagination.offset = 0;
+                                  reload();
+                                }
+
                                 final submitted = await showDialog(
                                   context: context,
                                   builder: (context) => SimpleDialog(
@@ -480,31 +517,23 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                         child: Column(
                                           children: [
                                             TextFormField(
-                                              controller: _roomSearch,
+                                              controller: search.room,
                                               decoration: InputDecoration(
                                                 contentPadding: const EdgeInsets.all(8.0),
                                                 icon: const Icon(Icons.room_outlined),
                                                 label: Text(AppLocale.Room.getString(context)),
                                               ),
-                                              onFieldSubmitted: (_) {
-                                                Navigator.pop(context, true);
-                                                offset = 0;
-                                              },
+                                              onFieldSubmitted: (_) => onSubmit(context),
                                               validator: (value) => roomValidator(context, required: false, value: value),
                                             ),
                                             TextFormField(
-                                              controller: _floorSearch,
+                                              controller: search.floor,
                                               decoration: InputDecoration(
                                                 contentPadding: const EdgeInsets.all(8.0),
                                                 icon: const Icon(Icons.apartment_outlined),
                                                 label: Text(AppLocale.Floor.getString(context)),
                                               ),
-                                              onFieldSubmitted: (_) {
-                                                if (formKey.currentState?.validate() ?? false) {
-                                                  Navigator.pop(context, true);
-                                                  offset = 0;
-                                                }
-                                              },
+                                              onFieldSubmitted: (_) => onSubmit(context),
                                             ),
                                             const SizedBox.square(dimension: 10),
                                             Row(
@@ -514,10 +543,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                   child: TextButton.icon(
                                                     icon: const Icon(Icons.done_outlined),
                                                     label: Text(AppLocale.Search.getString(context)),
-                                                    onPressed: () {
-                                                      Navigator.pop(context, true);
-                                                      offset = 0;
-                                                    },
+                                                    onPressed: () => onSubmit(context),
                                                   ),
                                                 ),
                                                 Expanded(
@@ -525,11 +551,10 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     icon: const Icon(Icons.clear_outlined),
                                                     label: Text(AppLocale.ClearAll.getString(context)),
                                                     onPressed: () {
-                                                      _roomSearch.clear();
-                                                      _floorSearch.clear();
+                                                      search.room.clear();
+                                                      search.floor.clear();
 
-                                                      Navigator.pop(context, true);
-                                                      offset = 0;
+                                                      onSubmit(context);
                                                     },
                                                   ),
                                                 ),
@@ -544,8 +569,8 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
 
                                 if (submitted == null) {
                                   // Dialog dismissed. Restore field values
-                                  _roomSearch.text = roomSearch;
-                                  _floorSearch.text = floorSearch;
+                                  search.room.text = roomSearch;
+                                  search.floor.text = floorSearch;
                                 }
                               },
                             ),
