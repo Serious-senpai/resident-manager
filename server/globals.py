@@ -127,24 +127,35 @@ class _VNPayResponse(BaseModel):
     Message: str
 
 
-@global_app.get("/IPN", include_in_schema=False)
+@global_app.get("/ipn", include_in_schema=False)
 async def ipn(request: Request) -> _VNPayResponse:
     params = dict(sorted(request.query_params.items()))
 
     # Validate request parameters
-    checksum = params.pop("vnp_SecureHash")
+    try:
+        checksum = params.pop("vnp_SecureHash")
+        tmn_code = params["vnp_TmnCode"]
+    except KeyError:
+        return _VNPayResponse(RspCode="99", Message="Missing required fields")
+
     data = "&".join(f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in params.items())
     expected_checksum = hmac.new(
         VNPAY_SECRET_KEY.encode("utf-8"),
         data.encode("utf-8"),
         digestmod=hashlib.sha512,
     ).hexdigest()
-    if VNPAY_TMN_CODE != params["vnp_TmnCode"] or checksum != expected_checksum:
+    if VNPAY_TMN_CODE != tmn_code or checksum != expected_checksum:
         return _VNPayResponse(RspCode="97", Message="Invalid signature")
 
     # Update database
-    if params["vnp_ResponseCode"] == "00":
-        room, fee_id, normalized_amount, _ = map(int, params["vnp_TxnRef"].split("-"))
+    try:
+        response_code = params["vnp_ResponseCode"]
+        txn_ref = params["vnp_TxnRef"]
+    except KeyError:
+        return _VNPayResponse(RspCode="99", Message="Missing required fields")
+
+    if response_code == "00":
+        room, fee_id, normalized_amount, _ = map(int, txn_ref.split("-"))
         amount = normalized_amount / 100
         try:
             async with Database.instance.pool.acquire() as connection:
