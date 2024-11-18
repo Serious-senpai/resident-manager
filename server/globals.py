@@ -144,7 +144,7 @@ async def ipn(request: Request) -> _VNPayResponse:
 
     # Update database
     if params["vnp_ResponseCode"] == "00":
-        room, fee_id, amount = map(int, params["vnp_TxnRef"].split("-"))
+        room, fee_id, amount, _ = map(int, params["vnp_TxnRef"].split("-"))
         try:
             async with Database.instance.pool.acquire() as connection:
                 async with connection.cursor() as cursor:

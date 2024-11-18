@@ -13,6 +13,7 @@ from fastapi.responses import RedirectResponse
 from ...app import api_v1
 from ...models import Fee, Room
 from ....config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
+from ....utils import since_epoch
 
 
 __all__ = ("residents_pay",)
@@ -56,6 +57,7 @@ async def residents_pay(
     now = datetime.now(timezone(timedelta(hours=7)))
     expire = now + timedelta(hours=1)
 
+    unique_suffix = int(1000 * since_epoch(now).total_seconds())
     params: Dict[str, Union[int, str]] = {
         "vnp_Version": "2.1.0",
         "vnp_Command": "pay",
@@ -69,7 +71,7 @@ async def residents_pay(
         "vnp_OrderType": 250000,
         "vnp_ReturnUrl": "https://example.com",
         "vnp_ExpireDate": _format_time(expire),
-        "vnp_TxnRef": f"{room}-{fee_id}-{amount}",
+        "vnp_TxnRef": f"{room}-{fee_id}-{amount}-{unique_suffix}",
     }
     params = dict(sorted(params.items()))
 
