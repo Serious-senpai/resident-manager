@@ -8,8 +8,9 @@ import pyodbc  # type: ignore
 from .accounts import Account
 from .results import Result
 from .snowflake import Snowflake
-from ..database import Database
-from ..utils import (
+from ...config import DB_PAGINATION_QUERY
+from ...database import Database
+from ...utils import (
     generate_id,
     hash_password,
     validate_name,
@@ -19,7 +20,6 @@ from ..utils import (
     validate_username,
     validate_password,
 )
-from ...config import DB_PAGINATION_QUERY
 
 
 __all__ = ("RegisterRequest",)

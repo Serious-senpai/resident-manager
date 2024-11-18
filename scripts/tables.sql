@@ -57,5 +57,6 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'payments' AND type = 'U')
         amount INT NOT NULL, -- amount = 100 * [amount in VND]
         fee_id BIGINT NOT NULL,
         CONSTRAINT FK_payments_rooms FOREIGN KEY (room) REFERENCES rooms(room),
-        CONSTRAINT FK_payments_fee FOREIGN KEY (fee_id) REFERENCES fee(id)
+        CONSTRAINT FK_payments_fee FOREIGN KEY (fee_id) REFERENCES fee(id),
+        CONSTRAINT UQ_payments_room_fee_id UNIQUE (room, fee_id)
     )

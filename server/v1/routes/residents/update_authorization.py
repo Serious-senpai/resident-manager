@@ -7,7 +7,7 @@ from fastapi import Depends, Response, status
 
 from ...app import api_v1
 from ...models import Resident, Result
-from ...utils import check_password
+from ....utils import check_password
 
 
 __all__ = ("residents_update_authorization",)

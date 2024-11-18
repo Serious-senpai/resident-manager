@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from .database import Database
+from ..database import Database
 
 
 __all__ = (

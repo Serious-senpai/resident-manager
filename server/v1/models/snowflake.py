@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 import pydantic
 
-from ..utils import snowflake_time
+from ...utils import snowflake_time
 
 
 __all__ = ("Snowflake",)

@@ -7,9 +7,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from ...app import api_v1
-from ...database import Database
 from ...models import AdminPermission, Token
-from ...utils import check_password
+from ....database import Database
+from ....utils import check_password
 
 
 __all__ = ("login",)

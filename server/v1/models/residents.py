@@ -12,14 +12,14 @@ from .auth import Token
 from .info import PersonalInfo
 from .results import Result
 from .snowflake import Snowflake
-from ..database import Database
-from ..utils import (
+from ...config import DB_PAGINATION_QUERY
+from ...database import Database
+from ...utils import (
     check_password,
     hash_password,
     validate_password,
     validate_username,
 )
-from ...config import DB_PAGINATION_QUERY
 
 
 __all__ = ("Resident",)

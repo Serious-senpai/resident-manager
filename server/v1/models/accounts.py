@@ -6,7 +6,7 @@ from typing_extensions import Self
 
 from .auth import HashedAuthorization
 from .info import PublicInfo
-from ..utils import (
+from ...utils import (
     validate_name,
     validate_room,
     validate_username,

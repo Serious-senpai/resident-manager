@@ -9,7 +9,7 @@ from hashlib import sha256
 from random import randbytes
 from typing import Optional
 
-from ..config import EPOCH, SALT_LENGTH
+from .config import EPOCH, SALT_LENGTH
 
 
 __all__ = (

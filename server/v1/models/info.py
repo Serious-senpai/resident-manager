@@ -7,7 +7,7 @@ import pydantic
 
 from .results import Result
 from .snowflake import Snowflake
-from ..utils import (
+from ...utils import (
     validate_name,
     validate_room,
     validate_phone,

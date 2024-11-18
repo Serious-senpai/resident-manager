@@ -2,6 +2,7 @@ from .accounts import *
 from .auth import *
 from .fee import *
 from .info import *
+from .payment import *
 from .reg_request import *
 from .residents import *
 from .results import *

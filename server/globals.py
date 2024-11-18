@@ -1,14 +1,24 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import asyncio
 import logging
+import urllib.parse
 from collections import OrderedDict
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Dict, Final, Optional, Type, TYPE_CHECKING
 
+import pyodbc  # type: ignore
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from fastapi.responses import RedirectResponse
+
+from .config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
+from .database import Database
+from .utils import generate_id
+
 
 try:
     import coverage  # dev-dependency only
@@ -110,3 +120,46 @@ async def docs() -> RedirectResponse:
 async def redoc() -> RedirectResponse:
     """Redirect to API documentation of latest version"""
     return RedirectResponse(final_subroute + "/redoc")
+
+
+class _VNPayResponse(BaseModel):
+    RspCode: str
+    Message: str
+
+
+@global_app.get("/IPN", include_in_schema=False)
+async def ipn(request: Request) -> _VNPayResponse:
+    params = dict(sorted(request.query_params.items()))
+
+    # Validate request parameters
+    checksum = params.pop("vnp_SecureHash")
+    data = "&".join(f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in params.items())
+    expected_checksum = hmac.new(
+        VNPAY_SECRET_KEY.encode("utf-8"),
+        data.encode("utf-8"),
+        digestmod=hashlib.sha512,
+    ).hexdigest()
+    if VNPAY_TMN_CODE != params["vnp_TmnCode"] or checksum != expected_checksum:
+        return _VNPayResponse(RspCode="97", Message="Invalid signature")
+
+    # Update database
+    if params["vnp_ResponseCode"] == "00":
+        room, fee_id, amount = map(int, params["vnp_TxnRef"].split("-"))
+        try:
+            async with Database.instance.pool.acquire() as connection:
+                async with connection.cursor() as cursor:
+                    await cursor.execute(
+                        """
+                            INSERT INTO payments
+                            VALUES (?, ?, ?, ?)
+                        """,
+                        generate_id(),
+                        room,
+                        amount,
+                        fee_id,
+                    )
+
+        except pyodbc.IntegrityError:
+            return _VNPayResponse(RspCode="02", Message="Data has been updated already")
+
+    return _VNPayResponse(RspCode="00", Message="Data has been updated successfully")

@@ -4,13 +4,13 @@ from typing import ClassVar, Optional, TYPE_CHECKING
 
 import aioodbc  # type: ignore
 
-from .utils import hash_password
-from ..config import (
+from .config import (
     DEFAULT_ADMIN_PASSWORD,
     DEFAULT_ADMIN_USERNAME,
     ODBC_CONNECTION_STRING,
     ROOT,
 )
+from .utils import hash_password
 
 
 __all__ = ("Database",)

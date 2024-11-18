@@ -7,8 +7,9 @@ import pydantic
 
 from .results import Result
 from .snowflake import Snowflake
-from ..database import Database
-from ..utils import (
+from ...config import DB_PAGINATION_QUERY
+from ...database import Database
+from ...utils import (
     generate_id,
     validate_fee_bounds,
     validate_fee_name,
@@ -16,7 +17,9 @@ from ..utils import (
     validate_fee_per_car,
     validate_fee_per_motorbike,
 )
-from ...config import DB_PAGINATION_QUERY
+
+
+__all__ = ("Fee",)
 
 
 class Fee(Snowflake):
