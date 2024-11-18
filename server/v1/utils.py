@@ -110,3 +110,19 @@ def validate_password(password: str) -> bool:
 
 def validate_fee_name(name: str) -> bool:
     return len(name) > 0 and len(name) < 256
+
+
+def validate_fee_bounds(lower: float, upper: float) -> bool:
+    return lower >= 0 and lower < upper and upper <= 21474835
+
+
+def validate_fee_per_area(value: float) -> bool:
+    return -21474835 <= value <= 21474835
+
+
+def validate_fee_per_motorbike(value: float) -> bool:
+    return -21474835 <= value <= 21474835
+
+
+def validate_fee_per_car(value: float) -> bool:
+    return -21474835 <= value <= 21474835

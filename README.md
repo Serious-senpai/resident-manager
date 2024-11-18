@@ -29,6 +29,11 @@ message into a specific language.
 | 301 | Target resident ID does not exist in an update request |
 | 401 | Unauthorized administrator operation |
 | 402 | Unauthorized resident operation |
-| 501 | Invalid room area |
+| 501 | Invalid room's area |
 | 502 | Invalid room's motorbikes count |
 | 503 | Invalid room's cars count |
+| 601 | Invalid fee name |
+| 602 | Invalid fee lower bound and upper bound |
+| 603 | Invalid fee per area |
+| 604 | Invalid fee per motorbike |
+| 605 | Invalid fee per car |

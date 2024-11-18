@@ -5,9 +5,17 @@ from typing import Annotated, Any, List, Literal, Optional
 
 import pydantic
 
+from .results import Result
 from .snowflake import Snowflake
 from ..database import Database
-from ..utils import validate_fee_name
+from ..utils import (
+    generate_id,
+    validate_fee_bounds,
+    validate_fee_name,
+    validate_fee_per_area,
+    validate_fee_per_car,
+    validate_fee_per_motorbike,
+)
 from ...config import DB_PAGINATION_QUERY
 
 
@@ -55,6 +63,70 @@ class Fee(Snowflake):
         )
 
     @classmethod
+    async def create(
+        cls,
+        *,
+        name: str,
+        lower: float,
+        upper: float,
+        per_area: float,
+        per_motorbike: float,
+        per_car: float,
+        deadline: date,
+        description: str,
+        flags: int,
+    ) -> Result[Optional[Fee]]:
+        if not validate_fee_name(name):
+            return Result(code=601, data=None)
+
+        if not validate_fee_bounds(lower, upper):
+            return Result(code=602, data=None)
+
+        if not validate_fee_per_area(per_area):
+            return Result(code=603, data=None)
+
+        if not validate_fee_per_motorbike(per_motorbike):
+            return Result(code=604, data=None)
+
+        if not validate_fee_per_car(per_car):
+            return Result(code=605, data=None)
+
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                print(name, lower, upper, per_area, per_motorbike, per_car, deadline, description, flags)
+                await cursor.execute(
+                    """
+                        DECLARE
+                            @Id BIGINT = ?,
+                            @Name NVARCHAR(255) = ?,
+                            @Lower INT = ?,
+                            @Upper INT = ?,
+                            @PerArea INT = ?,
+                            @PerMotorbike INT = ?,
+                            @PerCar INT = ?,
+                            @Deadline DATE = ?,
+                            @Description NVARCHAR(max) = ?,
+                            @Flags TINYINT = ?;
+
+                        INSERT INTO fee
+                        OUTPUT INSERTED.*
+                        VALUES (@Id, @Name, @Lower, @Upper, @PerArea, @PerMotorbike, @PerCar, @Deadline, @Description, @Flags)
+                    """,
+                    generate_id(),
+                    name,
+                    int(lower * 100),
+                    int(upper * 100),
+                    int(per_area * 100),
+                    int(per_motorbike * 100),
+                    int(per_car * 100),
+                    deadline,
+                    description,
+                    flags,
+                )
+                row = await cursor.fetchone()
+                return Result(code=0, data=cls.from_row(row))
+
+    @classmethod
     async def query(
         cls,
         *,
@@ -87,10 +159,9 @@ class Fee(Snowflake):
             where.append("CHARINDEX(?, name) > 0")
             params.append(name)
 
-        query = [
-            "SELECT * FROM fee",
-            "WHERE " + " AND ".join(where),
-        ]
+        query = ["SELECT * FROM fee"]
+        if len(where) > 0:
+            query.append("WHERE " + " AND ".join(where))
 
         if order_by not in {
             "id",
