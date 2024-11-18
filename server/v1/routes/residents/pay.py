@@ -58,20 +58,21 @@ async def residents_pay(
     expire = now + timedelta(hours=1)
 
     unique_suffix = int(1000 * since_epoch(now).total_seconds())
+    normalized_amount = int(100 * amount)
     params: Dict[str, Union[int, str]] = {
         "vnp_Version": "2.1.0",
         "vnp_Command": "pay",
         "vnp_TmnCode": VNPAY_TMN_CODE,
-        "vnp_Amount": int(100 * amount),
+        "vnp_Amount": normalized_amount,
         "vnp_CreateDate": _format_time(now),
         "vnp_CurrCode": "VND",
-        "vnp_IpAddr": request.headers["x-client-ip"],  # Azure headers containing client IP address
+        "vnp_IpAddr": request.headers.get("x-client-ip", "0.0.0.0"),  # Azure headers containing client IP address
         "vnp_Locale": "vn",
         "vnp_OrderInfo": f"Thanh toan {room} cho {fee_id}",
         "vnp_OrderType": 250000,
         "vnp_ReturnUrl": "https://example.com",
         "vnp_ExpireDate": _format_time(expire),
-        "vnp_TxnRef": f"{room}-{fee_id}-{amount}-{unique_suffix}",
+        "vnp_TxnRef": f"{room}-{fee_id}-{normalized_amount}-{unique_suffix}",
     }
     params = dict(sorted(params.items()))
 
