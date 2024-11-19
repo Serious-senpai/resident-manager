@@ -4,6 +4,7 @@ from datetime import date
 from typing import Annotated, Any, List, Literal, Optional
 
 import pydantic
+from pyodbc import Row  # type: ignore
 
 from .results import Result
 from .snowflake import Snowflake
@@ -39,7 +40,7 @@ class Fee(Snowflake):
     flags: Annotated[int, pydantic.Field(description="Bitmask flags of the fee")]
 
     @classmethod
-    def from_row(cls, row: Any) -> Fee:
+    def from_row(cls, row: Row) -> Fee:
         """Create a new `Fee` object from a database row.
 
         Parameters
@@ -53,16 +54,16 @@ class Fee(Snowflake):
             The new `Fee` object.
         """
         return cls(
-            id=row[0],
-            name=row[1],
-            lower=row[2] / 100,
-            upper=row[3] / 100,
-            per_area=row[4] / 100,
-            per_motorbike=row[5] / 100,
-            per_car=row[6] / 100,
-            deadline=row[7],
-            description=row[8],
-            flags=row[9],
+            id=row.id,
+            name=row.name,
+            lower=row.lower / 100,
+            upper=row.upper / 100,
+            per_area=row.per_area / 100,
+            per_motorbike=row.per_motorbike / 100,
+            per_car=row.per_car / 100,
+            deadline=row.deadline,
+            description=row.description,
+            flags=row.flags,
         )
 
     @classmethod
@@ -109,7 +110,7 @@ class Fee(Snowflake):
                             @PerCar INT = ?,
                             @Deadline DATE = ?,
                             @Description NVARCHAR(max) = ?,
-                            @Flags TINYINT = ?;
+                            @Flags TINYINT = ?
 
                         INSERT INTO fee
                         OUTPUT INSERTED.*

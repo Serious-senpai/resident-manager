@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, List, Optional, Tuple, TypeVar
 
+from pyodbc import Row  # type: ignore
 from typing_extensions import Self
 
 from .auth import HashedAuthorization
@@ -19,16 +20,16 @@ T = TypeVar("T")
 
 class Account(PublicInfo, HashedAuthorization):
     @classmethod
-    def from_row(cls, row: Any) -> Self:
+    def from_row(cls, row: Row) -> Self:
         return cls(
-            id=row[0],
-            name=row[1],
-            room=row[2],
-            birthday=row[3],
-            phone=row[4],
-            email=row[5],
-            username=row[6],
-            hashed_password=row[7],
+            id=row.id,
+            name=row.name,
+            room=row.room,
+            birthday=row.birthday,
+            phone=row.phone,
+            email=row.email,
+            username=row.username,
+            hashed_password=row.hashed_password,
         )
 
     @staticmethod

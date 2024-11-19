@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import List, Optional, Tuple
 
+from pyodbc import Row  # type: ignore
+
+from .fee import Fee
 from .results import Result
+from .rooms import RoomData
 from .snowflake import Snowflake
 from ...database import Database
 from ...utils import generate_id
@@ -22,12 +26,12 @@ class Payment(Snowflake):
     fee_id: int
 
     @classmethod
-    def from_row(cls, row: Any) -> Payment:
+    def from_row(cls, row: Row) -> Payment:
         return cls(
-            id=row[0],
-            room=row[1],
-            amount=row[2] / 100,
-            fee_id=row[3],
+            id=row.id,
+            room=row.room,
+            amount=row.amount / 100,
+            fee_id=row.fee_id,
         )
 
     @classmethod
@@ -46,7 +50,7 @@ class Payment(Snowflake):
                             @Id BIGINT = ?,
                             @Room SMALLINT = ?,
                             @Amount INT = ?,
-                            @FeeId BIGINT = ?;
+                            @FeeId BIGINT = ?
 
                         INSERT INTO payments
                         OUTPUT INSERTED.*
@@ -64,3 +68,24 @@ class Payment(Snowflake):
                 )
                 row = await cursor.fetchone()
                 return Result(data=cls.from_row(row))
+
+    @classmethod
+    async def query_unpaid(cls, *, room: int) -> List[Tuple[RoomData, Fee]]:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                        DECLARE @Room SMALLINT = ?
+
+                        SELECT rooms.*, fee.* FROM fee
+                        INNER JOIN rooms ON rooms.room = @Room
+                        WHERE fee.id NOT IN (
+                            SELECT fee_id FROM payments
+                            WHERE room = @Room
+                        )
+                    """,
+                    room,
+                )
+
+                rows = await cursor.fetchall()
+                return [(RoomData.from_row(row), Fee.from_row(row)) for row in rows]

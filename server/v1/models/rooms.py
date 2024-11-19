@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Annotated, Any, List, Optional
 
 import pydantic
+from pyodbc import Row  # type: ignore
 
 from .results import Result
 from ...config import DB_PAGINATION_QUERY
@@ -22,6 +23,15 @@ class RoomData(pydantic.BaseModel):
     area: Annotated[float, pydantic.Field(description="The area of the room in square meters")]
     motorbike: Annotated[int, pydantic.Field(description="The number of motorbikes")]
     car: Annotated[int, pydantic.Field(description="The number of cars")]
+
+    @classmethod
+    def from_row(cls, row: Row) -> RoomData:
+        return cls(
+            room=row.room,
+            area=row.area / 100,
+            motorbike=row.motorbike,
+            car=row.car,
+        )
 
     def validate_info(self) -> Optional[Result[None]]:
         if not validate_room(self.room):
@@ -116,13 +126,13 @@ class Room(pydantic.BaseModel):
     residents: Annotated[int, pydantic.Field(description="The number of residents in this room")]
 
     @classmethod
-    def from_row(cls, row: Any) -> Room:
+    def from_row(cls, row: Row) -> Room:
         return cls(
-            room=row[0],
-            area=None if row[1] is None else row[1] / 100,
-            motorbike=None if row[2] is None else row[2],
-            car=None if row[3] is None else row[3],
-            residents=row[4],
+            room=row.room,
+            area=None if row.area is None else row.area / 100,
+            motorbike=row.motorbike,
+            car=row.car,
+            residents=row.residents,
         )
 
     @staticmethod

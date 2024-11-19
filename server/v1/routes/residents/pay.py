@@ -11,7 +11,7 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
 from ...app import api_v1
-from ...models import Fee, Room
+from ...models import Payment
 from ....config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
 from ....utils import since_epoch
 
@@ -29,6 +29,7 @@ def _format_time(time: datetime) -> str:
     name="Fee payment",
     description="Perform a payment for a fee",
     tags=["resident"],
+    include_in_schema=False,
 )
 async def residents_pay(
     request: Request,
@@ -36,18 +37,13 @@ async def residents_pay(
     fee_id: int,
     amount: float,
 ) -> RedirectResponse:
-    fees = await Fee.query(offset=0, id=fee_id)
-    if len(fees) == 0:
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    unpaid = await Payment.query_unpaid(room=room)
+    for r, fee in unpaid:
+        if fee.id == fee_id:
+            break
 
-    fee = fees[0]
-    rooms = await Room.query(offset=0, room=room)
-    if len(rooms) == 0:
+    else:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-
-    r = rooms[0]
-    if r.area is None or r.motorbike is None or r.car is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST)
 
     extra = fee.per_area * r.area + fee.per_motorbike * r.motorbike + fee.per_car * r.car
     if amount < fee.lower + extra or amount > fee.upper + extra:
