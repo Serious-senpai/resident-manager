@@ -9,6 +9,7 @@ import "package:resident_manager/src/state.dart";
 import "package:resident_manager/src/widgets/home.dart";
 import "package:resident_manager/src/widgets/login.dart";
 import "package:resident_manager/src/widgets/register.dart";
+import "package:resident_manager/src/widgets/admin/home.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 import "package:resident_manager/src/widgets/admin/residents.dart";
 import "package:resident_manager/src/widgets/admin/rooms.dart";
@@ -32,8 +33,9 @@ Future<Finder> pumpUntilFound(
   WidgetTester tester,
 ) async {
   final stopWatch = Stopwatch();
+  stopWatch.start();
   while (true) {
-    await tester.pumpAndSettle();
+    await tester.pump();
     try {
       final finder = find.byWidgetPredicate(predicate);
       expect(finder, matcher);
@@ -73,7 +75,10 @@ Future<void> adminSearch(
   await tester.enterText(searchFields.at(1), room.toString());
   await tester.enterText(searchFields.at(2), username);
   await tester.tap(find.descendant(of: searchDialog, matching: find.byIcon(Icons.done_outlined)));
-  await tester.pumpAndSettle(MAX_WAIT_DURATION);
+  await tester.pumpAndSettle();
+
+  // Wait until loading is completed
+  await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
 }
 
 void main() {
@@ -98,7 +103,16 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Open registration queue
+      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      await tester.pumpAndSettle();
+      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -106,7 +120,8 @@ void main() {
 
       // Open residents list
       await tester.tap(find.byIcon(Icons.people_outlined));
-      await pumpUntilFound((widget) => widget is ResidentsPage, findsOneWidget, tester);
+      await tester.pumpAndSettle();
+      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -114,7 +129,8 @@ void main() {
 
       // Open rooms list
       await tester.tap(find.byIcon(Icons.room_outlined));
-      await pumpUntilFound((widget) => widget is RoomsPage, findsOneWidget, tester);
+      await tester.pumpAndSettle();
+      expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -188,7 +204,19 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
 
       // Successfully logged in as admin
-      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
+
+      // Open registration queue
+      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      await tester.pumpAndSettle();
+      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+
+      // Wait until loading is completed
+      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
 
       // Search for resident
       await adminSearch(tester, fullname: fullname, room: room, username: username);
@@ -205,7 +233,10 @@ void main() {
 
       // Approve the registration request
       await tester.tap(find.byIcon(Icons.done_outlined));
-      await tester.pumpAndSettle(MAX_WAIT_DURATION);
+      await tester.pumpAndSettle();
+
+      // Wait until loading is completed
+      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -251,7 +282,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
 
       // Successfully logged in as admin
-      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -313,7 +344,10 @@ void main() {
 
       // Delete the created account
       await tester.tap(find.byIcon(Icons.delete_outlined));
-      await tester.pumpAndSettle(MAX_WAIT_DURATION);
+      await tester.pumpAndSettle();
+
+      // Wait until loading is completed
+      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
