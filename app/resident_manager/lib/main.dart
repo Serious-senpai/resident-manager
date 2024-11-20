@@ -11,6 +11,7 @@ import "src/widgets/login.dart";
 import "src/widgets/payment.dart";
 import "src/widgets/personal_info.dart";
 import "src/widgets/register.dart";
+import "src/widgets/admin/home.dart";
 import "src/widgets/admin/reg_queue.dart";
 import "src/widgets/admin/residents.dart";
 import "src/widgets/admin/rooms.dart";
@@ -19,15 +20,15 @@ class MainApplication extends StateAwareWidget {
   const MainApplication({super.key, required super.state});
 
   @override
-  MainApplicationState createState() => MainApplicationState();
+  AbstractCommonState<MainApplication> createState() => _MainApplicationState();
 }
 
-class MainApplicationState extends AbstractCommonState<MainApplication> {
+class _MainApplicationState extends AbstractCommonState<MainApplication> {
   @override
   Widget build(BuildContext context) {
     String initialRoute = ApplicationRoute.login;
     if (state.loggedIn) {
-      initialRoute = state.loggedInAsAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home;
+      initialRoute = state.loggedInAsAdmin ? ApplicationRoute.adminHomePage : ApplicationRoute.home;
     }
 
     return MaterialApp(
@@ -44,6 +45,7 @@ class MainApplicationState extends AbstractCommonState<MainApplication> {
         ApplicationRoute.home: (context) => HomePage(state: state),
         ApplicationRoute.personalInfo: (context) => PersonalInfoPage(state: state),
         ApplicationRoute.payment: (context) => PaymentPage(state: state),
+        ApplicationRoute.adminHomePage: (context) => AdminHomePage(state: state),
         ApplicationRoute.adminRegisterQueue: (context) => RegisterQueuePage(state: state),
         ApplicationRoute.adminResidentsPage: (context) => ResidentsPage(state: state),
         ApplicationRoute.adminRoomsPage: (context) => RoomsPage(state: state),

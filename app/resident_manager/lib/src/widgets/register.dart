@@ -17,10 +17,10 @@ class RegisterPage extends StateAwareWidget {
   const RegisterPage({super.key, required super.state});
 
   @override
-  RegisterPageState createState() => RegisterPageState();
+  AbstractCommonState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class RegisterPageState extends AbstractCommonState<RegisterPage> with CommonStateMixin<RegisterPage> {
+class _RegisterPageState extends AbstractCommonState<RegisterPage> with CommonStateMixin<RegisterPage> {
   final _name = TextEditingController();
   final _room = TextEditingController();
   final _birthday = TextEditingController();

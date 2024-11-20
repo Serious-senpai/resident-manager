@@ -9,15 +9,15 @@ class PaymentPage extends StateAwareWidget {
   const PaymentPage({super.key, required super.state});
 
   @override
-  PaymentPageState createState() => PaymentPageState();
+  AbstractCommonState<PaymentPage> createState() => _PaymentPageState();
 }
 
-class PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStateMixin<PaymentPage> {
+class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStateMixin<PaymentPage> {
   @override
   CommonScaffold<PaymentPage> build(BuildContext context) {
     return CommonScaffold.single(
       widgetState: this,
-      title: Text(AppLocale.Payment.getString(context)),
+      title: Text(AppLocale.Payment.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
       sliver: const SliverToBoxAdapter(child: SizedBox.square(dimension: 0)),
     );
   }

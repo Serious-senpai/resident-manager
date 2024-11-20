@@ -7,10 +7,10 @@ class HoverContainer extends StatefulWidget {
   const HoverContainer({super.key, required this.onHover, required this.child});
 
   @override
-  HoverContainerState createState() => HoverContainerState();
+  State<HoverContainer> createState() => _HoverContainerState();
 }
 
-class HoverContainerState extends State<HoverContainer> {
+class _HoverContainerState extends State<HoverContainer> {
   bool _hovered = false;
 
   @override

@@ -78,6 +78,8 @@ class AppLocale {
   static const String Successful = "Successful";
   static const String EditRoomInfo = "EditRoomInfo";
   static const String Payment = "Payment";
+  static const String Admin = "Admin";
+  static const String NotYetLoggedIn = "NotYetLoggedIn";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -177,6 +179,8 @@ class AppLocale {
     Successful: "Successful",
     EditRoomInfo: "Edit room information",
     Payment: "Payment",
+    Admin: "Admin",
+    NotYetLoggedIn: "Not yet logged in",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -277,6 +281,8 @@ class AppLocale {
     Successful: "Thành công",
     EditRoomInfo: "Chỉnh sửa thông tin phòng",
     Payment: "Thanh toán",
+    Admin: "Quản trị viên",
+    NotYetLoggedIn: "Chưa đăng nhập",
 
     // Error codes
     Error0: "Thao tác thành công.",

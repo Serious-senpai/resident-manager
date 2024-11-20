@@ -13,10 +13,10 @@ class HomePage extends StateAwareWidget {
   const HomePage({super.key, required super.state});
 
   @override
-  HomePageState createState() => HomePageState();
+  AbstractCommonState<HomePage> createState() => _HomePageState();
 }
 
-class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<HomePage> {
+class _HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<HomePage> {
   @override
   CommonScaffold<HomePage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -34,7 +34,7 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: const AssetImage("assets/vector-background-blue.png"),
+                      image: const AssetImage("assets/vector-background-green.png"),
                       colorFilter: ColorFilter.mode(
                         Colors.black.withOpacity(0.3),
                         BlendMode.srcOver,

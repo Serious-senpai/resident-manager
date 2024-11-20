@@ -16,7 +16,7 @@ class PersonalInfoPage extends StateAwareWidget {
   const PersonalInfoPage({super.key, required super.state});
 
   @override
-  PersonalInfoPageState createState() => PersonalInfoPageState();
+  State<PersonalInfoPage> createState() => _PersonalInfoPageState();
 }
 
 class _InfoCard extends StatelessWidget {
@@ -37,7 +37,7 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-class PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with CommonStateMixin<PersonalInfoPage> {
+class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with CommonStateMixin<PersonalInfoPage> {
   final _name = TextEditingController();
   final _room = TextEditingController();
   final _birthday = TextEditingController();

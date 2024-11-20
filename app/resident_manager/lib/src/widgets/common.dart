@@ -109,9 +109,12 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
                   ),
                 ),
             ],
-            floating: true,
-            pinned: false,
-            snap: false,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Image.asset(
+                "assets/vector-background-blue.png",
+                fit: BoxFit.cover,
+              ),
+            ),
             leading: canPop
                 ? IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -141,18 +144,28 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
           child: const Icon(Icons.arrow_upward_outlined),
         ),
       ),
+      onDrawerChanged: (isOpened) {
+        if (!isOpened) {
+          widget.widgetState.refresh();
+        }
+      },
       drawer: Builder(
         builder: (context) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
+          final state = widget.widgetState.state;
           final navigator = <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage("assets/vector-background-green.jpg"),
-                  fit: BoxFit.cover,
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.grey),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const CircleAvatar(child: Icon(Icons.account_circle_outlined)),
+                    Text(state.loggedInAsAdmin ? AppLocale.Admin.getString(context) : state.resident?.name ?? AppLocale.NotYetLoggedIn.getString(context)),
+                  ],
                 ),
               ),
-              child: null,
             ),
           ];
 
@@ -197,6 +210,12 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
               // ... as admin
               navigator.addAll(
                 [
+                  routeTile(
+                    leading: const Icon(Icons.home_outlined),
+                    title: AppLocale.Home.getString(context),
+                    route: ApplicationRoute.adminHomePage,
+                    popAll: false,
+                  ),
                   routeTile(
                     leading: const Icon(Icons.how_to_reg_outlined),
                     title: AppLocale.RegisterQueue.getString(context),

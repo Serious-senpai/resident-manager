@@ -15,10 +15,10 @@ class LoginPage extends StateAwareWidget {
   const LoginPage({super.key, required super.state});
 
   @override
-  LoginPageState createState() => LoginPageState();
+  AbstractCommonState<LoginPage> createState() => _LoginPageState();
 }
 
-class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
+class _LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
   final _actionLock = Lock();
   Widget _notification = const SizedBox.square(dimension: 0);
 
@@ -67,7 +67,7 @@ class LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixi
           await showToastSafe(msg: "${mounted ? AppLocale.LoggedInAs.getString(context) : AppLocale.LoggedInAs} \"$username\"");
 
           if (mounted) {
-            await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
+            await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminHomePage : ApplicationRoute.home);
           }
         } else {
           _notification = Builder(
