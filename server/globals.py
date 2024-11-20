@@ -154,7 +154,7 @@ async def ipn(request: Request) -> _VNPayResponse:
     except KeyError:
         return _VNPayResponse(RspCode="99", Message="Missing required fields")
 
-    if response_code == "00":
+    if response_code in {"00", "07"}:
         room, fee_id, normalized_amount, _ = map(int, txn_ref.split("-"))
         amount = normalized_amount / 100
         try:

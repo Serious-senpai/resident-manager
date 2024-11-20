@@ -80,9 +80,11 @@ class HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<
                   ),
                   Expanded(
                     child: TextButton.icon(
-                      icon: const Icon(Icons.construction_outlined),
-                      label: Text(AppLocale.ComingSoon.getString(context)),
-                      onPressed: null,
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: Text(AppLocale.Payment.getString(context)),
+                      onPressed: () async {
+                        await pushNamedAndRefresh(context, ApplicationRoute.payment);
+                      },
                     ),
                   ),
                   Expanded(
