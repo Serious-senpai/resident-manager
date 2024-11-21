@@ -20,7 +20,7 @@ class LoginPage extends StateAwareWidget {
 
 class _LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
   final _actionLock = Lock();
-  Widget _notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.shrink();
 
   final _username = TextEditingController();
   final _password = TextEditingController();

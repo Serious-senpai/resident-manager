@@ -33,6 +33,9 @@ class ApplicationState {
   /// Token used for authorization
   String? _bearerToken;
 
+  String? _username;
+  String? _password;
+
   /// Resident logged in as
   Resident? resident;
 
@@ -73,6 +76,9 @@ class ApplicationState {
     final result = response.statusCode < 400;
     if (result) {
       // Update state attributes
+      _username = username;
+      _password = password;
+
       final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       _bearerToken = data["access_token"];
       if (!isAdmin) {
@@ -141,6 +147,29 @@ class ApplicationState {
     _onTranslationCallbacks.removeLast();
   }
 
+  Future<bool> _reauthorize(Response response) async {
+    final username = _username, password = _password;
+    if (username != null && password != null) {
+      try {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final code = data["code"];
+        if (code == 401 || code == 402) {
+          await authorize(
+            username: username,
+            password: password,
+            isAdmin: code == 401,
+            remember: await _withLoginFile((file) => file.exists()) ?? false,
+          );
+          return true;
+        }
+      } catch (_) {
+        // pass
+      }
+    }
+
+    return false;
+  }
+
   Future<Response> get(
     String path, {
     Map<String, String>? queryParameters,
@@ -156,6 +185,15 @@ class ApplicationState {
       baseUrl.replace(path: path, queryParameters: queryParameters),
       headers: headers,
     );
+
+    if (response.statusCode >= 400 && await _reauthorize(response)) {
+      return await get(
+        path,
+        queryParameters: queryParameters,
+        headers: headers,
+        authorize: authorize,
+      );
+    }
 
     return response;
   }
@@ -179,6 +217,17 @@ class ApplicationState {
       body: body,
       encoding: encoding,
     );
+
+    if (response.statusCode >= 400 && await _reauthorize(response)) {
+      return await post(
+        path,
+        queryParameters: queryParameters,
+        headers: headers,
+        body: body,
+        encoding: encoding,
+        authorize: authorize,
+      );
+    }
 
     return response;
   }

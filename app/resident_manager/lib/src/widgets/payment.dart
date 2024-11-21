@@ -18,7 +18,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
     return CommonScaffold.single(
       widgetState: this,
       title: Text(AppLocale.Payment.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      sliver: const SliverToBoxAdapter(child: SizedBox.square(dimension: 0)),
+      sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
     );
   }
 }

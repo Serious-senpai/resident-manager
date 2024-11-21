@@ -31,7 +31,7 @@ class _RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSt
   final _passwordRetype = TextEditingController();
 
   final _actionLock = Lock();
-  Widget _notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.shrink();
 
   final _formKey = GlobalKey<FormState>();
 

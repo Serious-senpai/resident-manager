@@ -118,7 +118,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
 
-  Widget _notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.shrink();
 
   final _actionLock = Lock();
 
@@ -367,7 +367,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                     ),
                                                   );
                                                 } else {
-                                                  _notification = const SizedBox.square(dimension: 0);
+                                                  _notification = const SizedBox.shrink();
                                                 }
                                               } catch (e) {
                                                 await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -413,7 +413,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                                                 ),
                                               );
                                             } else {
-                                              _notification = const SizedBox.square(dimension: 0);
+                                              _notification = const SizedBox.shrink();
                                             }
                                           } catch (e) {
                                             await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);

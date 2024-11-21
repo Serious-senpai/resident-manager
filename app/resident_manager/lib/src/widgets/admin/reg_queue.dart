@@ -133,7 +133,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
 
-  Widget _notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.shrink();
 
   final _actionLock = Lock();
 
@@ -158,7 +158,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
           final result = await coro(state: state, objects: queryLoader.selected);
           if (result == null) {
             queryLoader.selected.clear();
-            _notification = const SizedBox.square(dimension: 0);
+            _notification = const SizedBox.shrink();
           } else {
             _notification = Builder(
               builder: (context) => Text(

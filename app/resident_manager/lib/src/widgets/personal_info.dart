@@ -51,8 +51,8 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
   final _generalFormKey = GlobalKey<FormState>();
   final _authFormKey = GlobalKey<FormState>();
 
-  Widget _generalNotification = const SizedBox.square(dimension: 0);
-  Widget _authNotification = const SizedBox.square(dimension: 0);
+  Widget _generalNotification = const SizedBox.shrink();
+  Widget _authNotification = const SizedBox.shrink();
 
   final _generalLock = Lock();
   final _authLock = Lock();

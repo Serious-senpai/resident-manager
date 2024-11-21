@@ -278,7 +278,7 @@ class _EditButton extends StatelessWidget {
                       ),
                     );
                   } else {
-                    state._notification = const SizedBox.square(dimension: 0);
+                    state._notification = const SizedBox.shrink();
                   }
                 } catch (e) {
                   await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
@@ -313,7 +313,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
 
-  Widget _notification = const SizedBox.square(dimension: 0);
+  Widget _notification = const SizedBox.shrink();
 
   final _actionLock = Lock();
 
@@ -339,7 +339,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
             queryLoader.selected.clear();
           }
 
-          _notification = const SizedBox.square(dimension: 0);
+          _notification = const SizedBox.shrink();
         } catch (e) {
           await showToastSafe(msg: mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
           _notification = Builder(
