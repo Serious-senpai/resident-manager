@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:math";
 
 import "package:flutter/material.dart";
@@ -27,9 +28,8 @@ String randomDigits(int length) {
   return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(rng.nextInt(chars.length))));
 }
 
-Future<Finder> pumpUntilFound(
-  bool Function(Widget) predicate,
-  Matcher matcher,
+Future<T> pumpUntilNoExcept<T>(
+  FutureOr<T> Function() func,
   WidgetTester tester,
 ) async {
   final stopWatch = Stopwatch();
@@ -37,10 +37,7 @@ Future<Finder> pumpUntilFound(
   while (true) {
     await tester.pump();
     try {
-      final finder = find.byWidgetPredicate(predicate);
-      expect(finder, matcher);
-
-      return finder;
+      return await func();
     } catch (_) {
       if (stopWatch.elapsed > MAX_WAIT_DURATION) {
         rethrow;
@@ -50,6 +47,21 @@ Future<Finder> pumpUntilFound(
     await Future.delayed(const Duration(milliseconds: 500));
   }
 }
+
+Future<Finder> pumpUntilFound(
+  bool Function(Widget) predicate,
+  Matcher matcher,
+  WidgetTester tester,
+) =>
+    pumpUntilNoExcept(
+      () {
+        final finder = find.byWidgetPredicate(predicate);
+        expect(finder, matcher);
+
+        return finder;
+      },
+      tester,
+    );
 
 Future<void> adminSearch(
   WidgetTester tester, {
@@ -104,10 +116,6 @@ void main() {
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
       await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
-
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
 
       // Open registration queue
       await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
@@ -170,6 +178,7 @@ void main() {
       var email = "$fullname@test.com"; // Will prepend the string "edited." later
       var username = randomString(15); // Will append 1 character later
       var password = randomString(15); // Will append 1 character later
+      print("Registration test: $fullname, $room, $phone, $email, $username, $password"); // ignore: avoid_print
 
       // Fill in registration fields
       await tester.enterText(registrationFields.at(0), fullname);
@@ -206,10 +215,6 @@ void main() {
       // Successfully logged in as admin
       await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
 
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
-
       // Open registration queue
       await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
       await tester.pumpAndSettle();
@@ -235,8 +240,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.done_outlined));
       await tester.pumpAndSettle();
 
-      // Wait until loading is completed
-      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
+      // Wait until loading is completed (only 1 checkbox remains)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -284,10 +289,6 @@ void main() {
       // Successfully logged in as admin
       await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
 
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
-
       // View resident list
       await tester.tap(find.byIcon(Icons.people_outlined));
       await tester.pumpAndSettle();
@@ -324,10 +325,9 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.descendant(of: editDialog, matching: find.byIcon(Icons.done_outlined)));
-      await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
-      // Now no result should match our search
-      expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOneWidget);
+      // Wait until loading is completed (only 1 checkbox remains)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
 
       // Search the resident again using updated information
       await adminSearch(tester, fullname: fullname, room: room, username: username);
@@ -346,8 +346,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.delete_outlined));
       await tester.pumpAndSettle();
 
-      // Wait until loading is completed
-      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
+      // Wait until loading is completed (only 1 checkbox remains)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
