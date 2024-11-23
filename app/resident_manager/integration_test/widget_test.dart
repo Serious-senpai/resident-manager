@@ -245,6 +245,8 @@ void main() {
       await tester.tap(checkboxes.first);
       await tester.pumpAndSettle();
 
+      // TODO: Assert checkboxes are toggled
+
       // Approve the registration request
       await tester.tap(find.byIcon(Icons.done_outlined));
       await tester.pumpAndSettle();
@@ -350,6 +352,8 @@ void main() {
       await tester.tap(checkboxes2.last);
       await tester.tap(checkboxes2.first);
       await tester.pumpAndSettle();
+
+      // TODO: Login with old and new information
 
       // Delete the created account
       await tester.tap(find.byIcon(Icons.delete_outlined));
