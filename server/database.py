@@ -65,13 +65,16 @@ class Database:
             autocommit=True,
         )
 
+        procedure_lock = asyncio.Lock()
+
         async def execute(file: Path, *args: Any) -> None:
             try:
                 logger.info(f"Executing {file}")
                 with file.open("r", encoding="utf-8") as sql:
                     async with pool.acquire() as connection:
                         async with connection.cursor() as cursor:
-                            await cursor.execute(sql.read(), *args)
+                            async with procedure_lock:
+                                await cursor.execute(sql.read(), *args)
 
             except Exception as e:
                 raise RuntimeError(f"Failed to execute {file}") from e
