@@ -3,10 +3,8 @@ from __future__ import annotations
 import re
 import secrets
 import string
-import struct
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
-from random import randbytes
 from typing import Optional
 
 from .config import EPOCH, SALT_LENGTH
@@ -19,7 +17,6 @@ __all__ = (
     "since_epoch",
     "from_epoch",
     "snowflake_time",
-    "generate_id",
     "validate_name",
     "validate_room",
     "validate_phone",
@@ -74,14 +71,7 @@ def from_epoch(dt: timedelta) -> datetime:
 
 def snowflake_time(id: int) -> datetime:
     """Get the creation date of a snowflake ID."""
-    return from_epoch(timedelta(milliseconds=id >> (8 * 3)))
-
-
-def generate_id() -> int:
-    now = int(1000 * since_epoch().total_seconds())
-    tail = struct.unpack("I", randbytes(4))[0] & 0x00FFFFFF
-    result = (now << (8 * 3)) | tail
-    return result
+    return from_epoch(timedelta(milliseconds=id >> 16))
 
 
 def validate_name(name: str) -> bool:

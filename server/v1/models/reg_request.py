@@ -3,15 +3,12 @@ from __future__ import annotations
 from datetime import date
 from typing import List, Literal, Optional
 
-import pyodbc  # type: ignore
-
 from .accounts import Account
 from .results import Result
 from .snowflake import Snowflake
 from ...config import DB_PAGINATION_QUERY
 from ...database import Database
 from ...utils import (
-    generate_id,
     hash_password,
     validate_name,
     validate_room,
@@ -64,7 +61,11 @@ class RegisterRequest(Account):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"UPDATE accounts SET approved = 1 WHERE id IN {id_array} AND approved = 0",
+                    f"""
+                        DECLARE @Id BIGINTARRAY
+                        INSERT INTO @Id VALUES {id_array}
+                        EXECUTE ApproveRegistrationRequests @Id = @Id
+                    """,
                     *[o.id for o in objects],
                 )
 
@@ -77,7 +78,11 @@ class RegisterRequest(Account):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = 0",
+                    f"""
+                        DECLARE @Id BIGINTARRAY
+                        INSERT INTO @Id VALUES {id_array}
+                        EXECUTE RejectRegistrationRequests @Id = @Id
+                    """,
                     *[o.id for o in objects],
                 )
 
@@ -122,22 +127,15 @@ class RegisterRequest(Account):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        DECLARE
-                            @Id BIGINT = ?,
-                            @Name NVARCHAR(255) = ?,
-                            @Room SMALLINT = ?,
-                            @Birthday DATETIME = ?,
-                            @Phone NVARCHAR(15) = ?,
-                            @Email NVARCHAR(255) = ?,
-                            @Username NVARCHAR(255) = ?,
-                            @HashedPassword NVARCHAR(255) = ?
-
-                        IF NOT EXISTS (SELECT 1 FROM accounts WHERE username = @Username)
-                            INSERT INTO accounts
-                            OUTPUT INSERTED.*
-                            VALUES (@Id, @Name, @Room, @Birthday, @Phone, @Email, @Username, @HashedPassword, 0)
+                        EXECUTE Register
+                            @Name = ?,
+                            @Room = ?,
+                            @Birthday = ?,
+                            @Phone = ?,
+                            @Email = ?,
+                            @Username = ?,
+                            @HashedPassword = ?
                     """,
-                    generate_id(),
                     name,
                     room,
                     birthday,
@@ -147,13 +145,9 @@ class RegisterRequest(Account):
                     hash_password(password),
                 )
 
-                try:
-                    row = await cursor.fetchone()
-                    if row is not None:
-                        return Result(data=cls.from_row(row))
-
-                except pyodbc.ProgrammingError:
-                    pass
+                row = await cursor.fetchone()
+                if row is not None:
+                    return Result(data=cls.from_row(row))
 
         return Result(code=107, data=None)
 

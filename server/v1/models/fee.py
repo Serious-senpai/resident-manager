@@ -11,7 +11,6 @@ from .snowflake import Snowflake
 from ...config import DB_PAGINATION_QUERY
 from ...database import Database
 from ...utils import (
-    generate_id,
     validate_fee_bounds,
     validate_fee_name,
     validate_fee_per_area,
@@ -100,23 +99,17 @@ class Fee(Snowflake):
                 print(name, lower, upper, per_area, per_motorbike, per_car, deadline, description, flags)
                 await cursor.execute(
                     """
-                        DECLARE
-                            @Id BIGINT = ?,
-                            @Name NVARCHAR(255) = ?,
-                            @Lower INT = ?,
-                            @Upper INT = ?,
-                            @PerArea INT = ?,
-                            @PerMotorbike INT = ?,
-                            @PerCar INT = ?,
-                            @Deadline DATE = ?,
-                            @Description NVARCHAR(max) = ?,
+                        EXECUTE CreateFee
+                            @Name = ?,
+                            @Lower = ?,
+                            @Upper = ?,
+                            @PerArea = ?,
+                            @PerMotorbike = ?,
+                            @PerCar = ?,
+                            @Deadline = ?,
+                            @Description = ?,
                             @Flags TINYINT = ?
-
-                        INSERT INTO fee
-                        OUTPUT INSERTED.*
-                        VALUES (@Id, @Name, @Lower, @Upper, @PerArea, @PerMotorbike, @PerCar, @Deadline, @Description, @Flags)
                     """,
-                    generate_id(),
                     name,
                     int(lower * 100),
                     int(upper * 100),

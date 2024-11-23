@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import ClassVar, Optional, TYPE_CHECKING
+import asyncio
+from pathlib import Path
+from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
 import aioodbc  # type: ignore
 
 from .config import (
     DEFAULT_ADMIN_PASSWORD,
     DEFAULT_ADMIN_USERNAME,
+    EPOCH,
     ODBC_CONNECTION_STRING,
     ROOT,
 )
@@ -60,14 +63,34 @@ class Database:
             autocommit=True,
         )
 
-        async with pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                with open(ROOT / "scripts" / "tables.sql", "r", encoding="utf-8") as sql:
-                    await cursor.execute(
-                        sql.read(),
-                        DEFAULT_ADMIN_USERNAME,
-                        hash_password(DEFAULT_ADMIN_PASSWORD),
-                    )
+        async def execute(file: Path, *args: Any) -> None:
+            try:
+                async with pool.acquire() as connection:
+                    async with connection.cursor() as cursor:
+                        with file.open("r", encoding="utf-8") as sql:
+                            await cursor.execute(sql.read(), *args)
+
+            except Exception as e:
+                raise RuntimeError(f"Failed to execute {file}") from e
+
+        scripts_dir = ROOT / "scripts"
+        tasks = [
+            asyncio.create_task(
+                execute(
+                    scripts_dir / "database.sql",
+                    DEFAULT_ADMIN_USERNAME,
+                    hash_password(DEFAULT_ADMIN_PASSWORD),
+                    EPOCH,
+                ),
+            ),
+        ]
+
+        procedures = scripts_dir / "procedures"
+        for file in procedures.iterdir():
+            if file.suffix == ".sql":
+                tasks.append(asyncio.create_task(execute(file)))
+
+        await asyncio.gather(*tasks)
 
     async def close(self) -> None:
         if self.__pool is not None:

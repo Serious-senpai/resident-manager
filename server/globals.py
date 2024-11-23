@@ -10,14 +10,12 @@ from contextlib import AbstractAsyncContextManager
 from types import TracebackType
 from typing import Dict, Final, Optional, Type, TYPE_CHECKING
 
-import pyodbc  # type: ignore
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from fastapi.responses import RedirectResponse
 
 from .config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
 from .database import Database
-from .utils import generate_id
 
 
 try:
@@ -156,22 +154,16 @@ async def ipn(request: Request) -> _VNPayResponse:
 
     if response_code in {"00", "07"}:
         room, fee_id, normalized_amount, _ = map(int, txn_ref.split("-"))
-        amount = normalized_amount / 100
-        try:
-            async with Database.instance.pool.acquire() as connection:
-                async with connection.cursor() as cursor:
-                    await cursor.execute(
-                        """
-                            INSERT INTO payments
-                            VALUES (?, ?, ?, ?)
-                        """,
-                        generate_id(),
-                        room,
-                        amount,
-                        fee_id,
-                    )
-
-        except pyodbc.IntegrityError:
-            return _VNPayResponse(RspCode="02", Message="Data has been updated already")
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    "EXECUTE CreatePayment @Room = ?, @Amount = ?, @FeeId = ?",
+                    room,
+                    normalized_amount,
+                    fee_id,
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    return _VNPayResponse(RspCode="02", Message="Data has been updated already")
 
     return _VNPayResponse(RspCode="00", Message="Data has been updated successfully")

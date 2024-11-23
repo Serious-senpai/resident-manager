@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from pyodbc import Row  # type: ignore
 
 from .fee import Fee
-from .results import Result
 from .rooms import RoomData
 from .snowflake import Snowflake
 from ...database import Database
-from ...utils import generate_id
 
 
 __all__ = ("Payment",)
@@ -33,41 +31,6 @@ class Payment(Snowflake):
             amount=row.amount / 100,
             fee_id=row.fee_id,
         )
-
-    @classmethod
-    async def create(
-        cls,
-        *,
-        room: int,
-        amount: float,
-        fee_id: int,
-    ) -> Result[Optional[Payment]]:
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    """
-                        DECLARE
-                            @Id BIGINT = ?,
-                            @Room SMALLINT = ?,
-                            @Amount INT = ?,
-                            @FeeId BIGINT = ?
-
-                        INSERT INTO payments
-                        OUTPUT INSERTED.*
-                        VALUES (
-                            @Id,
-                            @Room,
-                            @Amount,
-                            @FeeId
-                        )
-                    """,
-                    generate_id(),
-                    room,
-                    int(amount * 100),
-                    fee_id,
-                )
-                row = await cursor.fetchone()
-                return Result(data=cls.from_row(row))
 
     @classmethod
     async def query_unpaid(cls, *, room: int) -> List[Tuple[RoomData, Fee]]:

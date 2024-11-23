@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Annotated, List, Literal, Optional, TypeVar
 
 import jwt
-import pyodbc  # type: ignore
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -41,32 +40,15 @@ class Resident(Account):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    """
-                        DECLARE
-                            @Id BIGINT = ?,
-                            @Username NVARCHAR(255) = ?,
-                            @HashedPassword NVARCHAR(255) = ?
-
-                        IF NOT EXISTS (SELECT 1 FROM accounts WHERE id != @Id AND username = @Username)
-                            UPDATE accounts
-                            SET
-                                username = @Username,
-                                hashed_password = @HashedPassword
-                            OUTPUT INSERTED.*
-                            WHERE id = @Id AND approved = 1
-                    """,
+                    "EXECUTE UpdateResidentAuthorization @Id = ?, @Username = ?, @HashedPassword = ?",
                     self.id,
                     username,
                     hash_password(password),
                 )
 
-                try:
-                    row = await cursor.fetchone()
-                    if row is not None:
-                        return Result(data=Resident.from_row(row))
-
-                except pyodbc.ProgrammingError:
-                    pass
+                row = await cursor.fetchone()
+                if row is not None:
+                    return Result(data=Resident.from_row(row))
 
         return Result(code=107, data=None)
 
@@ -116,7 +98,11 @@ class Resident(Account):
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"DELETE FROM accounts WHERE id IN {id_array} AND approved = 1",
+                    f"""
+                        DECLARE @Id BIGINTARRAY
+                        INSERT INTO @Id VALUES {id_array}
+                        EXECUTE DeleteResidents @Id = @Id
+                    """,
                     *[o.id for o in objects],
                 )
 
@@ -187,23 +173,13 @@ class Resident(Account):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        DECLARE
-                            @Id BIGINT = ?,
-                            @Name NVARCHAR(255) = ?,
-                            @Room SMALLINT = ?,
-                            @Birthday DATETIME = ?,
-                            @Phone NVARCHAR(15) = ?,
-                            @Email NVARCHAR(255) = ?
-
-                        UPDATE accounts
-                        SET
-                            name = @Name,
-                            room = @Room,
-                            birthday = @Birthday,
-                            phone = @Phone,
-                            email = @Email
-                        OUTPUT INSERTED.*
-                        WHERE id = @Id AND approved = 1
+                        EXECUTE UpdateResident
+                            @Id = ?,
+                            @Name = ?,
+                            @Room = ?,
+                            @Birthday = ?,
+                            @Phone = ?,
+                            @Email = ?
                     """,
                     id,
                     info.name,

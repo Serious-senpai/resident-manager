@@ -164,7 +164,7 @@ DateTime fromEpoch(Duration dt) {
 }
 
 DateTime snowflakeTime(int id) {
-  return fromEpoch(Duration(milliseconds: id >> (8 * 3)));
+  return fromEpoch(Duration(milliseconds: id >> 16));
 }
 
 class FieldLabel extends StatelessWidget {
