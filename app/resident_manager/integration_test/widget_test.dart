@@ -18,16 +18,23 @@ import "package:resident_manager/src/widgets/admin/rooms.dart";
 final rng = Random();
 const MAX_WAIT_DURATION = Duration(seconds: 10);
 
+/// Generate a random alphanumeric string with the specified [length].
+///
+/// The string consists of lowercase characters, uppercase characters and digits.
 String randomString(int length) {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(rng.nextInt(chars.length))));
 }
 
+/// Generate a random string of digits with the specified [length].
 String randomDigits(int length) {
   const chars = "0123456789";
   return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(rng.nextInt(chars.length))));
 }
 
+/// Repeatedly pump the widget tree until the function [func] completes without an exception.
+///
+/// The return value is the result of [func].
 Future<T> pumpUntilNoExcept<T>(
   FutureOr<T> Function() func,
   WidgetTester tester,
@@ -48,6 +55,7 @@ Future<T> pumpUntilNoExcept<T>(
   }
 }
 
+/// Repeatedly pump the widget tree a [Widget] satisfying [predicate] appears.
 Future<Finder> pumpUntilFound(
   bool Function(Widget) predicate,
   Matcher matcher,
@@ -63,6 +71,7 @@ Future<Finder> pumpUntilFound(
       tester,
     );
 
+/// Utility function to perform a search in the admin interface.
 Future<void> adminSearch(
   WidgetTester tester, {
   required String fullname,
