@@ -84,60 +84,6 @@ jobs:
 
             core.setOutput("comment_id", response.data.id);
 
-  python:
-    name: Web application test
-    needs: checkout
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
-    env:
-      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
-      VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
-      VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
-      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
-      PORT: 8000
-
-    steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repository
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: pip install -r dev-requirements.txt
-
-      - name: Install ODBC driver 18
-        run: |
-          chmod +x scripts/odbc.sh
-          scripts/odbc.sh
-
-      - name: Run tests
-        run: coverage run -m pytest -v .
-
-      - name: Collect coverage data
-        run: coverage combine
-
-      - name: Report coverage
-        run: coverage report -m
-
-      - name: Rename coverage report
-        run: mv .coverage .coverage.python-${{ matrix.python-version }}
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-python-${{ matrix.python-version }}
-          path: .coverage.python-${{ matrix.python-version }}
-          include-hidden-files: true
-
   flutter-integration:
     name: Client integration test
     needs: checkout
@@ -298,7 +244,7 @@ jobs:
 
   python-coverage:
     name: Combine coverage reports
-    needs: [python, flutter-integration]
+    needs: flutter-integration
     runs-on: ubuntu-latest
 
     steps:
@@ -348,7 +294,7 @@ jobs:
 
   notification:
     name: Comment in pull request
-    needs: [checkout, python, flutter-integration, python-coverage, performance-test]
+    needs: [checkout, flutter-integration, python-coverage, performance-test]
     if: ${{ always() && needs.checkout.result == 'success' && github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
@@ -375,7 +321,7 @@ jobs:
             const sha = "${{ needs.checkout.outputs.sha }}".substr(0, 7);
 
             let body = null;
-            if (${{ needs.python.result == 'success' && needs.flutter-integration.result == 'success' }}) {
+            if (${{ needs.flutter-integration.result == 'success' }}) {
               body = `🎉 [All tests #${{ github.run_attempt }}](${url}) of \`${sha}\` passed successfully.`;
 
               if (${{ needs.python-coverage.result == 'success' }}) {

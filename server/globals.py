@@ -6,9 +6,8 @@ import asyncio
 import logging
 import urllib.parse
 from collections import OrderedDict
-from contextlib import AbstractAsyncContextManager
-from types import TracebackType
-from typing import Dict, Final, Optional, Type, TYPE_CHECKING
+from contextlib import AsyncExitStack, asynccontextmanager
+from typing import AsyncGenerator, Dict, Optional
 
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
@@ -45,45 +44,34 @@ final_subroute = list(subapps.keys())[-1]
 final_subapp = list(subapps.values())[-1]
 
 
-class ApplicationLifespan(AbstractAsyncContextManager):
+@asynccontextmanager
+async def __lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    cov: Optional[coverage.Coverage] = None
+    if CI:
+        cov = coverage.Coverage(data_suffix=True, config_file=True)
+        cov.start()
+        logger.info("Measuring code coverage...")
 
-    __slots__ = ("app", "cov")
-    if TYPE_CHECKING:
-        app: Final[FastAPI]
-        cov: Optional[coverage.Coverage]
+    logger.info(f"Starting {app} from {__file__}")
+    await Database.instance.prepare()
+    async with AsyncExitStack() as stack:
+        for subapp in subapps.values():
+            await stack.enter_async_context(subapp.router.lifespan_context(subapp))
 
-    def __init__(self, app: FastAPI) -> None:
-        self.app = app
+        yield
 
-        self.cov = None
-        if CI:
-            self.cov = coverage.Coverage(data_suffix=True, config_file=True)
-            self.cov.start()
-            logger.info("Measuring code coverage...")
-
-    async def __aenter__(self) -> None:
-        coros = [a.router.lifespan_context(subapp).__aenter__() for a in subapps.values()]
-        await asyncio.gather(*coros)
-
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
-        if self.cov is not None:
-            self.cov.stop()
-            self.cov.save()
-
-        coros = [a.router.lifespan_context(subapp).__aexit__(exc_type, exc_val, exc_tb) for a in subapps.values()]
-        await asyncio.gather(*coros)
+    logger.info(f"Stopping {app} from {__file__}")
+    await Database.instance.close()
+    if cov is not None:
+        cov.stop()
+        cov.save()
 
 
 global_app = FastAPI(
     title="Resident manager API",
     docs_url=None,
     redoc_url=None,
-    lifespan=ApplicationLifespan,
+    lifespan=__lifespan,
     version=final_subapp.version,
 )
 for route, subapp in subapps.items():

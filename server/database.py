@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
@@ -17,6 +18,7 @@ from .utils import hash_password
 
 
 __all__ = ("Database",)
+logger = logging.getLogger("uvicorn")
 
 
 class Database:
@@ -65,9 +67,10 @@ class Database:
 
         async def execute(file: Path, *args: Any) -> None:
             try:
-                async with pool.acquire() as connection:
-                    async with connection.cursor() as cursor:
-                        with file.open("r", encoding="utf-8") as sql:
+                logger.info(f"Executing {file}")
+                with file.open("r", encoding="utf-8") as sql:
+                    async with pool.acquire() as connection:
+                        async with connection.cursor() as cursor:
                             await cursor.execute(sql.read(), *args)
 
             except Exception as e:
@@ -94,6 +97,7 @@ class Database:
 
     async def close(self) -> None:
         if self.__pool is not None:
+            logger.info("Closing database connection pool")
             self.__pool.close()
             await self.__pool.wait_closed()
 

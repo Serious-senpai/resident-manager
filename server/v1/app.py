@@ -1,41 +1,26 @@
 from __future__ import annotations
 
-from contextlib import AbstractAsyncContextManager
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
-from types import TracebackType
-from typing import Optional, Final, Type, TYPE_CHECKING
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from ..database import Database
-
 
 __all__ = (
     "api_v1",
 )
+logger = logging.getLogger("uvicorn")
 
 
-class _ApplicationLifespan(AbstractAsyncContextManager):
-
-    __slots__ = ("app",)
-    if TYPE_CHECKING:
-        app: Final[FastAPI]
-
-    def __init__(self, app: FastAPI) -> None:
-        self.app = app
-
-    async def __aenter__(self) -> None:
-        await Database.instance.prepare()
-
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
-        await Database.instance.close()
+@asynccontextmanager
+async def __lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    logger.info(f"Starting {app} from {__file__}")
+    yield
+    logger.info(f"Stopping {app} from {__file__}")
 
 
 current_dir = Path(__file__).parent
@@ -48,7 +33,7 @@ api_v1 = FastAPI(
     title="Resident manager API v1",
     description=description,
     version="1.0.0",
-    lifespan=_ApplicationLifespan,
+    lifespan=__lifespan,
 )
 api_v1.mount("/static", StaticFiles(directory=current_dir / "static"))
 
