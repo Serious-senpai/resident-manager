@@ -11,8 +11,8 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
 from ...app import api_v1
-from ...models import Payment
-from ....config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
+from ...models import PaymentStatus
+from ....config import EPOCH, VNPAY_SECRET_KEY, VNPAY_TMN_CODE
 from ....utils import since_epoch
 
 
@@ -37,20 +37,19 @@ async def residents_pay(
     fee_id: int,
     amount: float,
 ) -> RedirectResponse:
-    unpaid = await Payment.query_unpaid(room=room)
-    for r, fee in unpaid:
-        if fee.id == fee_id:
+    now = datetime.now(timezone(timedelta(hours=7)))
+    all_status = await PaymentStatus.query(room, created_from=EPOCH, created_to=now)
+    for st in all_status:
+        if st.payment is None and st.fee.id == fee_id:
             break
 
     else:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-    extra = fee.per_area * r.area + fee.per_motorbike * r.motorbike + fee.per_car * r.car
-    if amount < fee.lower + extra or amount > fee.upper + extra:
+    if amount < st.lower_bound or amount > st.upper_bound:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
 
     # Construct VNPay URL
-    now = datetime.now(timezone(timedelta(hours=7)))
     expire = now + timedelta(hours=1)
 
     unique_suffix = int(1000 * since_epoch(now).total_seconds())
