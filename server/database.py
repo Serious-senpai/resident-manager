@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 from pathlib import Path
 from typing import Any, ClassVar, Optional, TYPE_CHECKING
@@ -65,38 +64,30 @@ class Database:
             autocommit=True,
         )
 
-        procedure_lock = asyncio.Lock()
+        async with pool.acquire() as connection:
+            async with connection.cursor() as cursor:
 
-        async def execute(file: Path, *args: Any) -> None:
-            try:
-                logger.info(f"Executing {file}")
-                with file.open("r", encoding="utf-8") as sql:
-                    async with pool.acquire() as connection:
-                        async with connection.cursor() as cursor:
-                            async with procedure_lock:
-                                await cursor.execute(sql.read(), *args)
+                async def execute(file: Path, *args: Any) -> None:
+                    try:
+                        logger.info(f"Executing {file}")
+                        with file.open("r", encoding="utf-8") as sql:
+                            await cursor.execute(sql.read(), *args)
 
-            except Exception as e:
-                raise RuntimeError(f"Failed to execute {file}") from e
+                    except Exception as e:
+                        raise RuntimeError(f"Failed to execute {file}") from e
 
-        scripts_dir = ROOT / "scripts"
-        tasks = [
-            asyncio.create_task(
-                execute(
+                scripts_dir = ROOT / "scripts"
+                await execute(
                     scripts_dir / "database.sql",
                     DEFAULT_ADMIN_USERNAME,
                     hash_password(DEFAULT_ADMIN_PASSWORD),
                     EPOCH,
-                ),
-            ),
-        ]
+                )
 
-        procedures = scripts_dir / "procedures"
-        for file in procedures.iterdir():
-            if file.suffix == ".sql":
-                tasks.append(asyncio.create_task(execute(file)))
-
-        await asyncio.gather(*tasks)
+                procedures = scripts_dir / "procedures"
+                for file in procedures.iterdir():
+                    if file.suffix == ".sql":
+                        await execute(file)
 
     async def close(self) -> None:
         if self.__pool is not None:
