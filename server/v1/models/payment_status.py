@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Any, List, Literal, Optional
+from typing import Annotated, List, Optional
 
 import pydantic
 from pyodbc import Row  # type: ignore
 
 from .fee import Fee
 from .payment import Payment
-from .results import Result
-from .snowflake import Snowflake
 from ...config import DB_PAGINATION_QUERY, EPOCH
 from ...database import Database
 
