@@ -38,12 +38,17 @@ class PaymentStatus(pydantic.BaseModel):
             description=row.fee_description,
             flags=row.fee_flags,
         )
-        payment = Payment(
-            id=row.payment_id,
-            room=row.payment_room,
-            amount=row.payment_amount / 100,
-            fee_id=row.payment_fee_id,
-        )
+
+        if row.payment_id is not None:
+            payment = Payment(
+                id=row.payment_id,
+                room=row.payment_room,
+                amount=row.payment_amount / 100,
+                fee_id=row.payment_fee_id,
+            )
+        else:
+            payment = None
+
         return cls(
             fee=fee,
             lower_bound=row.lower_bound / 100,

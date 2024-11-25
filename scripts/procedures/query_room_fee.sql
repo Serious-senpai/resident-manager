@@ -23,15 +23,15 @@ BEGIN
         fee.deadline AS fee_deadline,
         fee.description AS fee_description,
         fee.flags AS fee_flags,
-        fee.lower + fee.per_area * rooms.area + fee.per_motorbike * rooms.motorbike + fee.per_car * rooms.car AS lower_bound,
-        fee.upper + fee.per_area * rooms.area + fee.per_motorbike * rooms.motorbike + fee.per_car * rooms.car AS upper_bound,
-        payment.id AS payment_id,
-        payment.room AS payment_room,
-        payment.amount AS payment_amount,
-        payment.fee_id AS payment_fee_id
+        fee.lower + rooms.area / 100 * fee.per_area + fee.per_motorbike * rooms.motorbike + fee.per_car * rooms.car AS lower_bound,
+        fee.upper + rooms.area / 100 * fee.per_area + fee.per_motorbike * rooms.motorbike + fee.per_car * rooms.car AS upper_bound,
+        payments.id AS payment_id,
+        payments.room AS payment_room,
+        payments.amount AS payment_amount,
+        payments.fee_id AS payment_fee_id
     FROM fee
     INNER JOIN rooms ON rooms.room = @Room
-    LEFT JOIN payment ON payment.fee_id = fee.id AND payment.room = @Room
+    LEFT JOIN payments ON payments.fee_id = fee.id AND payments.room = @Room
     WHERE fee.id NOT IN (
         SELECT fee_id FROM payments
         WHERE room = @Room

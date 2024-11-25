@@ -6,7 +6,7 @@ from typing import Annotated, List, Optional
 from fastapi import Depends, Query, Response, status
 
 from ...app import api_v1
-from ...models import Fee, Resident, Result
+from ...models import Fee, PaymentStatus, Resident, Result
 from ....config import EPOCH
 
 
@@ -33,6 +33,7 @@ async def residents_fee(
     resident: Annotated[Result[Optional[Resident]], Depends(Resident.from_token)],
     response: Response,
     *,
+    offset: int = 0,
     created_from: Annotated[
         datetime,
         Query(description="Query fees created from this timestamp"),
@@ -44,9 +45,15 @@ async def residents_fee(
             default_factory=lambda: datetime.now(timezone.utc),
         ),
     ],
-) -> Result[Optional[List[Fee]]]:
+) -> Result[Optional[List[PaymentStatus]]]:
     if resident.data is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return Result(code=402, data=None)
 
-    raise NotImplementedError
+    st = await PaymentStatus.query(
+        resident.data.room,
+        offset=offset,
+        created_from=created_from,
+        created_to=created_to,
+    )
+    return Result(data=st)
