@@ -106,10 +106,17 @@ class RoomData(pydantic.BaseModel):
         if len(rooms) == 0:
             return
 
-        array = "(" + ", ".join("?" * len(rooms)) + ")"
+        room_array = ", ".join("(?)" * len(rooms))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(f"DELETE FROM rooms WHERE room IN {array}", *rooms)
+                await cursor.execute(
+                    f"""
+                        DECLARE @Rooms BIGINTARRAY
+                        INSERT INTO @Rooms VALUES {room_array}
+                        EXECUTE DeleteRoom @Rooms = @Rooms
+                    """,
+                    *rooms,
+                )
 
 
 class Room(pydantic.BaseModel):

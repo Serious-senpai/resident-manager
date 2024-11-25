@@ -57,7 +57,7 @@ class RegisterRequest(Account):
         if len(objects) == 0:
             return
 
-        id_array = "(" + ", ".join("?" * len(objects)) + ")"
+        id_array = ", ".join("(?)" * len(objects))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
@@ -74,7 +74,7 @@ class RegisterRequest(Account):
         if len(objects) == 0:
             return
 
-        id_array = "(" + ", ".join("?" * len(objects)) + ")"
+        id_array = ", ".join("(?)" * len(objects))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(

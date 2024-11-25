@@ -39,7 +39,10 @@ async def residents_fee(
     ] = EPOCH,
     created_to: Annotated[
         datetime,
-        Query(description="Query fees created until this timestamp", default_factory=lambda: datetime.now(timezone.utc)),
+        Query(
+            description="Query fees created until this timestamp",
+            default_factory=lambda: datetime.now(timezone.utc),
+        ),
     ],
 ) -> Result[Optional[List[Fee]]]:
     if resident.data is None:
