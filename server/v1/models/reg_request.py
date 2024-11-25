@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from datetime import date
 from typing import List, Literal, Optional
 
@@ -57,13 +58,13 @@ class RegisterRequest(Account):
         if len(objects) == 0:
             return
 
-        id_array = ", ".join("(?)" * len(objects))
+        array = ", ".join(itertools.repeat("(?)", len(objects)))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     f"""
                         DECLARE @Id BIGINTARRAY
-                        INSERT INTO @Id VALUES {id_array}
+                        INSERT INTO @Id VALUES {array}
                         EXECUTE ApproveRegistrationRequests @Id = @Id
                     """,
                     *[o.id for o in objects],
@@ -74,13 +75,13 @@ class RegisterRequest(Account):
         if len(objects) == 0:
             return
 
-        id_array = ", ".join("(?)" * len(objects))
+        array = ", ".join(itertools.repeat("(?)", len(objects)))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     f"""
                         DECLARE @Id BIGINTARRAY
-                        INSERT INTO @Id VALUES {id_array}
+                        INSERT INTO @Id VALUES {array}
                         EXECUTE RejectRegistrationRequests @Id = @Id
                     """,
                     *[o.id for o in objects],

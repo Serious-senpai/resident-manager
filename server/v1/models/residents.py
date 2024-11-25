@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Annotated, List, Literal, Optional, TypeVar
 
 import jwt
@@ -94,13 +95,13 @@ class Resident(Account):
         if len(objects) == 0:
             return
 
-        id_array = ", ".join("(?)" * len(objects))
+        array = ", ".join(itertools.repeat("(?)", len(objects)))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     f"""
                         DECLARE @Id BIGINTARRAY
-                        INSERT INTO @Id VALUES {id_array}
+                        INSERT INTO @Id VALUES {array}
                         EXECUTE DeleteResidents @Id = @Id
                     """,
                     *[o.id for o in objects],

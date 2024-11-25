@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Annotated, Any, List, Optional
 
 import pydantic
@@ -106,13 +107,13 @@ class RoomData(pydantic.BaseModel):
         if len(rooms) == 0:
             return
 
-        room_array = ", ".join("(?)" * len(rooms))
+        array = ", ".join(itertools.repeat("(?)", len(rooms)))
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     f"""
                         DECLARE @Rooms BIGINTARRAY
-                        INSERT INTO @Rooms VALUES {room_array}
+                        INSERT INTO @Rooms VALUES {array}
                         EXECUTE DeleteRoom @Rooms = @Rooms
                     """,
                     *rooms,
