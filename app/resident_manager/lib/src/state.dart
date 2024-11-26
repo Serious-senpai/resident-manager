@@ -16,7 +16,7 @@ import "models/residents.dart";
 
 class ApplicationState {
   /// Base URL for the API server.
-  static final baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager.azurewebsites.net");
+  static final baseUrl = kDebugMode ? Uri.http("localhost:8000") : Uri.https("resident-manager-1.azurewebsites.net");
 
   /// HTTP client to make requests.
   ///
