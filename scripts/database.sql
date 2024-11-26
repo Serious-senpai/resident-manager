@@ -59,8 +59,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'fee' AND type = 'U')
     CREATE TABLE fee (
         id BIGINT PRIMARY KEY,
         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
-        lower INT NOT NULL, -- lower = 100 * [amount in VND]
-        upper INT NOT NULL, -- upper = 100 * [amount in VND]
+        lower BIGINT NOT NULL, -- lower = 100 * [amount in VND]
+        upper BIGINT NOT NULL, -- upper = 100 * [amount in VND]
         per_area INT NOT NULL, -- per_area = 100 * [amount in VND]
         per_motorbike INT NOT NULL, -- per_motorbike = 100 * [amount in VND]
         per_car INT NOT NULL, -- per_car = 100 * [amount in VND]
@@ -74,7 +74,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'payments' AND type = 'U')
     CREATE TABLE payments (
         id BIGINT PRIMARY KEY,
         room SMALLINT NOT NULL,
-        amount INT NOT NULL, -- amount = 100 * [amount in VND]
+        amount BIGINT NOT NULL, -- amount = 100 * [amount in VND]
         fee_id BIGINT NOT NULL,
         CONSTRAINT FK_payments_rooms FOREIGN KEY (room) REFERENCES rooms(room),
         CONSTRAINT FK_payments_fee FOREIGN KEY (fee_id) REFERENCES fee(id),

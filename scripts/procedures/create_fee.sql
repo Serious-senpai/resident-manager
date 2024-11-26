@@ -1,7 +1,7 @@
 CREATE OR ALTER PROCEDURE CreateFee
     @Name NVARCHAR(255),
-    @Lower INT,
-    @Upper INT,
+    @Lower BIGINT,
+    @Upper BIGINT,
     @PerArea INT,
     @PerMotorbike INT,
     @PerCar INT,
