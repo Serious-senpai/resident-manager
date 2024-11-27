@@ -131,8 +131,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
 
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
+      // Back to home page
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
       // Open residents list
@@ -140,14 +140,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
-      // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
+      // Back to home page
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
       // Open rooms list
       await tester.tap(find.byIcon(Icons.room_outlined));
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
+
+      // Back to home page
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
+      await tester.pumpAndSettle();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -253,6 +257,10 @@ void main() {
 
       // Wait until loading is completed (only 1 checkbox remains)
       await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
+
+      // Back to home page
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
+      await tester.pumpAndSettle();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -361,6 +369,10 @@ void main() {
 
       // Wait until loading is completed (only 1 checkbox remains)
       await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
+
+      // Back to home page
+      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
+      await tester.pumpAndSettle();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
