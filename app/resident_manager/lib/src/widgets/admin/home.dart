@@ -1,10 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 import "package:one_clock/one_clock.dart";
-import "package:resident_manager/src/routes.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../../routes.dart";
 import "../../translations.dart";
 import "../../utils.dart";
 
@@ -23,31 +23,27 @@ class _CardBuilder {
   _CardBuilder({this.backgroundColor, this.onPressed, required this.children});
 
   Widget call(int flex) {
-    return Builder(
-      builder: (context) {
-        return _ShrinkableFlex(
-          flex: flex,
-          child: Container(
-            padding: const EdgeInsets.all(5),
-            child: ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: backgroundColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: children,
-                ),
-              ),
+    return _ShrinkableFlex(
+      flex: flex,
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
-        );
-      },
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: children,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

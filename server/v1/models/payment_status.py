@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, List, Optional
 
 import pydantic
@@ -65,8 +65,8 @@ class PaymentStatus(pydantic.BaseModel):
         created_from: datetime,
         created_to: datetime,
     ) -> List[PaymentStatus]:
-        created_from = max(created_from, EPOCH)
-        created_to = max(created_to, EPOCH)
+        created_from = max(created_from.astimezone(timezone.utc), EPOCH)
+        created_to = max(created_to.astimezone(timezone.utc), EPOCH)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:

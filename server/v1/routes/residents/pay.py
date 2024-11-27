@@ -12,8 +12,8 @@ from fastapi.responses import RedirectResponse
 
 from ...app import api_v1
 from ...models import PaymentStatus
-from ....config import EPOCH, VNPAY_SECRET_KEY, VNPAY_TMN_CODE
-from ....utils import since_epoch
+from ....config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
+from ....utils import since_epoch, snowflake_time
 
 
 __all__ = ("residents_pay",)
@@ -29,7 +29,7 @@ def _format_time(time: datetime) -> str:
     name="Fee payment",
     description="Perform a payment for a fee",
     tags=["resident"],
-    include_in_schema=False,
+    # include_in_schema=False,
 )
 async def residents_pay(
     request: Request,
@@ -37,8 +37,8 @@ async def residents_pay(
     fee_id: int,
     amount: float,
 ) -> RedirectResponse:
-    now = datetime.now(timezone(timedelta(hours=7)))
-    all_status = await PaymentStatus.query(room, created_from=EPOCH, created_to=now)
+    date = snowflake_time(fee_id)
+    all_status = await PaymentStatus.query(room, created_from=date, created_to=date)
     for st in all_status:
         if st.payment is None and st.fee.id == fee_id:
             break
@@ -50,6 +50,7 @@ async def residents_pay(
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
 
     # Construct VNPay URL
+    now = datetime.now(timezone(timedelta(hours=7)))
     expire = now + timedelta(hours=1)
 
     unique_suffix = int(1000 * since_epoch(now).total_seconds())

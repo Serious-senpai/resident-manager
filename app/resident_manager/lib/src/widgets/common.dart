@@ -99,16 +99,6 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
         controller: _scrollController,
         slivers: [
           SliverAppBar(
-            actions: [
-              if (canPop)
-                Padding(
-                  padding: const EdgeInsets.all(5),
-                  child: IconButton(
-                    onPressed: () => openDrawer(),
-                    icon: const Icon(Icons.menu_outlined),
-                  ),
-                ),
-            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
                 "assets/vector-background-blue.png",

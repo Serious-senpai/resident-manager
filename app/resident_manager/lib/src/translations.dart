@@ -80,6 +80,15 @@ class AppLocale {
   static const String Payment = "Payment";
   static const String Admin = "Admin";
   static const String NotYetLoggedIn = "NotYetLoggedIn";
+  static const String NoData = "NoData";
+  static const String AmountPaid = "AmountPaid";
+  static const String NotPaid = "NotPaid";
+  static const String Deadline = "Deadline";
+  static const String PaymentHistory = "PaymentHistory";
+  static const String Fee = "Fee";
+  static const String Description = "Description";
+  static const String Minimum = "Minimum";
+  static const String Maximum = "Maximum";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -181,6 +190,15 @@ class AppLocale {
     Payment: "Payment",
     Admin: "Admin",
     NotYetLoggedIn: "Not yet logged in",
+    NoData: "No data available.",
+    AmountPaid: "Amount paid",
+    NotPaid: "Not paid",
+    Deadline: "Deadline",
+    PaymentHistory: "Payment history",
+    Fee: "Fee",
+    Description: "Description",
+    Minimum: "Minimum",
+    Maximum: "Maximum",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -283,6 +301,15 @@ class AppLocale {
     Payment: "Thanh toán",
     Admin: "Quản trị viên",
     NotYetLoggedIn: "Chưa đăng nhập",
+    NoData: "Không có dữ liệu.",
+    AmountPaid: "Số tiền đã trả",
+    NotPaid: "Chưa thanh toán",
+    Deadline: "Hạn thanh toán",
+    PaymentHistory: "Lịch sử thanh toán",
+    Fee: "Phí",
+    Description: "Mô tả",
+    Minimum: "Tối thiểu",
+    Maximum: "Tối đa",
 
     // Error codes
     Error0: "Thao tác thành công.",

@@ -1,4 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter_localization/flutter_localization.dart";
+
+import "../translations.dart";
 
 class HoverContainer extends StatefulWidget {
   final Color onHover;
@@ -23,6 +26,30 @@ class _HoverContainerState extends State<HoverContainer> {
           color: _hovered ? widget.onHover : null,
         ),
         child: widget.child,
+      ),
+    );
+  }
+}
+
+class SliverCircularProgressFullScreen extends StatelessWidget {
+  const SliverCircularProgressFullScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox.square(
+              dimension: 50,
+              child: CircularProgressIndicator(),
+            ),
+            const SizedBox.square(dimension: 5),
+            Text(AppLocale.Loading.getString(context)),
+          ],
+        ),
       ),
     );
   }

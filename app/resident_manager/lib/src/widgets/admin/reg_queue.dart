@@ -9,6 +9,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../config.dart";
 import "../../state.dart";
 import "../../translations.dart";
@@ -204,22 +205,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
         initialData: queryLoader.lastData,
         builder: (context, _) {
           if (queryLoader.isLoading) {
-            return SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox.square(
-                      dimension: 50,
-                      child: CircularProgressIndicator(),
-                    ),
-                    const SizedBox.square(dimension: 5),
-                    Text(AppLocale.Loading.getString(context)),
-                  ],
-                ),
-              ),
-            );
+            return const SliverCircularProgressFullScreen();
           }
 
           final code = queryLoader.lastData;

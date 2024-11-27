@@ -9,6 +9,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../state.dart";
+import "../utils.dart";
 import "../../config.dart";
 import "../../translations.dart";
 import "../../utils.dart";
@@ -386,366 +387,347 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
       sliver: FutureBuilder(
         future: queryLoader.future,
         builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-            case ConnectionState.waiting:
-            case ConnectionState.active:
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox.square(
-                        dimension: 50,
-                        child: CircularProgressIndicator(),
-                      ),
-                      const SizedBox.square(dimension: 5),
-                      Text(AppLocale.Loading.getString(context)),
-                    ],
+          if (queryLoader.isLoading) {
+            return const SliverCircularProgressFullScreen();
+          }
+
+          final code = snapshot.data;
+          if (code == 0) {
+            TableCell headerCeil(String text, [String? newOrderBy]) {
+              if (newOrderBy != null) {
+                if (queryLoader.orderBy == newOrderBy) {
+                  text += queryLoader.ascending ? " ▴" : " ▾";
+                } else {
+                  text += " ▴▾";
+                }
+              }
+
+              return TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: GestureDetector(
+                    onTap: () {
+                      if (newOrderBy != null) {
+                        if (newOrderBy == queryLoader.orderBy) {
+                          queryLoader.ascending = !queryLoader.ascending;
+                        } else {
+                          queryLoader.ascending = true;
+                        }
+
+                        queryLoader.orderBy = newOrderBy;
+                        pagination.offset = 0;
+                        reload();
+                      }
+                    },
+                    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               );
+            }
 
-            case ConnectionState.done:
-              final code = snapshot.data;
-              if (code == 0) {
-                TableCell headerCeil(String text, [String? newOrderBy]) {
-                  if (newOrderBy != null) {
-                    if (queryLoader.orderBy == newOrderBy) {
-                      text += queryLoader.ascending ? " ▴" : " ▾";
-                    } else {
-                      text += " ▴▾";
-                    }
-                  }
-
-                  return TableCell(
-                    child: Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (newOrderBy != null) {
-                            if (newOrderBy == queryLoader.orderBy) {
-                              queryLoader.ascending = !queryLoader.ascending;
-                            } else {
-                              queryLoader.ascending = true;
-                            }
-
-                            queryLoader.orderBy = newOrderBy;
-                            pagination.offset = 0;
-                            reload();
+            final rows = [
+              TableRow(
+                decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
+                children: [
+                  TableCell(
+                    child: Checkbox.adaptive(
+                      value: queryLoader.selected.containsAll(queryLoader.residents),
+                      onChanged: (state) {
+                        if (state != null) {
+                          if (state) {
+                            queryLoader.selected.addAll(queryLoader.residents);
+                          } else {
+                            queryLoader.selected.removeAll(queryLoader.residents);
                           }
-                        },
-                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ),
+                        }
+
+                        refresh();
+                      },
                     ),
-                  );
-                }
-
-                final rows = [
-                  TableRow(
-                    decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
+                  ),
+                  headerCeil(AppLocale.Fullname.getString(context), "name"),
+                  headerCeil(AppLocale.Room.getString(context), "room"),
+                  headerCeil(AppLocale.DateOfBirth.getString(context)),
+                  headerCeil(AppLocale.Phone.getString(context)),
+                  headerCeil(AppLocale.Email.getString(context)),
+                  headerCeil(AppLocale.CreationTime.getString(context), "id"),
+                  headerCeil(AppLocale.Username.getString(context), "username"),
+                  headerCeil(AppLocale.Option.getString(context)),
+                ],
+              ),
+              ...List<TableRow>.from(
+                queryLoader.residents.map(
+                  (resident) => TableRow(
                     children: [
-                      TableCell(
-                        child: Checkbox.adaptive(
-                          value: queryLoader.selected.containsAll(queryLoader.residents),
-                          onChanged: (state) {
-                            if (state != null) {
-                              if (state) {
-                                queryLoader.selected.addAll(queryLoader.residents);
-                              } else {
-                                queryLoader.selected.removeAll(queryLoader.residents);
-                              }
+                      Checkbox.adaptive(
+                        value: queryLoader.selected.contains(resident),
+                        onChanged: (state) {
+                          if (state != null) {
+                            if (state) {
+                              queryLoader.selected.add(resident);
+                            } else {
+                              queryLoader.selected.remove(resident);
                             }
+                          }
 
-                            refresh();
-                          },
+                          refresh();
+                        },
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.name),
                         ),
                       ),
-                      headerCeil(AppLocale.Fullname.getString(context), "name"),
-                      headerCeil(AppLocale.Room.getString(context), "room"),
-                      headerCeil(AppLocale.DateOfBirth.getString(context)),
-                      headerCeil(AppLocale.Phone.getString(context)),
-                      headerCeil(AppLocale.Email.getString(context)),
-                      headerCeil(AppLocale.CreationTime.getString(context), "id"),
-                      headerCeil(AppLocale.Username.getString(context), "username"),
-                      headerCeil(AppLocale.Option.getString(context)),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.room.toString()),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.birthday?.format("dd/mm/yyyy") ?? "---"),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.phone ?? "---"),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.email ?? "---"),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.createdAt.toLocal().toString()),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Text(resident.username ?? "---"),
+                        ),
+                      ),
+                      TableCell(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Row(
+                            children: [_EditButton(resident, this)],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  ...List<TableRow>.from(
-                    queryLoader.residents.map(
-                      (resident) => TableRow(
-                        children: [
-                          Checkbox.adaptive(
-                            value: queryLoader.selected.contains(resident),
-                            onChanged: (state) {
-                              if (state != null) {
-                                if (state) {
-                                  queryLoader.selected.add(resident);
-                                } else {
-                                  queryLoader.selected.remove(resident);
-                                }
-                              }
+                ),
+              ),
+            ];
 
-                              refresh();
-                            },
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.name),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.room.toString()),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.birthday?.format("dd/mm/yyyy") ?? "---"),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.phone ?? "---"),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.email ?? "---"),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.createdAt.toLocal().toString()),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Text(resident.username ?? "---"),
-                            ),
-                          ),
-                          TableCell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Row(
-                                children: [_EditButton(resident, this)],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+            return SliverMainAxisGroup(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(5),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.delete_outlined),
+                          label: Text("${AppLocale.DeleteAccount.getString(context)} (${queryLoader.selected.length})"),
+                          onPressed: _actionLock.locked || queryLoader.selected.isEmpty ? null : _deleteAccounts,
+                        ),
+                      ],
                     ),
                   ),
-                ];
-
-                return SliverMainAxisGroup(
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.all(5),
-                      sliver: SliverToBoxAdapter(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton.icon(
-                              icon: const Icon(Icons.delete_outlined),
-                              label: Text("${AppLocale.DeleteAccount.getString(context)} (${queryLoader.selected.length})"),
-                              onPressed: _actionLock.locked || queryLoader.selected.isEmpty ? null : _deleteAccounts,
-                            ),
-                          ],
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.all(5),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left_outlined),
+                          onPressed: () {
+                            if (pagination.offset > 0) {
+                              pagination.offset--;
+                              reload();
+                            }
+                          },
                         ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.all(5),
-                      sliver: SliverToBoxAdapter(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left_outlined),
-                              onPressed: () {
-                                if (pagination.offset > 0) {
-                                  pagination.offset--;
-                                  reload();
-                                }
-                              },
-                            ),
-                            FutureBuilder(
-                              future: pagination.future,
-                              builder: (context, _) {
-                                final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
-                                return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right_outlined),
-                              onPressed: () {
-                                if (pagination.offset < pagination.offsetLimit) {
-                                  pagination.offset++;
-                                  reload();
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.refresh_outlined),
-                              onPressed: () {
-                                pagination.offset = 0;
-                                reload();
-                              },
-                            ),
-                            TextButton.icon(
-                              icon: const Icon(Icons.search_outlined),
-                              label: Text(
-                                search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
-                              ),
-                              onPressed: () async {
-                                // Save current values for restoration
-                                final nameSearch = search.name.text;
-                                final roomSearch = search.room.text;
-                                final usernameSearch = search.username.text;
+                        FutureBuilder(
+                          future: pagination.future,
+                          builder: (context, _) {
+                            final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
+                            return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right_outlined),
+                          onPressed: () {
+                            if (pagination.offset < pagination.offsetLimit) {
+                              pagination.offset++;
+                              reload();
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_outlined),
+                          onPressed: () {
+                            pagination.offset = 0;
+                            reload();
+                          },
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.search_outlined),
+                          label: Text(
+                            search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
+                          ),
+                          onPressed: () async {
+                            // Save current values for restoration
+                            final nameSearch = search.name.text;
+                            final roomSearch = search.room.text;
+                            final usernameSearch = search.username.text;
 
-                                final formKey = GlobalKey<FormState>();
+                            final formKey = GlobalKey<FormState>();
 
-                                void onSubmit(BuildContext context) {
-                                  Navigator.pop(context, true);
-                                  pagination.offset = 0;
-                                  reload();
-                                }
+                            void onSubmit(BuildContext context) {
+                              Navigator.pop(context, true);
+                              pagination.offset = 0;
+                              reload();
+                            }
 
-                                final submitted = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => SimpleDialog(
-                                    contentPadding: const EdgeInsets.all(10),
-                                    title: Text(AppLocale.Search.getString(context)),
-                                    children: [
-                                      Form(
-                                        key: formKey,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        child: Column(
+                            final submitted = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => SimpleDialog(
+                                contentPadding: const EdgeInsets.all(10),
+                                title: Text(AppLocale.Search.getString(context)),
+                                children: [
+                                  Form(
+                                    key: formKey,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          controller: search.name,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.badge_outlined),
+                                            label: Text(AppLocale.Fullname.getString(context)),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => nameValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: search.room,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.room_outlined),
+                                            label: Text(AppLocale.Room.getString(context)),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => roomValidator(context, required: false, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: search.username,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            icon: const Icon(Icons.person_outlined),
+                                            label: Text(AppLocale.Username.getString(context)),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => usernameValidator(context, required: false, value: value),
+                                        ),
+                                        const SizedBox.square(dimension: 10),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            TextFormField(
-                                              controller: search.name,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.badge_outlined),
-                                                label: Text(AppLocale.Fullname.getString(context)),
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.done_outlined),
+                                                label: Text(AppLocale.Search.getString(context)),
+                                                onPressed: () {
+                                                  if (formKey.currentState?.validate() ?? false) {
+                                                    onSubmit(context);
+                                                  }
+                                                },
                                               ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => nameValidator(context, required: false, value: value),
                                             ),
-                                            TextFormField(
-                                              controller: search.room,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.room_outlined),
-                                                label: Text(AppLocale.Room.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => roomValidator(context, required: false, value: value),
-                                            ),
-                                            TextFormField(
-                                              controller: search.username,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.person_outlined),
-                                                label: Text(AppLocale.Username.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => usernameValidator(context, required: false, value: value),
-                                            ),
-                                            const SizedBox.square(dimension: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.done_outlined),
-                                                    label: Text(AppLocale.Search.getString(context)),
-                                                    onPressed: () {
-                                                      if (formKey.currentState?.validate() ?? false) {
-                                                        onSubmit(context);
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.clear_outlined),
-                                                    label: Text(AppLocale.ClearAll.getString(context)),
-                                                    onPressed: () {
-                                                      search.name.clear();
-                                                      search.room.clear();
-                                                      search.username.clear();
+                                            Expanded(
+                                              child: TextButton.icon(
+                                                icon: const Icon(Icons.clear_outlined),
+                                                label: Text(AppLocale.ClearAll.getString(context)),
+                                                onPressed: () {
+                                                  search.name.clear();
+                                                  search.room.clear();
+                                                  search.username.clear();
 
-                                                      onSubmit(context);
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
+                                                  onSubmit(context);
+                                                },
+                                              ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                );
+                                ],
+                              ),
+                            );
 
-                                if (submitted == null) {
-                                  // Dialog dismissed. Restore field values
-                                  search.name.text = nameSearch;
-                                  search.room.text = roomSearch;
-                                  search.username.text = usernameSearch;
-                                }
-                              },
-                            ),
-                          ],
+                            if (submitted == null) {
+                              // Dialog dismissed. Restore field values
+                              search.name.text = nameSearch;
+                              search.room.text = roomSearch;
+                              search.username.text = usernameSearch;
+                            }
+                          },
                         ),
-                      ),
+                      ],
                     ),
-                    SliverToBoxAdapter(child: Center(child: _notification)),
-                    SliverPadding(
-                      padding: const EdgeInsets.all(5),
-                      sliver: SliverToBoxAdapter(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Container(
-                            width: max(mediaQuery.size.width, 1000),
-                            padding: const EdgeInsets.all(5),
-                            child: Table(children: rows),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox.square(
-                        dimension: 50,
-                        child: Icon(Icons.highlight_off_outlined),
-                      ),
-                      const SizedBox.square(dimension: 5),
-                      Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
-                    ],
                   ),
                 ),
-              );
+                SliverToBoxAdapter(child: Center(child: _notification)),
+                SliverPadding(
+                  padding: const EdgeInsets.all(5),
+                  sliver: SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Container(
+                        width: max(mediaQuery.size.width, 1000),
+                        padding: const EdgeInsets.all(5),
+                        child: Table(children: rows),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
           }
+
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox.square(
+                    dimension: 50,
+                    child: Icon(Icons.highlight_off_outlined),
+                  ),
+                  const SizedBox.square(dimension: 5),
+                  Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
+                ],
+              ),
+            ),
+          );
         },
       ),
     );
