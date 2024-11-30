@@ -32,10 +32,7 @@ BEGIN
     FROM fee
     INNER JOIN rooms ON rooms.room = @Room
     LEFT JOIN payments ON payments.fee_id = fee.id AND payments.room = @Room
-    WHERE fee.id NOT IN (
-        SELECT fee_id FROM payments
-        WHERE room = @Room
-    ) AND fee.id >= @FromId AND fee.id <= @ToId
+    WHERE fee.id >= @FromId AND fee.id <= @ToId
     ORDER BY fee.id
     OFFSET @Offset ROWS
     FETCH NEXT @FetchNext ROWS ONLY

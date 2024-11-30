@@ -119,8 +119,8 @@ async def ipn(request: Request) -> _VNPayResponse:
 
     # Validate request parameters
     try:
-        checksum = params.pop("vnp_SecureHash")
-        tmn_code = params["vnp_TmnCode"]
+        vnp_securehash = params.pop("vnp_SecureHash")
+        vnp_tmncode = params["vnp_TmnCode"]
     except KeyError:
         return _VNPayResponse(RspCode="99", Message="Missing required fields")
 
@@ -130,27 +130,27 @@ async def ipn(request: Request) -> _VNPayResponse:
         data.encode("utf-8"),
         digestmod=hashlib.sha512,
     ).hexdigest()
-    if VNPAY_TMN_CODE != tmn_code or checksum != expected_checksum:
+    if VNPAY_TMN_CODE != vnp_tmncode or vnp_securehash != expected_checksum:
         return _VNPayResponse(RspCode="97", Message="Invalid signature")
 
     try:
-        response_code = params["vnp_ResponseCode"]
-        txn_ref = params["vnp_TxnRef"]
+        vnp_responsecode = params["vnp_ResponseCode"]
+        vnp_txnref = params["vnp_TxnRef"]
     except KeyError:
         return _VNPayResponse(RspCode="99", Message="Missing required fields")
 
-    room, fee_id, normalized_amount, _ = map(int, txn_ref.split("-"))
+    room, fee_id, normalized_amount, _ = map(int, vnp_txnref.split("-"))
 
     try:
-        amount = int(params["vnp_Amount"])
+        vnp_amount = int(params["vnp_Amount"])
     except KeyError:
         return _VNPayResponse(RspCode="99", Message="Missing required fields")
 
-    if 100 * amount != normalized_amount:
+    if vnp_amount != normalized_amount:
         return _VNPayResponse(RspCode="04", Message="Invalid amount")
 
     # Update database
-    if response_code in {"00", "07"}:
+    if vnp_responsecode in {"00", "07"}:
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
@@ -159,7 +159,9 @@ async def ipn(request: Request) -> _VNPayResponse:
                     normalized_amount,
                     fee_id,
                 )
-                code = await cursor.fetchval()
-                return _VNPayResponse(RspCode=code, Message="See RspCode for details")
 
-    return _VNPayResponse(RspCode="00", Message="Data has been updated successfully")
+                row = await cursor.fetchone()
+                if row is not None:
+                    return _VNPayResponse(RspCode=row["code"], Message=row["message"])
+
+    return _VNPayResponse(RspCode="99", Message="Unknown error")

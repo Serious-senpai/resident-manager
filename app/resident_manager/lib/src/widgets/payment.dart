@@ -122,11 +122,11 @@ class _PayButton extends StatelessWidget {
                                     return message
                                         .replaceFirst(
                                           "{min}",
-                                          status.lowerBound.floor().toString(),
+                                          status.lowerBound.round().toString(),
                                         )
                                         .replaceFirst(
                                           "{max}",
-                                          status.upperBound.floor().toString(),
+                                          status.upperBound.round().toString(),
                                         );
                                   },
                                 ),
@@ -345,13 +345,13 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
                                   TableCell(
                                     child: Padding(
                                       padding: const EdgeInsets.all(5),
-                                      child: Text(status.lowerBound.floor().toString()),
+                                      child: Text(status.lowerBound.round().toString()),
                                     ),
                                   ),
                                   TableCell(
                                     child: Padding(
                                       padding: const EdgeInsets.all(5),
-                                      child: Text(status.upperBound.floor().toString()),
+                                      child: Text(status.upperBound.round().toString()),
                                     ),
                                   ),
                                   TableCell(
@@ -363,7 +363,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
                                   TableCell(
                                     child: Padding(
                                       padding: const EdgeInsets.all(5),
-                                      child: Text(status.payment?.amount.toString() ?? "---"),
+                                      child: Text(status.payment?.amount.round().toString() ?? "---"),
                                     ),
                                   ),
                                   TableCell(
