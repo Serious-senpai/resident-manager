@@ -6,6 +6,7 @@ CREATE OR ALTER PROCEDURE UpdateResident
     @Phone NVARCHAR(15),
     @Email NVARCHAR(255)
 AS
+    SET NOCOUNT ON
     UPDATE accounts
     SET
         name = @Name,

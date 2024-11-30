@@ -6,6 +6,8 @@ CREATE OR ALTER PROCEDURE QueryRoomFee
     @FetchNext INT
 AS
 BEGIN
+    SET NOCOUNT ON
+
     DECLARE @Epoch DATETIME2
     SELECT @Epoch = value FROM config_datetime2 WHERE name = 'epoch'
 

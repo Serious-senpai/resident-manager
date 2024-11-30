@@ -162,6 +162,6 @@ async def ipn(request: Request) -> _VNPayResponse:
 
                 row = await cursor.fetchone()
                 if row is not None:
-                    return _VNPayResponse(RspCode=row["code"], Message=row["message"])
+                    return _VNPayResponse(RspCode=row.code, Message=row.message)
 
     return _VNPayResponse(RspCode="99", Message="Unknown error")

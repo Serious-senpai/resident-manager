@@ -8,11 +8,12 @@ CREATE OR ALTER PROCEDURE Register
     @HashedPassword NVARCHAR(255)
 AS
 BEGIN
+    SET NOCOUNT ON
+
+    DECLARE @Id BIGINT
+    EXECUTE GenerateId @Id = @Id OUTPUT
+
     BEGIN TRANSACTION
-
-        DECLARE @Id BIGINT
-        EXECUTE GenerateId @Id = @Id OUTPUT
-
         IF EXISTS (SELECT 1 FROM accounts WHERE username = @Username)
             SELECT * FROM accounts WHERE 1 = 0
 

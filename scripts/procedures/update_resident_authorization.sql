@@ -4,6 +4,7 @@ CREATE OR ALTER PROCEDURE UpdateResidentAuthorization
     @HashedPassword NVARCHAR(255)
 AS
 BEGIN
+    SET NOCOUNT ON
     BEGIN TRANSACTION
 
         IF EXISTS (SELECT 1 FROM accounts WHERE id != @Id AND username = @Username)

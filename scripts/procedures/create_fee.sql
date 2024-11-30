@@ -10,36 +10,34 @@ CREATE OR ALTER PROCEDURE CreateFee
     @Flags TINYINT
 AS
 BEGIN
-    BEGIN TRANSACTION
+    SET NOCOUNT ON
 
-        DECLARE @Id BIGINT
-        EXECUTE GenerateId @Id = @Id OUTPUT
+    DECLARE @Id BIGINT
+    EXECUTE GenerateId @Id = @Id OUTPUT
 
-        INSERT INTO fee (
-            id,
-            name,
-            lower,
-            upper,
-            per_area,
-            per_motorbike,
-            per_car,
-            deadline,
-            description,
-            flags
-        )
-        OUTPUT INSERTED.*
-        VALUES (
-            @Id,
-            @Name,
-            @Lower,
-            @Upper,
-            @PerArea,
-            @PerMotorbike,
-            @PerCar,
-            @Deadline,
-            @Description,
-            @Flags
-        )
-
-    COMMIT TRANSACTION
+    INSERT INTO fee (
+        id,
+        name,
+        lower,
+        upper,
+        per_area,
+        per_motorbike,
+        per_car,
+        deadline,
+        description,
+        flags
+    )
+    OUTPUT INSERTED.*
+    VALUES (
+        @Id,
+        @Name,
+        @Lower,
+        @Upper,
+        @PerArea,
+        @PerMotorbike,
+        @PerCar,
+        @Deadline,
+        @Description,
+        @Flags
+    )
 END
