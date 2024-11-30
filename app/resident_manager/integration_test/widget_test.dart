@@ -79,7 +79,11 @@ Future<void> adminSearch(
   required String username,
 }) async {
   // Open search interface
-  await tester.tap(find.byIcon(Icons.search_outlined));
+  await tester.tap(
+    find.byWidgetPredicate(
+      (widget) => (widget is Icon) && (widget.icon == Icons.search_outlined || widget.icon == Icons.search_off_outlined),
+    ),
+  );
   await tester.pumpAndSettle();
 
   final searchDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);

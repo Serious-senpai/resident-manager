@@ -82,7 +82,6 @@ class AppLocale {
   static const String NotYetLoggedIn = "NotYetLoggedIn";
   static const String NoData = "NoData";
   static const String AmountPaid = "AmountPaid";
-  static const String NotPaid = "NotPaid";
   static const String Deadline = "Deadline";
   static const String PaymentHistory = "PaymentHistory";
   static const String Fee = "Fee";
@@ -91,6 +90,13 @@ class AppLocale {
   static const String Maximum = "Maximum";
   static const String EnterAmount = "EnterAmount";
   static const String AmountMustBeFromTo = "AmountMustBeFromTo";
+  static const String ConfigureFilter = "ConfigureFilter";
+  static const String All = "All";
+  static const String NotPaid = "NotPaid";
+  static const String AlreadyPaid = "AlreadyPaid";
+  static const String PaymentStatus = "PaymentStatus";
+  static const String CreatedAfter = "CreatedAfter";
+  static const String CreatedBefore = "CreatedBefore";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -194,7 +200,6 @@ class AppLocale {
     NotYetLoggedIn: "Not yet logged in",
     NoData: "No data available.",
     AmountPaid: "Amount paid",
-    NotPaid: "Not paid",
     Deadline: "Deadline",
     PaymentHistory: "Payment history",
     Fee: "Fee",
@@ -203,6 +208,13 @@ class AppLocale {
     Maximum: "Maximum",
     EnterAmount: "Enter amount",
     AmountMustBeFromTo: "Amount must be from {min} to {max}",
+    ConfigureFilter: "Configure filter",
+    All: "All",
+    NotPaid: "Not paid",
+    AlreadyPaid: "Already paid",
+    PaymentStatus: "Payment status",
+    CreatedAfter: "Created after",
+    CreatedBefore: "Created before",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -307,7 +319,6 @@ class AppLocale {
     NotYetLoggedIn: "Chưa đăng nhập",
     NoData: "Không có dữ liệu.",
     AmountPaid: "Số tiền đã trả",
-    NotPaid: "Chưa thanh toán",
     Deadline: "Hạn thanh toán",
     PaymentHistory: "Lịch sử thanh toán",
     Fee: "Phí",
@@ -316,6 +327,13 @@ class AppLocale {
     Maximum: "Tối đa",
     EnterAmount: "Nhập số tiền",
     AmountMustBeFromTo: "Số tiền phải từ {min} đến {max}",
+    ConfigureFilter: "Cấu hình bộ lọc",
+    All: "Tất cả",
+    NotPaid: "Chưa thanh toán",
+    AlreadyPaid: "Đã thanh toán",
+    PaymentStatus: "Trạng thái thanh toán",
+    CreatedAfter: "Tạo sau",
+    CreatedBefore: "Tạo trước",
 
     // Error codes
     Error0: "Thao tác thành công.",

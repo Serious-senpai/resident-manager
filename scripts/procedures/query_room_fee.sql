@@ -1,5 +1,6 @@
 CREATE OR ALTER PROCEDURE QueryRoomFee
     @Room SMALLINT,
+    @Paid BIT,
     @CreatedFrom DATETIME2,
     @CreatedTo DATETIME2,
     @Offset INT,
@@ -34,7 +35,11 @@ BEGIN
     FROM fee
     INNER JOIN rooms ON rooms.room = @Room
     LEFT JOIN payments ON payments.fee_id = fee.id AND payments.room = @Room
-    WHERE fee.id >= @FromId AND fee.id <= @ToId
+    WHERE fee.id >= @FromId AND fee.id <= @ToId AND (
+        @Paid IS NULL
+        OR (@Paid = 0 AND payments.id IS NULL)
+        OR (@Paid = 1 AND payments.id IS NOT NULL)
+    )
     ORDER BY fee.id
     OFFSET @Offset ROWS
     FETCH NEXT @FetchNext ROWS ONLY

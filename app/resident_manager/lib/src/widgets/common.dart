@@ -105,6 +105,9 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
                 fit: BoxFit.cover,
               ),
             ),
+            floating: true,
+            pinned: false,
+            snap: false,
             leading: canPop
                 ? IconButton(
                     onPressed: () => Navigator.pop(context),

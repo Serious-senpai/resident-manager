@@ -585,7 +585,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                           },
                         ),
                         TextButton.icon(
-                          icon: const Icon(Icons.search_outlined),
+                          icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
                           label: Text(
                             search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
                             style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),

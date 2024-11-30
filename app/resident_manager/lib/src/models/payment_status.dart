@@ -29,13 +29,15 @@ class PaymentStatus {
   static Future<Result<List<PaymentStatus>?>> query({
     required ApplicationState state,
     required int offset,
+    required bool? paid,
     required DateTime createdFrom,
     required DateTime createdTo,
   }) async {
     final response = await state.get(
-      "/api/v1/residents/fee",
+      "/api/v1/residents/fees",
       queryParameters: {
         "offset": offset.toString(),
+        if (paid != null) "paid": paid.toString(),
         "created_from": createdFrom.toUtc().toIso8601String(),
         "created_to": createdTo.toUtc().toIso8601String(),
       },

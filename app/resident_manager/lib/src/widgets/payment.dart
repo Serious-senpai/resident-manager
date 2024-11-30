@@ -33,6 +33,11 @@ class _Pagination extends FutureHolder<int?> {
 
 class _QueryLoader extends FutureHolder<int?> {
   final statuses = <PaymentStatus>[];
+  bool? paid;
+  DateTime? createdFrom;
+  DateTime? createdTo;
+
+  bool get filtering => paid != null || createdFrom != null || createdTo != null;
 
   final _PaymentPageState _state;
 
@@ -44,8 +49,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await PaymentStatus.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        createdFrom: epoch,
-        createdTo: DateTime.now().toUtc(),
+        paid: paid,
+        createdFrom: createdFrom ?? epoch,
+        createdTo: createdTo ?? DateTime.now().toUtc(),
       );
 
       final data = result.data;
@@ -243,6 +249,120 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
                           onPressed: () {
                             pagination.offset = 0;
                             reload();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(queryLoader.filtering ? Icons.filter_alt_outlined : Icons.filter_alt_off_outlined),
+                          onPressed: () async {
+                            bool? tempPaid = queryLoader.paid;
+                            DateTime? tempCreatedFrom = queryLoader.createdFrom;
+                            DateTime? tempCreatedTo = queryLoader.createdTo;
+
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                  builder: (BuildContext context, StateSetter setState) {
+                                    return AlertDialog(
+                                      title: Text(AppLocale.ConfigureFilter.getString(context)),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(AppLocale.PaymentStatus.getString(context)),
+                                              const SizedBox.square(dimension: 5),
+                                              DropdownButton<bool?>(
+                                                value: tempPaid,
+                                                hint: Text(AppLocale.PaymentStatus.getString(context)),
+                                                items: [
+                                                  DropdownMenuItem(value: null, child: Text(AppLocale.All.getString(context))),
+                                                  DropdownMenuItem(value: true, child: Text(AppLocale.AlreadyPaid.getString(context))),
+                                                  DropdownMenuItem(value: false, child: Text(AppLocale.NotPaid.getString(context))),
+                                                ],
+                                                onChanged: (value) {
+                                                  setState(
+                                                    () {
+                                                      tempPaid = value;
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox.square(dimension: 10),
+                                          Row(
+                                            children: [
+                                              Text(AppLocale.CreatedAfter.getString(context)),
+                                              const SizedBox.square(dimension: 5),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  DateTime? picked = await showDatePicker(
+                                                    context: context,
+                                                    initialDate: tempCreatedFrom,
+                                                    firstDate: DateTime(2024),
+                                                    lastDate: DateTime(2100),
+                                                  );
+                                                  setState(
+                                                    () {
+                                                      tempCreatedFrom = picked;
+                                                    },
+                                                  );
+                                                },
+                                                child: Text(tempCreatedFrom?.toLocal().toString() ?? "---"),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox.square(dimension: 10),
+                                          Row(
+                                            children: [
+                                              Text(AppLocale.CreatedBefore.getString(context)),
+                                              const SizedBox.square(dimension: 5),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  DateTime? picked = await showDatePicker(
+                                                    context: context,
+                                                    initialDate: tempCreatedTo,
+                                                    firstDate: DateTime(2024),
+                                                    lastDate: DateTime(2100),
+                                                  );
+                                                  setState(
+                                                    () {
+                                                      tempCreatedTo = picked;
+                                                    },
+                                                  );
+                                                },
+                                                child: Text(tempCreatedTo?.toLocal().toString() ?? "---"),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text(AppLocale.Cancel.getString(context)),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            // Save the selected values
+                                            queryLoader.paid = tempPaid;
+                                            queryLoader.createdFrom = tempCreatedFrom;
+                                            queryLoader.createdTo = tempCreatedTo;
+
+                                            Navigator.of(context).pop();
+                                            reload();
+                                          },
+                                          child: Text(AppLocale.Search.getString(context)),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            );
                           },
                         ),
                       ],

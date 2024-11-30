@@ -220,7 +220,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.search_outlined),
+                                icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
                                 onPressed: () async {
                                   state.extras["room-search"] = room;
                                   await pushNamedAndRefresh(context, ApplicationRoute.adminResidentsPage);
@@ -469,7 +469,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMix
                           },
                         ),
                         TextButton.icon(
-                          icon: const Icon(Icons.search_outlined),
+                          icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
                           label: Text(
                             search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
                             style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),

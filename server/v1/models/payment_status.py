@@ -62,6 +62,7 @@ class PaymentStatus(pydantic.BaseModel):
         room: int,
         *,
         offset: int = 0,
+        paid: Optional[bool] = None,
         created_from: datetime,
         created_to: datetime,
     ) -> List[PaymentStatus]:
@@ -74,12 +75,14 @@ class PaymentStatus(pydantic.BaseModel):
                     """
                         EXECUTE QueryRoomFee
                             @Room = ?,
+                            @Paid = ?,
                             @CreatedFrom = ?,
                             @CreatedTo = ?,
                             @Offset = ?,
                             @FetchNext = ?
                     """,
                     room,
+                    paid,
                     created_from,
                     created_to,
                     offset,
