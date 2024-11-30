@@ -4,11 +4,13 @@ import "dart:math";
 
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
+import "package:url_launcher/url_launcher.dart";
 
 import "common.dart";
 import "state.dart";
 import "utils.dart";
 import "../config.dart";
+import "../state.dart";
 import "../translations.dart";
 import "../utils.dart";
 import "../models/payment_status.dart";
@@ -63,6 +65,115 @@ class _QueryLoader extends FutureHolder<int?> {
     } finally {
       _state.refresh();
     }
+  }
+}
+
+class _PayButton extends StatelessWidget {
+  final ApplicationState state;
+  final PaymentStatus status;
+
+  const _PayButton({required this.state, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.payment_outlined),
+      onPressed: status.payment != null
+          ? null
+          : () async {
+              var amount = status.lowerBound;
+
+              if (status.upperBound != amount) {
+                final controller = TextEditingController();
+                final selected = await showDialog<double>(
+                  context: context,
+                  builder: (context) {
+                    final formKey = GlobalKey<FormState>();
+                    return SimpleDialog(
+                      title: Text(AppLocale.Payment.getString(context)),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Form(
+                            key: formKey,
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  autofocus: true,
+                                  controller: controller,
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.all(8.0),
+                                    label: FieldLabel(
+                                      AppLocale.EnterAmount.getString(context),
+                                      style: const TextStyle(color: Colors.black),
+                                      required: true,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty && value.length < 9) {
+                                      final numValue = double.tryParse(value);
+                                      if (numValue != null && numValue >= status.lowerBound && numValue <= status.upperBound) {
+                                        return null;
+                                      }
+                                    }
+
+                                    final message = AppLocale.AmountMustBeFromTo.getString(context);
+                                    return message
+                                        .replaceFirst(
+                                          "{min}",
+                                          status.lowerBound.floor().toString(),
+                                        )
+                                        .replaceFirst(
+                                          "{max}",
+                                          status.upperBound.floor().toString(),
+                                        );
+                                  },
+                                ),
+                                const SizedBox.square(dimension: 10),
+                                Container(
+                                  padding: const EdgeInsets.all(5),
+                                  width: double.infinity,
+                                  child: TextButton.icon(
+                                    icon: const Icon(Icons.done_outlined),
+                                    label: Text(AppLocale.Confirm.getString(context)),
+                                    onPressed: () {
+                                      if (formKey.currentState?.validate() ?? false) {
+                                        Navigator.pop(context, double.parse(controller.text));
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                // controller.dispose();
+                if (selected == null) {
+                  return;
+                }
+
+                amount = selected;
+              }
+
+              await launchUrl(
+                ApplicationState.baseUrl.replace(
+                  path: "/api/v1/residents/pay",
+                  queryParameters: {
+                    "room": state.resident?.room.toString(),
+                    "fee_id": status.fee.id.toString(),
+                    "amount": amount.toString(),
+                  },
+                ),
+                mode: LaunchMode.inAppWebView,
+              );
+            },
+    );
   }
 }
 
@@ -205,6 +316,15 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
                                     ),
                                   ),
                                 ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Text(
+                                      AppLocale.Option.getString(context),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                             for (final status in queryLoader.statuses)
@@ -244,6 +364,16 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStat
                                     child: Padding(
                                       padding: const EdgeInsets.all(5),
                                       child: Text(status.payment?.amount.toString() ?? "---"),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: Row(
+                                        children: [
+                                          _PayButton(state: state, status: status),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],

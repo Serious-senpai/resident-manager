@@ -65,7 +65,7 @@ async def residents_pay(
         "vnp_IpAddr": request.headers.get("x-client-ip", "0.0.0.0"),  # Azure headers containing client IP address
         "vnp_Locale": "vn",
         "vnp_OrderInfo": f"Thanh toan {room} cho {fee_id}",
-        "vnp_OrderType": 250000,
+        "vnp_OrderType": 250000,  # https://sandbox.vnpayment.vn/apis/docs/loai-hang-hoa/
         "vnp_ReturnUrl": "https://example.com",
         "vnp_ExpireDate": _format_time(expire),
         "vnp_TxnRef": f"{room}-{fee_id}-{normalized_amount}-{unique_suffix}",

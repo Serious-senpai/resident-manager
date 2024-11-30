@@ -89,6 +89,8 @@ class AppLocale {
   static const String Description = "Description";
   static const String Minimum = "Minimum";
   static const String Maximum = "Maximum";
+  static const String EnterAmount = "EnterAmount";
+  static const String AmountMustBeFromTo = "AmountMustBeFromTo";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -199,6 +201,8 @@ class AppLocale {
     Description: "Description",
     Minimum: "Minimum",
     Maximum: "Maximum",
+    EnterAmount: "Enter amount",
+    AmountMustBeFromTo: "Amount must be from {min} to {max}",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -310,6 +314,8 @@ class AppLocale {
     Description: "Mô tả",
     Minimum: "Tối thiểu",
     Maximum: "Tối đa",
+    EnterAmount: "Nhập số tiền",
+    AmountMustBeFromTo: "Số tiền phải từ {min} đến {max}",
 
     // Error codes
     Error0: "Thao tác thành công.",
