@@ -164,4 +164,4 @@ async def ipn(request: Request) -> _VNPayResponse:
                 if row is not None:
                     return _VNPayResponse(RspCode=row.code, Message=row.message)
 
-    return _VNPayResponse(RspCode="99", Message="Unknown error")
+    return _VNPayResponse(RspCode="00", Message="Unknown state, payment may not be updated")
