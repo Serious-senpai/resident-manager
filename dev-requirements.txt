@@ -15,7 +15,7 @@ mccabe==0.7.0
 multidict==6.1.0
 mypy==1.13.0
 mypy-extensions==1.0.0
-propcache==0.2.0
+propcache==0.2.1
 pycodestyle==2.12.1
 pydantic==2.10.2
 pydantic_core==2.27.1

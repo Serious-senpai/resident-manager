@@ -9,7 +9,7 @@ h11==0.14.0
 httptools==0.6.4
 idna==3.10
 multidict==6.1.0
-propcache==0.2.0
+propcache==0.2.1
 pydantic==2.10.2
 pydantic_core==2.27.1
 PyJWT==2.10.1
