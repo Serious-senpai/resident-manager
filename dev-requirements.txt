@@ -17,7 +17,7 @@ mypy==1.13.0
 mypy-extensions==1.0.0
 propcache==0.2.0
 pycodestyle==2.12.1
-pydantic==2.10.1
+pydantic==2.10.2
 pydantic_core==2.27.1
 pyflakes==3.2.0
 PyJWT==2.10.1
