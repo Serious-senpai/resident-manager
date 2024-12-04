@@ -93,7 +93,6 @@ jobs:
       ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
       VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
       VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
-      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
       PORT: 8000
 
     steps:
@@ -171,7 +170,6 @@ jobs:
       ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
       VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
       VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
-      PRIVATE_KEY_SEED: ${{ secrets.PRIVATE_KEY_SEED }}
       PORT: 8000
 
     steps:
