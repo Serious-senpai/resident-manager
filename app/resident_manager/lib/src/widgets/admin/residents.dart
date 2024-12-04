@@ -305,7 +305,7 @@ class _EditButton extends StatelessWidget {
   }
 }
 
-class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonStateMixin<ResidentsPage> {
+class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonScaffoldStateMixin<ResidentsPage> {
   final search = _SearchField();
 
   _Pagination? _pagination;

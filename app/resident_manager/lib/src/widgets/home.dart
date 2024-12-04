@@ -16,7 +16,7 @@ class HomePage extends StateAwareWidget {
   AbstractCommonState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends AbstractCommonState<HomePage> with CommonStateMixin<HomePage> {
+class _HomePageState extends AbstractCommonState<HomePage> with CommonScaffoldStateMixin<HomePage> {
   @override
   CommonScaffold<HomePage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);

@@ -44,20 +44,22 @@ abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> 
   }
 }
 
-mixin CommonStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
+mixin CommonScaffoldStateMixin<T extends StateAwareWidget> on AbstractCommonState<T> {
   @override
   CommonScaffold<T> build(BuildContext context);
 }
 
 class CommonScaffold<T extends StateAwareWidget> extends StatefulWidget {
-  final CommonStateMixin<T> widgetState;
+  final CommonScaffoldStateMixin<T> widgetState;
   final Widget title;
+  final ScrollController? controller;
   final List<Widget> slivers;
 
   const CommonScaffold({
     super.key,
     required this.widgetState,
     required this.title,
+    this.controller,
     required this.slivers,
   });
 
@@ -65,6 +67,7 @@ class CommonScaffold<T extends StateAwareWidget> extends StatefulWidget {
     super.key,
     required this.widgetState,
     required this.title,
+    this.controller,
     required Widget sliver,
   }) : slivers = [sliver];
 
@@ -76,7 +79,8 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
   /// The [GlobalKey] for the underlying [Scaffold]
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final _scrollController = ScrollController();
+  ScrollController? _scrollController;
+  ScrollController get scrollController => _scrollController ??= ScrollController();
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -91,12 +95,18 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController = widget.controller;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
     return Scaffold(
       key: scaffoldKey,
       body: CustomScrollView(
-        controller: _scrollController,
+        controller: scrollController,
         slivers: [
           SliverAppBar(
             flexibleSpace: FlexibleSpaceBar(
@@ -128,8 +138,8 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
           backgroundColor: Colors.lightBlue,
           foregroundColor: Colors.white,
           onPressed: () {
-            _scrollController.animateTo(
-              _scrollController.position.minScrollExtent,
+            scrollController.animateTo(
+              scrollController.position.minScrollExtent,
               curve: Curves.easeOut,
               duration: const Duration(milliseconds: 500),
             );

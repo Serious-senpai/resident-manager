@@ -18,7 +18,7 @@ class LoginPage extends StateAwareWidget {
   AbstractCommonState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMixin<LoginPage> {
+class _LoginPageState extends AbstractCommonState<LoginPage> with CommonScaffoldStateMixin<LoginPage> {
   final _actionLock = Lock();
   Widget _notification = const SizedBox.shrink();
 

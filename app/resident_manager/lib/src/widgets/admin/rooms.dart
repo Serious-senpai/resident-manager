@@ -110,7 +110,7 @@ class _QueryLoader extends FutureHolder<int?> {
   }
 }
 
-class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonStateMixin<RoomsPage> {
+class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffoldStateMixin<RoomsPage> {
   final search = _SearchField();
 
   _Pagination? _pagination;

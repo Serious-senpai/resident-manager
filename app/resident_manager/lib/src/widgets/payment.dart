@@ -183,7 +183,7 @@ class _PayButton extends StatelessWidget {
   }
 }
 
-class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonStateMixin<PaymentPage> {
+class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaffoldStateMixin<PaymentPage> {
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination();
 

@@ -37,7 +37,7 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with CommonStateMixin<PersonalInfoPage> {
+class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with CommonScaffoldStateMixin<PersonalInfoPage> {
   final _name = TextEditingController();
   final _room = TextEditingController();
   final _birthday = TextEditingController();

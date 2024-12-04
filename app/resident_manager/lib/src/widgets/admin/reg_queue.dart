@@ -109,7 +109,7 @@ class _QueryLoader extends FutureHolder<int?> {
   }
 }
 
-class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
+class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonScaffoldStateMixin<RegisterQueuePage> {
   final name = TextEditingController();
   final room = TextEditingController();
   final username = TextEditingController();

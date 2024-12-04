@@ -20,7 +20,7 @@ class RegisterPage extends StateAwareWidget {
   AbstractCommonState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends AbstractCommonState<RegisterPage> with CommonStateMixin<RegisterPage> {
+class _RegisterPageState extends AbstractCommonState<RegisterPage> with CommonScaffoldStateMixin<RegisterPage> {
   final _name = TextEditingController();
   final _room = TextEditingController();
   final _birthday = TextEditingController();
