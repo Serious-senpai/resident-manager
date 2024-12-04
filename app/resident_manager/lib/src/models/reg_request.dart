@@ -31,7 +31,8 @@ class RegisterRequest extends PublicInfo {
   static Future<Result<List<RegisterRequest>?>> query({
     required ApplicationState state,
     required int offset,
-    int? id,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
     String? name,
     int? room,
     String? username,
@@ -46,7 +47,8 @@ class RegisterRequest extends PublicInfo {
       "/api/v1/admin/registration-requests",
       queryParameters: {
         "offset": offset.toString(),
-        if (id != null) "id": id.toString(),
+        if (createdAfter != null) "created_after": createdAfter.toIso8601String(),
+        if (createdBefore != null) "created_before": createdBefore.toIso8601String(),
         if (name != null && name.isNotEmpty) "name": name,
         if (room != null) "room": room.toString(),
         if (username != null && username.isNotEmpty) "username": username,

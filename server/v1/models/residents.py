@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from datetime import datetime, timezone
 from typing import Annotated, List, Literal, Optional, TypeVar
 
 import jwt
@@ -12,7 +13,7 @@ from .auth import Token
 from .info import PersonalInfo
 from .results import Result
 from .snowflake import Snowflake
-from ...config import DB_PAGINATION_QUERY
+from ...config import DB_PAGINATION_QUERY, EPOCH
 from ...database import Database
 from ...utils import (
     check_password,
@@ -110,31 +111,35 @@ class Resident(Account):
     @staticmethod
     async def count(
         *,
-        id: Optional[int] = None,
+        created_after: datetime,
+        created_before: datetime,
         name: Optional[str] = None,
         room: Optional[int] = None,
         username: Optional[str] = None,
     ) -> int:
-        _packed = Account.build_sql_condition(id=id, name=name, room=room, username=username)
-        if _packed is None:
-            return 0
-
-        where, params = _packed
-        where.append("approved = 1")
-
-        query = [
-            "SELECT * FROM accounts",
-            "WHERE " + " AND ".join(where),
-        ]
-
-        query = [
-            "SELECT COUNT(1) FROM accounts",
-            "WHERE " + " AND ".join(where),
-        ]
+        created_after = max(created_after.astimezone(timezone.utc), EPOCH)
+        created_before = max(created_before.astimezone(timezone.utc), EPOCH)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("\n".join(query), *params)
+                await cursor.execute(
+                    """
+                        EXECUTE CountAccounts
+                            @CreatedAfter = ?,
+                            @CreatedBefore = ?,
+                            @Name = ?,
+                            @Room = ?,
+                            @Username = ?,
+                            @Approved = ?
+                    """,
+                    created_after,
+                    created_before,
+                    name,
+                    room,
+                    username,
+                    1,
+                )
+
                 return await cursor.fetchval()
 
     @classmethod

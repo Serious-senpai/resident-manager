@@ -25,23 +25,10 @@ class RegisterQueuePage extends StateAwareWidget {
   AbstractCommonState<RegisterQueuePage> createState() => _RegisterQueuePageState();
 }
 
-class _SearchField {
-  final name = TextEditingController();
-  final room = TextEditingController();
-  final username = TextEditingController();
-
-  bool get searching => name.text.isNotEmpty || room.text.isNotEmpty || username.text.isNotEmpty;
-
-  void dispose() {
-    name.dispose();
-    room.dispose();
-    username.dispose();
-  }
-}
-
 class _Pagination extends FutureHolder<int?> {
   int offset = 0;
-  int offsetLimit = 0;
+  int count = 0;
+  int get offsetLimit => max(offset, (count + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1);
 
   final _RegisterQueuePageState _state;
 
@@ -52,21 +39,18 @@ class _Pagination extends FutureHolder<int?> {
     try {
       final result = await RegisterRequest.count(
         state: _state.state,
-        name: _state.search.name.text,
-        room: int.tryParse(_state.search.room.text),
-        username: _state.search.username.text,
+        name: _state.name.text,
+        room: int.tryParse(_state.room.text),
+        username: _state.username.text,
       );
 
       final data = result.data;
       if (data != null) {
-        offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      } else {
-        offsetLimit = offset;
+        count = data;
       }
 
       return result.code;
     } catch (e) {
-      offsetLimit = offset;
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
         return null;
@@ -96,9 +80,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await RegisterRequest.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        name: _state.search.name.text,
-        room: int.tryParse(_state.search.room.text),
-        username: _state.search.username.text,
+        name: _state.name.text,
+        room: int.tryParse(_state.room.text),
+        username: _state.username.text,
         orderBy: orderBy,
         ascending: ascending,
       );
@@ -126,7 +110,11 @@ class _QueryLoader extends FutureHolder<int?> {
 }
 
 class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonStateMixin<RegisterQueuePage> {
-  final search = _SearchField();
+  final name = TextEditingController();
+  final room = TextEditingController();
+  final username = TextEditingController();
+
+  bool get searching => name.text.isNotEmpty || room.text.isNotEmpty || username.text.isNotEmpty;
 
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
@@ -190,7 +178,9 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
   @override
   void dispose() {
     super.dispose();
-    search.dispose();
+    name.dispose();
+    room.dispose();
+    username.dispose();
   }
 
   @override
@@ -343,166 +333,196 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                 SliverPadding(
                   padding: const EdgeInsets.all(5),
                   sliver: SliverToBoxAdapter(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
                       children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.done_outlined),
-                          label: Text("${AppLocale.Approve.getString(context)} (${queryLoader.selected.length})"),
-                          onPressed: _actionLock.locked || queryLoader.selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.approve),
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.close_outlined),
-                          label: Text("${AppLocale.Reject.getString(context)} (${queryLoader.selected.length})"),
-                          onPressed: _actionLock.locked || queryLoader.selected.isEmpty ? null : () => _approveOrReject(RegisterRequest.reject),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(5),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.chevron_left_outlined),
-                          onPressed: () {
-                            if (pagination.offset > 0) {
-                              pagination.offset--;
-                              reload();
-                            }
-                          },
-                        ),
-                        FutureBuilder(
-                          future: pagination.future,
-                          builder: (context, _) {
-                            final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
-                            return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.chevron_right_outlined),
-                          onPressed: () {
-                            if (pagination.offset < pagination.offsetLimit) {
-                              pagination.offset++;
-                              reload();
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.refresh_outlined),
-                          onPressed: () {
-                            pagination.offset = 0;
-                            reload();
-                          },
-                        ),
-                        TextButton.icon(
-                          icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
-                          label: Text(
-                            search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                            style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
-                          ),
-                          onPressed: () async {
-                            // Save current values for restoration
-                            final nameSearch = search.name.text;
-                            final roomSearch = search.room.text;
-                            final usernameSearch = search.username.text;
+                        AdminMonitorWidget(state: state),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              icon: const Icon(Icons.done_outlined),
+                              label: Text("${AppLocale.Approve.getString(context)} (${queryLoader.selected.length})"),
+                              onPressed: () async {
+                                if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
+                                  final fmt = queryLoader.selected.length == 1 ? AppLocale.Approve1RegistrationRequest : AppLocale.ApproveNRegistrationRequests;
+                                  final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
 
-                            final formKey = GlobalKey<FormState>();
+                                  final confirm = await showConfirmDialog(
+                                    context: context,
+                                    title: Text(AppLocale.Confirm.getString(context)),
+                                    content: Text(content),
+                                  );
 
-                            void onSubmit(BuildContext context) {
-                              Navigator.pop(context, true);
-                              pagination.offset = 0;
-                              reload();
-                            }
+                                  if (confirm) {
+                                    _approveOrReject(RegisterRequest.approve);
+                                  }
+                                }
+                              },
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.close_outlined),
+                              label: Text("${AppLocale.Reject.getString(context)} (${queryLoader.selected.length})"),
+                              onPressed: () async {
+                                if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
+                                  final fmt = queryLoader.selected.length == 1 ? AppLocale.Reject1RegistrationRequest : AppLocale.RejectNRegistrationRequests;
+                                  final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
 
-                            final submitted = await showDialog(
-                              context: context,
-                              builder: (context) => SimpleDialog(
-                                contentPadding: const EdgeInsets.all(10),
-                                title: Text(AppLocale.Search.getString(context)),
-                                children: [
-                                  Form(
-                                    key: formKey,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    child: Column(
-                                      children: [
-                                        TextFormField(
-                                          controller: search.name,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.badge_outlined),
-                                            label: Text(AppLocale.Fullname.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) => onSubmit(context),
-                                          validator: (value) => nameValidator(context, required: false, value: value),
-                                        ),
-                                        TextFormField(
-                                          controller: search.room,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.room_outlined),
-                                            label: Text(AppLocale.Room.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) => onSubmit(context),
-                                          validator: (value) => roomValidator(context, required: false, value: value),
-                                        ),
-                                        TextFormField(
-                                          controller: search.username,
-                                          decoration: InputDecoration(
-                                            contentPadding: const EdgeInsets.all(8.0),
-                                            icon: const Icon(Icons.person_outlined),
-                                            label: Text(AppLocale.Username.getString(context)),
-                                          ),
-                                          onFieldSubmitted: (_) => onSubmit(context),
-                                          validator: (value) => usernameValidator(context, required: false, value: value),
-                                        ),
-                                        const SizedBox.square(dimension: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                  final confirm = await showConfirmDialog(
+                                    context: context,
+                                    title: Text(AppLocale.Confirm.getString(context)),
+                                    content: Text(content),
+                                  );
+
+                                  if (confirm) {
+                                    _approveOrReject(RegisterRequest.reject);
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left_outlined),
+                              onPressed: () {
+                                if (pagination.offset > 0) {
+                                  pagination.offset--;
+                                  reload();
+                                }
+                              },
+                            ),
+                            FutureBuilder(
+                              future: pagination.future,
+                              builder: (context, _) {
+                                final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
+                                return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right_outlined),
+                              onPressed: () {
+                                if (pagination.offset < pagination.offsetLimit) {
+                                  pagination.offset++;
+                                  reload();
+                                }
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.refresh_outlined),
+                              onPressed: () {
+                                pagination.offset = 0;
+                                reload();
+                              },
+                            ),
+                            TextButton.icon(
+                              icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
+                              label: Text(
+                                searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                              ),
+                              onPressed: () async {
+                                // Save current values for restoration
+                                final nameSearch = name.text;
+                                final roomSearch = room.text;
+                                final usernameSearch = username.text;
+
+                                final formKey = GlobalKey<FormState>();
+
+                                void onSubmit(BuildContext context) {
+                                  Navigator.pop(context, true);
+                                  pagination.offset = 0;
+                                  reload();
+                                }
+
+                                final submitted = await showDialog(
+                                  context: context,
+                                  builder: (context) => SimpleDialog(
+                                    contentPadding: const EdgeInsets.all(10),
+                                    title: Text(AppLocale.Search.getString(context)),
+                                    children: [
+                                      Form(
+                                        key: formKey,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        child: Column(
                                           children: [
-                                            Expanded(
-                                              child: TextButton.icon(
-                                                icon: const Icon(Icons.done_outlined),
-                                                label: Text(AppLocale.Search.getString(context)),
-                                                onPressed: () {
-                                                  if (formKey.currentState?.validate() ?? false) {
-                                                    onSubmit(context);
-                                                  }
-                                                },
+                                            TextFormField(
+                                              controller: name,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.badge_outlined),
+                                                label: Text(AppLocale.Fullname.getString(context)),
                                               ),
+                                              onFieldSubmitted: (_) => onSubmit(context),
+                                              validator: (value) => nameValidator(context, required: false, value: value),
                                             ),
-                                            Expanded(
-                                              child: TextButton.icon(
-                                                icon: const Icon(Icons.clear_outlined),
-                                                label: Text(AppLocale.ClearAll.getString(context)),
-                                                onPressed: () {
-                                                  search.name.clear();
-                                                  search.room.clear();
-                                                  search.username.clear();
-
-                                                  onSubmit(context);
-                                                },
+                                            TextFormField(
+                                              controller: room,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.room_outlined),
+                                                label: Text(AppLocale.Room.getString(context)),
                                               ),
+                                              onFieldSubmitted: (_) => onSubmit(context),
+                                              validator: (value) => roomValidator(context, required: false, value: value),
+                                            ),
+                                            TextFormField(
+                                              controller: username,
+                                              decoration: InputDecoration(
+                                                contentPadding: const EdgeInsets.all(8.0),
+                                                icon: const Icon(Icons.person_outlined),
+                                                label: Text(AppLocale.Username.getString(context)),
+                                              ),
+                                              onFieldSubmitted: (_) => onSubmit(context),
+                                              validator: (value) => usernameValidator(context, required: false, value: value),
+                                            ),
+                                            const SizedBox.square(dimension: 10),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    icon: const Icon(Icons.done_outlined),
+                                                    label: Text(AppLocale.Search.getString(context)),
+                                                    onPressed: () {
+                                                      if (formKey.currentState?.validate() ?? false) {
+                                                        onSubmit(context);
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: TextButton.icon(
+                                                    icon: const Icon(Icons.clear_outlined),
+                                                    label: Text(AppLocale.ClearAll.getString(context)),
+                                                    onPressed: () {
+                                                      name.clear();
+                                                      room.clear();
+                                                      username.clear();
+
+                                                      onSubmit(context);
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
+                                );
 
-                            if (submitted == null) {
-                              // Dialog dismissed. Restore field values
-                              search.name.text = nameSearch;
-                              search.room.text = roomSearch;
-                              search.username.text = usernameSearch;
-                            }
-                          },
+                                if (submitted == null) {
+                                  // Dialog dismissed. Restore field values
+                                  name.text = nameSearch;
+                                  room.text = roomSearch;
+                                  username.text = usernameSearch;
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -526,22 +546,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
             );
           }
 
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox.square(
-                    dimension: 50,
-                    child: Icon(Icons.highlight_off_outlined),
-                  ),
-                  const SizedBox.square(dimension: 5),
-                  Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
-                ],
-              ),
-            ),
-          );
+          return SliverErrorFullScreen(errorCode: code, callback: reload);
         },
       ),
     );

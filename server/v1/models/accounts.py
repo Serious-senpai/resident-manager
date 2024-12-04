@@ -65,7 +65,7 @@ class Account(PublicInfo, HashedAuthorization):
             if not validate_username(username):
                 return None
 
-            where.append("username = ?")
+            where.append("CHARINDEX(?, username) > 0")
             params.append(username)
 
         return where, params

@@ -97,6 +97,20 @@ class AppLocale {
   static const String PaymentStatus = "PaymentStatus";
   static const String CreatedAfter = "CreatedAfter";
   static const String CreatedBefore = "CreatedBefore";
+  static const String RegistrationRequest = "RegistrationRequest";
+  static const String RegistrationRequests = "RegistrationRequests";
+  static const String Resident = "Resident";
+  static const String Residents = "Residents";
+  static const String Rooms = "Rooms";
+  static const String NumberOfNewResidents = "NumberOfNewResidents";
+  static const String Yes = "Yes";
+  static const String No = "No";
+  static const String Approve1RegistrationRequest = "Approve1RegistrationRequest";
+  static const String ApproveNRegistrationRequests = "ApproveNRegistrationRequests";
+  static const String Reject1RegistrationRequest = "Reject1RegistrationRequest";
+  static const String RejectNRegistrationRequests = "RejectNRegistrationRequests";
+  static const String Delete1ResidentAccount = "Delete1ResidentAccount";
+  static const String DeleteNResidentAccounts = "DeleteNResidentAccounts";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -215,6 +229,20 @@ class AppLocale {
     PaymentStatus: "Payment status",
     CreatedAfter: "Created after",
     CreatedBefore: "Created before",
+    RegistrationRequest: "Registration request",
+    RegistrationRequests: "Registration requests",
+    Resident: "Resident",
+    Residents: "Residents",
+    Rooms: "Rooms",
+    NumberOfNewResidents: "Number of new residents",
+    Yes: "Yes",
+    No: "No",
+    Approve1RegistrationRequest: "Approve 1 registration request?",
+    ApproveNRegistrationRequests: "Approve {n} registration requests?",
+    Reject1RegistrationRequest: "Reject 1 registration request?",
+    RejectNRegistrationRequests: "Reject {n} registration requests?",
+    Delete1ResidentAccount: "Delete 1 resident account?",
+    DeleteNResidentAccounts: "Delete {n} resident accounts?",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -334,6 +362,20 @@ class AppLocale {
     PaymentStatus: "Trạng thái thanh toán",
     CreatedAfter: "Tạo sau",
     CreatedBefore: "Tạo trước",
+    RegistrationRequest: "Yêu cầu đăng ký",
+    RegistrationRequests: "Yêu cầu đăng ký",
+    Resident: "Cư dân",
+    Residents: "Cư dân",
+    Rooms: "Phòng",
+    NumberOfNewResidents: "Số lượng cư dân mới",
+    Yes: "Có",
+    No: "Không",
+    Approve1RegistrationRequest: "Chấp nhận 1 yêu cầu?",
+    ApproveNRegistrationRequests: "Chấp nhận {n} yêu cầu?",
+    Reject1RegistrationRequest: "Từ chối 1 yêu cầu?",
+    RejectNRegistrationRequests: "Từ chối {n} yêu cầu?",
+    Delete1ResidentAccount: "Xóa 1 tài khoản cư dân?",
+    DeleteNResidentAccounts: "Xóa {n} tài khoản cư dân?",
 
     // Error codes
     Error0: "Thao tác thành công.",

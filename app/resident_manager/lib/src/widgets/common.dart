@@ -204,12 +204,6 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
               navigator.addAll(
                 [
                   routeTile(
-                    leading: const Icon(Icons.home_outlined),
-                    title: AppLocale.Home.getString(context),
-                    route: ApplicationRoute.adminHomePage,
-                    popAll: false,
-                  ),
-                  routeTile(
                     leading: const Icon(Icons.how_to_reg_outlined),
                     title: AppLocale.RegisterQueue.getString(context),
                     route: ApplicationRoute.adminRegisterQueue,

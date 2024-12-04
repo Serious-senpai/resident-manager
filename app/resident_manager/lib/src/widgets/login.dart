@@ -67,7 +67,7 @@ class _LoginPageState extends AbstractCommonState<LoginPage> with CommonStateMix
           await showToastSafe(msg: "${mounted ? AppLocale.LoggedInAs.getString(context) : AppLocale.LoggedInAs} \"$username\"");
 
           if (mounted) {
-            await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminHomePage : ApplicationRoute.home);
+            await Navigator.pushReplacementNamed(context, isAdmin ? ApplicationRoute.adminRegisterQueue : ApplicationRoute.home);
           }
         } else {
           _notification = Builder(

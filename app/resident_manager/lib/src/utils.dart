@@ -26,6 +26,11 @@ class ScreenWidth {
 abstract class FutureHolder<T> {
   Future<T>? _future;
 
+  /// Initialize a [FutureHolder] with the given [initialData].
+  FutureHolder({T? initialData}) {
+    lastData = initialData;
+  }
+
   /// The underlying future.
   ///
   /// You can pass this to a [FutureBuilder] constructor.
@@ -66,7 +71,7 @@ abstract class FutureHolder<T> {
 
   /// The underlying asynchronous execution.
   ///
-  /// Concrete classes should implement this.
+  /// Subclasses should implement this method.
   Future<T> run();
 }
 

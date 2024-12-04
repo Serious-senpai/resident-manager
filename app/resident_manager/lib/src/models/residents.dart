@@ -158,7 +158,8 @@ class Resident extends PublicInfo {
   /// Count the number of residents.
   static Future<Result<int?>> count({
     required ApplicationState state,
-    int? id,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
     String? name,
     int? room,
     String? username,
@@ -166,7 +167,8 @@ class Resident extends PublicInfo {
     final response = await state.get(
       "/api/v1/admin/residents/count",
       queryParameters: {
-        if (id != null) "id": id.toString(),
+        if (createdAfter != null) "created_after": createdAfter.toIso8601String(),
+        if (createdBefore != null) "created_before": createdBefore.toIso8601String(),
         if (name != null && name.isNotEmpty) "name": name,
         if (room != null) "room": room.toString(),
         if (username != null && username.isNotEmpty) "username": username,

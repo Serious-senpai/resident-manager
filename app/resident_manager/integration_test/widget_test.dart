@@ -10,7 +10,6 @@ import "package:resident_manager/src/state.dart";
 import "package:resident_manager/src/widgets/home.dart";
 import "package:resident_manager/src/widgets/login.dart";
 import "package:resident_manager/src/widgets/register.dart";
-import "package:resident_manager/src/widgets/admin/home.dart";
 import "package:resident_manager/src/widgets/admin/reg_queue.dart";
 import "package:resident_manager/src/widgets/admin/residents.dart";
 import "package:resident_manager/src/widgets/admin/rooms.dart";
@@ -128,15 +127,10 @@ void main() {
 
       // Press the "Login as administrator" button
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
-      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
-      // Open registration queue
-      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
-      await tester.pumpAndSettle();
-      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
-
-      // Back to home page
-      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
       await tester.pumpAndSettle();
 
       // Open residents list
@@ -144,8 +138,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
-      // Back to home page
+      // Back to registration queue page
       await tester.tap(find.byIcon(Icons.arrow_back_outlined));
+      await tester.pumpAndSettle();
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
       await tester.pumpAndSettle();
 
       // Open rooms list
@@ -153,7 +151,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
 
-      // Back to home page
+      // Back to registration queue page
       await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
@@ -230,12 +228,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
 
       // Successfully logged in as admin
-      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
-
-      // Open registration queue
-      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
-      await tester.pumpAndSettle();
-      expect(find.byWidgetPredicate((widget) => widget is RegisterQueuePage), findsOneWidget);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Wait until loading is completed
       await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
@@ -246,6 +239,14 @@ void main() {
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
       final checkboxes = find.byWidgetPredicate((widget) => widget is Checkbox);
       expect(checkboxes, findsExactly(2));
+
+      // Ensure checkboxes are not offscreen
+      await tester.dragUntilVisible(
+        checkboxes.last,
+        find.byType(CustomScrollView),
+        const Offset(0, 50),
+      );
+      await tester.pumpAndSettle();
 
       // Toggle 3 times
       await tester.tap(checkboxes.first);
@@ -259,12 +260,16 @@ void main() {
       await tester.tap(find.byIcon(Icons.done_outlined));
       await tester.pumpAndSettle();
 
+      // Find confirm dialog
+      final confirmDialog = find.byType(AlertDialog);
+      expect(confirmDialog, findsOneWidget);
+      await tester.tap(find.descendant(of: confirmDialog, matching: find.byIcon(Icons.done_outlined)));
+
       // Wait until loading is completed (only 1 checkbox remains)
       await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
 
-      // Back to home page
-      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
-      await tester.pumpAndSettle();
+      // Ensure drawer is visible
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -310,7 +315,11 @@ void main() {
       await tester.tap(find.byIcon(Icons.admin_panel_settings_outlined));
 
       // Successfully logged in as admin
-      await pumpUntilFound((widget) => widget is AdminHomePage, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
+
+      // Open drawer
+      await tester.tap(find.byIcon(Icons.menu_outlined));
+      await tester.pumpAndSettle();
 
       // View resident list
       await tester.tap(find.byIcon(Icons.people_outlined));
@@ -321,8 +330,20 @@ void main() {
       // Search for resident
       await adminSearch(tester, fullname: fullname, room: room, username: username);
 
+      // Search the only edit icon
+      final edit = find.byIcon(Icons.edit_outlined);
+      expect(edit, findsOneWidget);
+
+      // Scroll to resident row
+      await tester.dragUntilVisible(
+        edit,
+        find.byType(CustomScrollView),
+        const Offset(0, 50),
+      );
+      await tester.pumpAndSettle();
+
       // Open the dialog to edit resident information
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.tap(edit);
       await tester.pumpAndSettle();
 
       final editDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
@@ -359,6 +380,14 @@ void main() {
       final checkboxes2 = find.byWidgetPredicate((widget) => widget is Checkbox);
       expect(checkboxes2, findsExactly(2));
 
+      // Ensure checkboxes are not offscreen
+      await tester.dragUntilVisible(
+        checkboxes2.last,
+        find.byType(CustomScrollView),
+        const Offset(0, 50),
+      );
+      await tester.pumpAndSettle();
+
       // Toggle 3 times
       await tester.tap(checkboxes2.first);
       await tester.tap(checkboxes2.last);
@@ -371,10 +400,18 @@ void main() {
       await tester.tap(find.byIcon(Icons.delete_outlined));
       await tester.pumpAndSettle();
 
+      // Find confirm dialog
+      final confirmDialog2 = find.byType(AlertDialog);
+      expect(confirmDialog2, findsOneWidget);
+      await tester.tap(find.descendant(of: confirmDialog2, matching: find.byIcon(Icons.done_outlined)));
+
       // Wait until loading is completed (only 1 checkbox remains)
       await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
 
-      // Back to home page
+      // Ensure drawer is visible
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
+
+      // Back to registration queue page
       await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
