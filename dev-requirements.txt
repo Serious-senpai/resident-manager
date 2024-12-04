@@ -6,7 +6,7 @@ click==8.1.7
 colorama==0.4.6
 coverage==7.6.8
 exceptiongroup==1.2.2
-fastapi==0.115.5
+fastapi==0.115.6
 flake8==7.1.1
 h11==0.14.0
 httptools==0.6.4
