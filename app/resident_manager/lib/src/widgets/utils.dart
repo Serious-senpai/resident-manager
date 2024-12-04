@@ -1,6 +1,7 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
+import "package:resident_manager/src/utils.dart";
 
 import "common.dart";
 import "state.dart";
@@ -424,6 +425,7 @@ class _NewAccountGraphState extends AbstractCommonState<NewAccountGraph> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     return SizedBox(
       height: widget.height,
       width: widget.width,
@@ -461,7 +463,7 @@ class _NewAccountGraphState extends AbstractCommonState<NewAccountGraph> {
                     getTitlesWidget: (value, metadata) {
                       final date = _subtractMonth(DateTime.now(), MONTHS - (value.toInt() + 1));
                       return Text(
-                        "${date.month}/${date.year}",
+                        mediaQuery.size.width < ScreenWidth.MEDIUM ? date.month.toString() : "${date.month}/${date.year}",
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 14,
@@ -495,86 +497,103 @@ class AdminMonitorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: RegistrationRequestCounter(
-                      state: state,
-                      numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-                      labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: ResidentCounter(
-                      state: state,
-                      numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-                      labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: RoomCounter(
-                      state: state,
-                      numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-                      labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+    final requestCounter = Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: RegistrationRequestCounter(
+            state: state,
+            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
         ),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
-                    child: NewAccountGraph(state: state, height: 300),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
-                    child: AccountsPieChart(state: state, height: 300),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
+    final residentCounter = Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: ResidentCounter(
+            state: state,
+            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+    final roomCounter = Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: RoomCounter(
+            state: state,
+            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+
+    final mediaQuery = MediaQuery.of(context);
+    var graphPadding = const EdgeInsets.fromLTRB(40, 10, 40, 10);
+    if (mediaQuery.size.width < ScreenWidth.LARGE) {
+      graphPadding /= 2;
+    }
+
+    final newAccountGraph = Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        child: Padding(
+          padding: graphPadding,
+          child: NewAccountGraph(state: state, height: 300),
+        ),
+      ),
+    );
+    final pieChart = Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        child: Padding(
+          padding: graphPadding,
+          child: AccountsPieChart(state: state, height: 300),
+        ),
+      ),
+    );
+
+    return mediaQuery.size.width > ScreenWidth.LARGE
+        ? Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: requestCounter),
+                  Expanded(child: residentCounter),
+                  Expanded(child: roomCounter),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(flex: 2, child: newAccountGraph),
+                  Expanded(flex: 1, child: pieChart),
+                ],
+              ),
+            ],
+          )
+        : Column(
+            children: List<Widget>.from(
+              [
+                requestCounter,
+                residentCounter,
+                roomCounter,
+                newAccountGraph,
+                pieChart,
+              ].map(
+                (w) => Row(
+                  children: [Expanded(child: w)],
+                ),
+              ),
+            ),
+          );
   }
 }
