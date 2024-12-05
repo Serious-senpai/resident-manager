@@ -1,0 +1,3 @@
+[submodule "extern/wrk"]
+	path = extern/wrk
+	url = https://github.com/giltene/wrk2
