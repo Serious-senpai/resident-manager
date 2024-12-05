@@ -9,6 +9,9 @@ import pydantic
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
+from ...database import Database
+from ...utils import check_password
+
 
 __all__ = (
     "HashedAuthorization",
@@ -60,6 +63,15 @@ class AdminPermission(pydantic.BaseModel):
     @staticmethod
     def create_token() -> Token:
         return Token.create(AdminPermission(admin=True))
+
+    @staticmethod
+    async def verify(*, username: str, password: str) -> bool:
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("EXECUTE QueryAdminInfo")
+
+                row = await cursor.fetchone()
+                return username == row[0] and check_password(password, hashed=row[1])
 
     @classmethod
     def from_token(cls, token: Annotated[str, Depends(Token.oauth2_admin)]) -> AdminPermission:
