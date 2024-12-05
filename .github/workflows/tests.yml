@@ -135,6 +135,9 @@ jobs:
           chmod +x scripts/odbc.sh
           scripts/odbc.sh
 
+      - name: Create sample data
+        run: python scripts/sample.py
+
       - name: Start API server
         run: |
           uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
@@ -221,6 +224,9 @@ jobs:
         run: |
           chmod +x scripts/odbc.sh
           scripts/odbc.sh
+
+      - name: Create sample data
+        run: python scripts/sample.py
 
       - name: Start API server
         run: |
