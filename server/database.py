@@ -59,8 +59,8 @@ class Database:
 
         self.__pool = pool = await aioodbc.create_pool(
             dsn=ODBC_CONNECTION_STRING,
-            minsize=1,
-            maxsize=10,
+            minsize=10,
+            maxsize=100,
             autocommit=True,
         )
 
