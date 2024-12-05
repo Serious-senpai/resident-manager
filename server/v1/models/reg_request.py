@@ -67,34 +67,36 @@ class RegisterRequest(Account):
         if len(objects) == 0:
             return
 
-        array = ", ".join(itertools.repeat("(?)", len(objects)))
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    f"""
-                        DECLARE @Id BIGINTARRAY
-                        INSERT INTO @Id VALUES {array}
-                        EXECUTE ApproveRegistrationRequests @Id = @Id
-                    """,
-                    *[o.id for o in objects],
-                )
+        for batch in itertools.batched(objects, 1000):
+            array = ", ".join(itertools.repeat("(?)", len(batch)))
+            async with Database.instance.pool.acquire() as connection:
+                async with connection.cursor() as cursor:
+                    await cursor.execute(
+                        f"""
+                            DECLARE @Id BIGINTARRAY
+                            INSERT INTO @Id VALUES {array}
+                            EXECUTE ApproveRegistrationRequests @Id = @Id
+                        """,
+                        *[o.id for o in batch],
+                    )
 
     @classmethod
     async def reject_many(cls, objects: Sequence[Snowflake]) -> None:
         if len(objects) == 0:
             return
 
-        array = ", ".join(itertools.repeat("(?)", len(objects)))
-        async with Database.instance.pool.acquire() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    f"""
-                        DECLARE @Id BIGINTARRAY
-                        INSERT INTO @Id VALUES {array}
-                        EXECUTE RejectRegistrationRequests @Id = @Id
-                    """,
-                    *[o.id for o in objects],
-                )
+        for batch in itertools.batched(objects, 1000):
+            array = ", ".join(itertools.repeat("(?)", len(batch)))
+            async with Database.instance.pool.acquire() as connection:
+                async with connection.cursor() as cursor:
+                    await cursor.execute(
+                        f"""
+                            DECLARE @Id BIGINTARRAY
+                            INSERT INTO @Id VALUES {array}
+                            EXECUTE RejectRegistrationRequests @Id = @Id
+                        """,
+                        *[o.id for o in batch],
+                    )
 
     @classmethod
     async def create(
