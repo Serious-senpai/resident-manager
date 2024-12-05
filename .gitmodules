@@ -1,3 +1,0 @@
-[submodule "extern/wrk"]
-	path = extern/wrk
-	url = https://github.com/wg/wrk
