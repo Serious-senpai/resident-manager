@@ -87,7 +87,7 @@ jobs:
   flutter-integration:
     name: Client integration test
     needs: checkout
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       ODBC_CONNECTION_STRING: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Uid=sa;Pwd=Password1234!;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
@@ -169,7 +169,7 @@ jobs:
   performance-test:
     name: Server performance test
     needs: checkout
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       ODBC_CONNECTION_STRING: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Uid=sa;Pwd=Password1234!;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
