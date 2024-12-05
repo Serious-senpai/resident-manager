@@ -237,15 +237,17 @@ jobs:
       - name: Measure performance
         working-directory: scripts/wrk
         run: |
-          command="wrk --script root.lua -t 12 -c 100 -d 20s http://localhost:$PORT"
+          config="-t 12 -c 100 -d 30s -R 10000"
+
+          command="wrk --script root.lua $config http://localhost:$PORT"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-root.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-root.txt
 
-          command="wrk --script api/v1/admin/login.lua -t 12 -c 100 -d 20s http://localhost:$PORT/api/v1/admin/login"
+          command="wrk --script api/v1/admin/login.lua $config http://localhost:$PORT/api/v1/admin/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
 
-          command="wrk --script api/v1/login.lua -t 12 -c 100 -d 20s http://localhost:$PORT/api/v1/login"
+          command="wrk --script api/v1/login.lua $config http://localhost:$PORT/api/v1/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-login.txt
 
