@@ -351,6 +351,8 @@ jobs:
               body = `❌ [One or more tests #${{ github.run_attempt }}](${url}) of \`${sha}\` failed.`;
             }
 
+            body += "\n\n*Note that this workflow YAML is fetched from the `main` branch.*";
+
             try {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
