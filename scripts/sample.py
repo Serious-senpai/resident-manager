@@ -5,6 +5,7 @@ import random
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import List
 
 from vn_fullname_generator import generate  # type: ignore
 
@@ -13,10 +14,11 @@ root = Path(__file__).parent.parent.resolve()
 sys.path.append(str(root))
 
 
-from server import Database, hash_password  # noqa
+from server import Database, Fee, RegisterRequest  # noqa
 
 
 now = datetime.now(timezone.utc)
+to_approve: List[RegisterRequest] = []
 
 
 async def populate_account(index: int) -> None:
@@ -26,26 +28,18 @@ async def populate_account(index: int) -> None:
     phone = f"09999{index:05}"
     email = f"test{index:05}@example.com"
     username = password = f"test{index:05}"
-    async with Database.instance.pool.acquire() as connection:
-        await connection.execute(
-            """
-                EXECUTE Register
-                    @Name = ?,
-                    @Room = ?,
-                    @Birthday = ?,
-                    @Phone = ?,
-                    @Email = ?,
-                    @Username = ?,
-                    @HashedPassword = ?
-            """,
-            name,
-            room,
-            birthday,
-            phone,
-            email,
-            username,
-            hash_password(password),
-        )
+
+    request = await RegisterRequest.create(
+        name=name,
+        room=room,
+        birthday=birthday,
+        phone=phone,
+        email=email,
+        username=username,
+        password=password,
+    )
+    if index % 2 == 0 and request.data is not None:
+        to_approve.append(request.data)
 
 
 async def populate_fee(index: int) -> None:
@@ -56,32 +50,20 @@ async def populate_fee(index: int) -> None:
     per_motorbike = random.randint(0, 100)
     per_car = random.randint(0, 100)
     deadline = now + timedelta(days=random.randint(7, 6500))
-    description = f"[Index {index}] Test phí thôi, nhìn cái gì?\nXuống dòng nè.\nXuống dòng phát nữa nè.\n"
+    description = f"[Index {index}] Test phí\nXuống dòng 1\nXuống dòng 2\n"
     flags = 0
-    async with Database.instance.pool.acquire() as connection:
-        await connection.execute(
-            """
-                EXECUTE CreateFee
-                    @Name = ?,
-                    @Lower = ?,
-                    @Upper = ?,
-                    @PerArea = ?,
-                    @PerMotorbike = ?,
-                    @PerCar = ?,
-                    @Deadline = ?,
-                    @Description = ?,
-                    @Flags = ?
-            """,
-            name,
-            lower * 100000,
-            upper * 100000,
-            per_area * 100000,
-            per_motorbike * 100000,
-            per_car * 100000,
-            deadline,
-            description,
-            flags,
-        )
+
+    await Fee.create(
+        name=name,
+        lower=lower,
+        upper=upper,
+        per_area=per_area,
+        per_motorbike=per_motorbike,
+        per_car=per_car,
+        deadline=deadline,
+        description=description,
+        flags=flags,
+    )
 
 
 async def main() -> None:
@@ -89,6 +71,8 @@ async def main() -> None:
     tasks = [asyncio.create_task(populate_account(i)) for i in range(10000)]
     tasks.extend(asyncio.create_task(populate_fee(i)) for i in range(10000))
     await asyncio.gather(*tasks)
+
+    await RegisterRequest.accept_many(to_approve)
 
 
 asyncio.run(main())

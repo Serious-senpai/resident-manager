@@ -245,6 +245,10 @@ jobs:
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
 
+          command="wrk --script api/v1/login.lua -t 12 -c 100 -d 20s http://localhost:$PORT/api/v1/login"
+          echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-login.txt
+          $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-login.txt
+
       - name: Stop API server
         run: |
           kill $(cat /tmp/serverpid.txt)
@@ -348,8 +352,14 @@ jobs:
               if (${{ needs.performance-test.result == 'success' }}) {
                 const wrk_root = await fs.readFile("wrk-root.txt", { encoding: "utf8" });
                 const wrk_api_v1_admin_login = await fs.readFile("wrk-api-v1-admin-login.txt", { encoding: "utf8" });
+                const wrk_api_v1_login = await fs.readFile("wrk-api-v1-login.txt", { encoding: "utf8" });
 
-                const wrapped = `- \`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
+                const reports = [
+                  `- \`/\`\n\`\`\`\n${wrk_root}\`\`\``,
+                  `- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``,
+                  `- \`/api/v1/login\`\n\`\`\`\n${wrk_api_v1_login}\`\`\``,
+                ];
+                const wrapped = reports.join("\n\n");
                 body += `\n<details>\n<summary>Performance report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
