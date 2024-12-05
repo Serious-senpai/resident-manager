@@ -96,7 +96,6 @@ class Fee(Snowflake):
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                print(name, lower, upper, per_area, per_motorbike, per_car, deadline, description, flags)
                 await cursor.execute(
                     """
                         EXECUTE CreateFee
@@ -108,7 +107,7 @@ class Fee(Snowflake):
                             @PerCar = ?,
                             @Deadline = ?,
                             @Description = ?,
-                            @Flags TINYINT = ?
+                            @Flags = ?
                     """,
                     name,
                     int(lower * 100),
