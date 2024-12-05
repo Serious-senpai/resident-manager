@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      ODBC_CONNECTION_STRING: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Uid=sa;Pwd=Password1234!;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
       VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
       VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
       PORT: 8000
@@ -124,6 +124,11 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r dev-requirements.txt
+
+      - name: Install and run local SQL server
+        run: |
+          chmod +x scripts/sql-server-ubuntu-22.04.sh
+          scripts/sql-server-ubuntu-22.04.sh
 
       - name: Install ODBC driver 18
         run: |
@@ -167,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ODBC_CONNECTION_STRING: ${{ secrets.ODBC_CONNECTION_STRING}}
+      ODBC_CONNECTION_STRING: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;Uid=sa;Pwd=Password1234!;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
       VNPAY_TMN_CODE: ${{ secrets.VNPAY_TMN_CODE }}
       VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
       PORT: 8000
@@ -206,6 +211,11 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r dev-requirements.txt
+
+      - name: Install and run local SQL server
+        run: |
+          chmod +x scripts/sql-server-ubuntu-22.04.sh
+          scripts/sql-server-ubuntu-22.04.sh
 
       - name: Install ODBC driver 18
         run: |
