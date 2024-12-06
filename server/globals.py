@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import asyncio
 import logging
+import os
 import urllib.parse
 from collections import OrderedDict
 from contextlib import AsyncExitStack, asynccontextmanager
@@ -52,7 +53,7 @@ async def __lifespan(app: FastAPI) -> AsyncGenerator[None]:
         cov.start()
         logger.info("Measuring code coverage...")
 
-    logger.info(f"Starting {app} from {__file__}")
+    logger.info(f"[{os.getpid()}] Starting {app} from {__file__}")
     await Database.instance.prepare()
     async with AsyncExitStack() as stack:
         for subapp in subapps.values():
@@ -60,7 +61,7 @@ async def __lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
         yield
 
-    logger.info(f"Stopping {app} from {__file__}")
+    logger.info(f"[{os.getpid()}] Stopping {app} from {__file__}")
     await Database.instance.close()
     if cov is not None:
         cov.stop()
@@ -88,6 +89,12 @@ async def root() -> RedirectResponse:
 async def loop() -> str:
     """Return current asyncio event loop"""
     return str(asyncio.get_event_loop())
+
+
+@global_app.get("/cpu", include_in_schema=False)
+async def cpu() -> Optional[int]:
+    """Return number of CPUs available"""
+    return os.cpu_count()
 
 
 @global_app.get("/headers", include_in_schema=False)

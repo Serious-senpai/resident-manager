@@ -4,4 +4,4 @@ ROOT_DIR=$(realpath $SCRIPT_DIR/..)
 
 cd $ROOT_DIR
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning --workers 24
+uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning --workers 12
