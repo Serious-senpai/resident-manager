@@ -4,7 +4,7 @@ anyio==4.6.2.post1
 click==8.1.7
 colorama==0.4.6
 exceptiongroup==1.2.2
-fastapi==0.115.5
+fastapi==0.115.6
 h11==0.14.0
 httptools==0.6.4
 idna==3.10
