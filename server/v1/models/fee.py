@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Annotated, Any, List, Literal, Optional
 
 import pydantic
@@ -8,7 +8,7 @@ from pyodbc import Row  # type: ignore
 
 from .results import Result
 from .snowflake import Snowflake
-from ...config import DB_PAGINATION_QUERY
+from ...config import DB_PAGINATION_QUERY, EPOCH
 from ...database import Database
 from ...utils import (
     validate_fee_bounds,
@@ -121,6 +121,32 @@ class Fee(Snowflake):
                 )
                 row = await cursor.fetchone()
                 return Result(code=0, data=cls.from_row(row))
+
+    @staticmethod
+    async def count(
+        *,
+        created_after: datetime,
+        created_before: datetime,
+        name: Optional[str] = None,
+    ) -> int:
+        created_after = max(created_after.astimezone(timezone.utc), EPOCH)
+        created_before = max(created_before.astimezone(timezone.utc), EPOCH)
+
+        async with Database.instance.pool.acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                        EXECUTE CountFees
+                            @CreatedAfter = ?,
+                            @CreatedBefore = ?,
+                            @Name = ?
+                    """,
+                    created_after,
+                    created_before,
+                    name,
+                )
+
+                return await cursor.fetchval()
 
     @classmethod
     async def query(
