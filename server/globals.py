@@ -12,7 +12,7 @@ from typing import AsyncGenerator, Dict, Optional
 
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
-from fastapi.responses import RedirectResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 
 from .config import VNPAY_SECRET_KEY, VNPAY_TMN_CODE
 from .database import Database
@@ -91,10 +91,16 @@ async def loop() -> str:
     return str(asyncio.get_event_loop())
 
 
-@global_app.get("/cpu", include_in_schema=False)
-async def cpu() -> Optional[int]:
-    """Return number of CPUs available"""
-    return os.cpu_count()
+_lscpu_lock = asyncio.Lock()
+
+
+@global_app.get("/lscpu", include_in_schema=False)
+async def lscpu() -> PlainTextResponse:
+    """Return hardware information"""
+    async with _lscpu_lock:
+        process = await asyncio.create_subprocess_shell("lscpu", stdout=asyncio.subprocess.PIPE)
+        stdout, _ = await process.communicate()
+        return PlainTextResponse(stdout.decode("utf-8"))
 
 
 @global_app.get("/headers", include_in_schema=False)
