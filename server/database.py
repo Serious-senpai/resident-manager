@@ -64,6 +64,12 @@ class Database:
             autocommit=True,
         )
 
+        try:
+            synchronize = ROOT / ".sync"
+            synchronize.touch()
+        except FileExistsError:
+            return
+
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
 
