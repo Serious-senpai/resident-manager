@@ -59,10 +59,16 @@ class Database:
 
         self.__pool = pool = await aioodbc.create_pool(
             dsn=ODBC_CONNECTION_STRING,
-            minsize=1,
-            maxsize=10,
+            minsize=10,
+            maxsize=100,
             autocommit=True,
         )
+
+        try:
+            synchronize = ROOT / ".sync"
+            synchronize.touch()
+        except FileExistsError:
+            return
 
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:

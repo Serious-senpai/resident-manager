@@ -120,7 +120,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: pip install -r dev-requirements.txt
@@ -134,6 +134,9 @@ jobs:
         run: |
           chmod +x scripts/odbc.sh
           scripts/odbc.sh
+
+      - name: Create sample data
+        run: python scripts/sample.py
 
       - name: Start API server
         run: |
@@ -207,7 +210,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: pip install -r dev-requirements.txt
@@ -222,22 +225,31 @@ jobs:
           chmod +x scripts/odbc.sh
           scripts/odbc.sh
 
+      - name: Create sample data
+        run: python scripts/sample.py
+
       - name: Start API server
         run: |
-          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning &
+          uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning --workers 24 &
           echo $! > /tmp/serverpid.txt
           sleep 5
 
       - name: Measure performance
         working-directory: scripts/wrk
         run: |
-          command="wrk --script root.lua -d 20s http://localhost:$PORT"
+          config="-t 12 -c 100 -d 30s -R 10000"
+
+          command="wrk --script root.lua $config http://localhost:$PORT"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-root.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-root.txt
 
-          command="wrk --script api/v1/admin/login.lua -d 20s http://localhost:$PORT/api/v1/admin/login"
+          command="wrk --script api/v1/admin/login.lua $config http://localhost:$PORT/api/v1/admin/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
+
+          command="wrk --script api/v1/login.lua $config http://localhost:$PORT/api/v1/login"
+          echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-login.txt
+          $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-login.txt
 
       - name: Stop API server
         run: |
@@ -271,7 +283,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: pip install -r dev-requirements.txt
@@ -342,8 +354,14 @@ jobs:
               if (${{ needs.performance-test.result == 'success' }}) {
                 const wrk_root = await fs.readFile("wrk-root.txt", { encoding: "utf8" });
                 const wrk_api_v1_admin_login = await fs.readFile("wrk-api-v1-admin-login.txt", { encoding: "utf8" });
+                const wrk_api_v1_login = await fs.readFile("wrk-api-v1-login.txt", { encoding: "utf8" });
 
-                const wrapped = `- \`/\`\n\`\`\`\n${wrk_root}\`\`\`\n\n- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``;
+                const reports = [
+                  `- \`/\`\n\`\`\`\n${wrk_root}\`\`\``,
+                  `- \`/api/v1/admin/login\`\n\`\`\`\n${wrk_api_v1_admin_login}\`\`\``,
+                  `- \`/api/v1/login\`\n\`\`\`\n${wrk_api_v1_login}\`\`\``,
+                ];
+                const wrapped = reports.join("\n\n");
                 body += `\n<details>\n<summary>Performance report</summary>\n\n${wrapped}\n\n</details>`;
               }
 
