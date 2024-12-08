@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
@@ -64,9 +65,10 @@ class Database:
             autocommit=True,
         )
 
+        synchronize = ROOT / ".sync"
         try:
-            synchronize = ROOT / ".sync"
-            synchronize.touch()
+            fd = os.open(str(synchronize), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
         except FileExistsError:
             return
 
