@@ -232,20 +232,24 @@ jobs:
         run: |
           uvicorn main:app --host 0.0.0.0 --port $PORT --log-level warning --workers 4 &
           echo $! > /tmp/serverpid.txt
-          sleep 5
+          sleep 30
 
       - name: Measure performance
         working-directory: scripts/wrk
         run: |
-          config="-t 4 -c 50 -d 30s -R 5000"
+          config="-t 4 -c 50 -d 30s -R 6000"
 
           command="wrk --script root.lua $config http://localhost:$PORT"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-root.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-root.txt
 
+          sleep 60
+
           command="wrk --script api/v1/admin/login.lua $config http://localhost:$PORT/api/v1/admin/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
           $command | tee --append $GITHUB_WORKSPACE/wrk-api-v1-admin-login.txt
+
+          sleep 60
 
           command="wrk --script api/v1/login.lua $config http://localhost:$PORT/api/v1/login"
           echo "$ $command" > $GITHUB_WORKSPACE/wrk-api-v1-login.txt
