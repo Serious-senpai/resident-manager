@@ -558,7 +558,7 @@ class AdminMonitorWidget extends StatelessWidget {
       child: Card(
         child: Padding(
           padding: graphPadding,
-          child: NewAccountGraph(state: state, height: 300),
+          child: NewAccountGraph(state: state),
         ),
       ),
     );
@@ -567,7 +567,7 @@ class AdminMonitorWidget extends StatelessWidget {
       child: Card(
         child: Padding(
           padding: graphPadding,
-          child: AccountsPieChart(state: state, height: 300),
+          child: AccountsPieChart(state: state),
         ),
       ),
     );
@@ -575,18 +575,24 @@ class AdminMonitorWidget extends StatelessWidget {
     return mediaQuery.size.width > ScreenWidth.LARGE
         ? Column(
             children: [
-              Row(
-                children: [
-                  Expanded(child: requestCounter),
-                  Expanded(child: residentCounter),
-                  Expanded(child: roomCounter),
-                ],
+              SizedBox(
+                height: 200,
+                child: Row(
+                  children: [
+                    Expanded(child: requestCounter),
+                    Expanded(child: residentCounter),
+                    Expanded(child: roomCounter),
+                  ],
+                ),
               ),
-              Row(
-                children: [
-                  Expanded(flex: 2, child: newAccountGraph),
-                  Expanded(flex: 1, child: pieChart),
-                ],
+              SizedBox(
+                height: 200,
+                child: Row(
+                  children: [
+                    Expanded(flex: 2, child: newAccountGraph),
+                    Expanded(flex: 1, child: pieChart),
+                  ],
+                ),
               ),
             ],
           )
