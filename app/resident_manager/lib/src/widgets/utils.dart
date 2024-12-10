@@ -1,12 +1,13 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
-import "package:resident_manager/src/utils.dart";
 
 import "common.dart";
 import "state.dart";
+import "../routes.dart";
 import "../state.dart";
 import "../translations.dart";
+import "../utils.dart";
 import "../models/reg_request.dart";
 import "../models/residents.dart";
 import "../models/rooms.dart";
@@ -500,12 +501,15 @@ class AdminMonitorWidget extends StatelessWidget {
     final requestCounter = Padding(
       padding: const EdgeInsets.all(5),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: RegistrationRequestCounter(
-            state: state,
-            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminRegisterQueue),
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: RegistrationRequestCounter(
+              state: state,
+              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),
@@ -513,12 +517,15 @@ class AdminMonitorWidget extends StatelessWidget {
     final residentCounter = Padding(
       padding: const EdgeInsets.all(5),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: ResidentCounter(
-            state: state,
-            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminResidentsPage),
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: ResidentCounter(
+              state: state,
+              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),
@@ -526,12 +533,15 @@ class AdminMonitorWidget extends StatelessWidget {
     final roomCounter = Padding(
       padding: const EdgeInsets.all(5),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: RoomCounter(
-            state: state,
-            numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminRoomsPage),
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: RoomCounter(
+              state: state,
+              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),
@@ -595,5 +605,134 @@ class AdminMonitorWidget extends StatelessWidget {
               ),
             ),
           );
+  }
+}
+
+class AdminAccountSearchButton extends StatelessWidget {
+  final String? Function() getName;
+  final String? Function() getRoom;
+  final String? Function() getUsername;
+  final bool Function() getSearching;
+  final void Function(String?) setName;
+  final void Function(String?) setRoom;
+  final void Function(String?) setUsername;
+  final void Function(int) setPageOffset;
+  final void Function() reload;
+
+  const AdminAccountSearchButton({
+    super.key,
+    required this.getName,
+    required this.getRoom,
+    required this.getUsername,
+    required this.getSearching,
+    required this.setName,
+    required this.setRoom,
+    required this.setUsername,
+    required this.setPageOffset,
+    required this.reload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final name = getName();
+    final room = getRoom();
+    final username = getUsername();
+    final searching = getSearching();
+    return TextButton.icon(
+      icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
+      label: Text(
+        searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+        style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+      ),
+      onPressed: () async {
+        final nameController = TextEditingController(text: name);
+        final roomController = TextEditingController(text: room);
+        final usernameController = TextEditingController(text: username);
+
+        void onSubmit(BuildContext context) {
+          setName(nameController.text);
+          setRoom(roomController.text);
+          setUsername(usernameController.text);
+          setPageOffset(0);
+
+          Navigator.pop(context, true);
+          reload();
+        }
+
+        final formKey = GlobalKey<FormState>();
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            contentPadding: const EdgeInsets.all(10),
+            title: Text(AppLocale.Search.getString(context)),
+            content: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8.0),
+                      icon: const Icon(Icons.badge_outlined),
+                      label: Text(AppLocale.Fullname.getString(context)),
+                    ),
+                    onFieldSubmitted: (_) => onSubmit(context),
+                    validator: (value) => nameValidator(context, required: false, value: value),
+                  ),
+                  TextFormField(
+                    controller: roomController,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8.0),
+                      icon: const Icon(Icons.room_outlined),
+                      label: Text(AppLocale.Room.getString(context)),
+                    ),
+                    onFieldSubmitted: (_) => onSubmit(context),
+                    validator: (value) => roomValidator(context, required: false, value: value),
+                  ),
+                  TextFormField(
+                    controller: usernameController,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8.0),
+                      icon: const Icon(Icons.person_outlined),
+                      label: Text(AppLocale.Username.getString(context)),
+                    ),
+                    onFieldSubmitted: (_) => onSubmit(context),
+                    validator: (value) => usernameValidator(context, required: false, value: value),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton.icon(
+                icon: const Icon(Icons.done_outlined),
+                label: Text(AppLocale.Search.getString(context)),
+                onPressed: () {
+                  if (formKey.currentState?.validate() ?? false) {
+                    onSubmit(context);
+                  }
+                },
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.clear_outlined),
+                label: Text(AppLocale.ClearAll.getString(context)),
+                onPressed: () {
+                  nameController.clear();
+                  roomController.clear();
+                  usernameController.clear();
+
+                  onSubmit(context);
+                },
+              ),
+            ],
+          ),
+        );
+
+        // nameController.dispose();
+        // roomController.dispose();
+        // usernameController.dispose();
+      },
+    );
   }
 }

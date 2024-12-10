@@ -220,7 +220,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
                           child: Row(
                             children: [
                               IconButton(
-                                icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
+                                icon: const Icon(Icons.search_outlined),
                                 onPressed: () async {
                                   state.extras["room-search"] = room;
                                   await pushNamedAndRefresh(context, ApplicationRoute.adminResidentsPage);

@@ -24,20 +24,6 @@ class ResidentsPage extends StateAwareWidget {
   AbstractCommonState<ResidentsPage> createState() => _ResidentsPageState();
 }
 
-class _SearchField {
-  final name = TextEditingController();
-  final room = TextEditingController();
-  final username = TextEditingController();
-
-  bool get searching => name.text.isNotEmpty || room.text.isNotEmpty || username.text.isNotEmpty;
-
-  void dispose() {
-    name.dispose();
-    room.dispose();
-    username.dispose();
-  }
-}
-
 class _Pagination extends FutureHolder<int?> {
   int offset = 0;
   int offsetLimit = 0;
@@ -51,9 +37,9 @@ class _Pagination extends FutureHolder<int?> {
     try {
       final result = await Resident.count(
         state: _state.state,
-        name: _state.search.name.text,
-        room: int.tryParse(_state.search.room.text),
-        username: _state.search.username.text,
+        name: _state.name,
+        room: int.tryParse(_state.room ?? ""),
+        username: _state.username,
       );
 
       final data = result.data;
@@ -95,9 +81,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await Resident.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        name: _state.search.name.text,
-        room: int.tryParse(_state.search.room.text),
-        username: _state.search.username.text,
+        name: _state.name,
+        room: int.tryParse(_state.room ?? ""),
+        username: _state.username,
         orderBy: orderBy,
         ascending: ascending,
       );
@@ -306,7 +292,11 @@ class _EditButton extends StatelessWidget {
 }
 
 class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with CommonScaffoldStateMixin<ResidentsPage> {
-  final search = _SearchField();
+  String? name;
+  String? room;
+  String? username;
+
+  bool get searching => name != null || room != null || username != null;
 
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
@@ -364,17 +354,11 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
   void initState() {
     final room = state.extras["room-search"] as Room?;
     if (room != null) {
-      search.room.text = room.room.toString();
+      this.room = room.room.toString();
       state.extras["room-search"] = null;
     }
 
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    search.dispose();
   }
 
   @override
@@ -596,111 +580,16 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                                 reload();
                               },
                             ),
-                            TextButton.icon(
-                              icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
-                              label: Text(
-                                search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
-                              ),
-                              onPressed: () async {
-                                // Save current values for restoration
-                                final nameSearch = search.name.text;
-                                final roomSearch = search.room.text;
-                                final usernameSearch = search.username.text;
-
-                                final formKey = GlobalKey<FormState>();
-
-                                void onSubmit(BuildContext context) {
-                                  Navigator.pop(context, true);
-                                  pagination.offset = 0;
-                                  reload();
-                                }
-
-                                final submitted = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => SimpleDialog(
-                                    contentPadding: const EdgeInsets.all(10),
-                                    title: Text(AppLocale.Search.getString(context)),
-                                    children: [
-                                      Form(
-                                        key: formKey,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        child: Column(
-                                          children: [
-                                            TextFormField(
-                                              controller: search.name,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.badge_outlined),
-                                                label: Text(AppLocale.Fullname.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => nameValidator(context, required: false, value: value),
-                                            ),
-                                            TextFormField(
-                                              controller: search.room,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.room_outlined),
-                                                label: Text(AppLocale.Room.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => roomValidator(context, required: false, value: value),
-                                            ),
-                                            TextFormField(
-                                              controller: search.username,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.person_outlined),
-                                                label: Text(AppLocale.Username.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => usernameValidator(context, required: false, value: value),
-                                            ),
-                                            const SizedBox.square(dimension: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.done_outlined),
-                                                    label: Text(AppLocale.Search.getString(context)),
-                                                    onPressed: () {
-                                                      if (formKey.currentState?.validate() ?? false) {
-                                                        onSubmit(context);
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.clear_outlined),
-                                                    label: Text(AppLocale.ClearAll.getString(context)),
-                                                    onPressed: () {
-                                                      search.name.clear();
-                                                      search.room.clear();
-                                                      search.username.clear();
-
-                                                      onSubmit(context);
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (submitted == null) {
-                                  // Dialog dismissed. Restore field values
-                                  search.name.text = nameSearch;
-                                  search.room.text = roomSearch;
-                                  search.username.text = usernameSearch;
-                                }
-                              },
+                            AdminAccountSearchButton(
+                              getName: () => name,
+                              getRoom: () => room,
+                              getUsername: () => username,
+                              setName: (value) => name = value,
+                              setRoom: (value) => room = value,
+                              setUsername: (value) => username = value,
+                              getSearching: () => searching,
+                              setPageOffset: (value) => pagination.offset = value,
+                              reload: reload,
                             ),
                           ],
                         ),

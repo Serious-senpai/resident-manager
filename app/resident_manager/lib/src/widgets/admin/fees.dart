@@ -64,11 +64,11 @@ class _QueryLoader extends FutureHolder<int?> {
   final fees = <Fee>[];
   final selected = SplayTreeSet<Fee>((k1, k2) => k1.id.compareTo(k2.id));
 
+  String? name;
   DateTime? createdAfter;
   DateTime? createdBefore;
-  String? name;
 
-  bool get searching => name != null;
+  bool get searching => name != null || createdAfter != null || createdBefore != null;
 
   int orderBy = -1;
   bool ascending = false;
@@ -194,7 +194,8 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                       },
                     ),
                   ),
-                  headerCeil(AppLocale.Fee.getString(context), 2),
+                  headerCeil(AppLocale.FeeName.getString(context), 2),
+                  headerCeil(AppLocale.CreationTime.getString(context), 1),
                   headerCeil(AppLocale.Deadline.getString(context), 8),
                   headerCeil(AppLocale.Description.getString(context)),
                   headerCeil(AppLocale.FeeLowerBound.getString(context), 3),
@@ -225,6 +226,12 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                       child: Padding(
                         padding: const EdgeInsets.all(5),
                         child: Text(fee.name),
+                      ),
+                    ),
+                    TableCell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Text(fee.createdAt.toLocal().toString()),
                       ),
                     ),
                     TableCell(
@@ -334,9 +341,12 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                   decoration: InputDecoration(
                                                     contentPadding: const EdgeInsets.all(8.0),
                                                     icon: const Icon(Icons.payment_outlined),
-                                                    label: Text(AppLocale.Fee.getString(context)),
+                                                    label: Text(AppLocale.FeeName.getString(context)),
                                                   ),
-                                                  onFieldSubmitted: (_) => onSubmit(context),
+                                                  onFieldSubmitted: (_) {
+                                                    queryLoader.name = nameController.text;
+                                                    onSubmit(context);
+                                                  },
                                                   validator: (value) => nameValidator(context, required: false, value: value),
                                                 ),
                                                 const SizedBox.square(dimension: 10),
@@ -391,9 +401,15 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                           actions: [
                                             TextButton(
                                               onPressed: () {
+                                                // Clear all values
+                                                queryLoader.name = null;
+                                                queryLoader.createdAfter = null;
+                                                queryLoader.createdBefore = null;
+
                                                 Navigator.pop(context);
+                                                reload();
                                               },
-                                              child: Text(AppLocale.Cancel.getString(context)),
+                                              child: Text(AppLocale.ClearAll.getString(context)),
                                             ),
                                             TextButton(
                                               onPressed: () {
@@ -402,7 +418,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                 queryLoader.createdAfter = tempCreatedAfter;
                                                 queryLoader.createdBefore = tempCreatedBefore;
 
-                                                Navigator.of(context).pop();
+                                                Navigator.pop(context);
                                                 reload();
                                               },
                                               child: Text(AppLocale.Search.getString(context)),
@@ -414,7 +430,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                   },
                                 );
 
-                                nameController.dispose();
+                                // nameController.dispose();
                               },
                             ),
                           ],

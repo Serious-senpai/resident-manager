@@ -114,6 +114,7 @@ class AppLocale {
   static const String FeeList = "FeeList";
   static const String FeeLowerBound = "FeeLowerBound";
   static const String FeeUpperBound = "FeeUpperBound";
+  static const String FeeName = "FeeName";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -249,6 +250,7 @@ class AppLocale {
     FeeList: "Fee list",
     FeeLowerBound: "Fee lower bound",
     FeeUpperBound: "Fee upper bound",
+    FeeName: "Fee name",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -385,6 +387,7 @@ class AppLocale {
     FeeList: "Danh sách phí",
     FeeLowerBound: "Nộp tối thiểu",
     FeeUpperBound: "Nộp tối đa",
+    FeeName: "Tên phí",
 
     // Error codes
     Error0: "Thao tác thành công.",

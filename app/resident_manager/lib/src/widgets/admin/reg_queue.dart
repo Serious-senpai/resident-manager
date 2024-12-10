@@ -39,9 +39,9 @@ class _Pagination extends FutureHolder<int?> {
     try {
       final result = await RegisterRequest.count(
         state: _state.state,
-        name: _state.name.text,
-        room: int.tryParse(_state.room.text),
-        username: _state.username.text,
+        name: _state.name,
+        room: int.tryParse(_state.room ?? ""),
+        username: _state.username,
       );
 
       final data = result.data;
@@ -80,9 +80,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await RegisterRequest.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        name: _state.name.text,
-        room: int.tryParse(_state.room.text),
-        username: _state.username.text,
+        name: _state.name,
+        room: int.tryParse(_state.room ?? ""),
+        username: _state.username,
         orderBy: orderBy,
         ascending: ascending,
       );
@@ -110,11 +110,11 @@ class _QueryLoader extends FutureHolder<int?> {
 }
 
 class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonScaffoldStateMixin<RegisterQueuePage> {
-  final name = TextEditingController();
-  final room = TextEditingController();
-  final username = TextEditingController();
+  String? name;
+  String? room;
+  String? username;
 
-  bool get searching => name.text.isNotEmpty || room.text.isNotEmpty || username.text.isNotEmpty;
+  bool get searching => name != null || room != null || username != null;
 
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
@@ -173,14 +173,6 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
         }
       },
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    name.dispose();
-    room.dispose();
-    username.dispose();
   }
 
   @override
@@ -416,111 +408,16 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                                 reload();
                               },
                             ),
-                            TextButton.icon(
-                              icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
-                              label: Text(
-                                searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: searching ? TextDecoration.underline : null),
-                              ),
-                              onPressed: () async {
-                                // Save current values for restoration
-                                final nameSearch = name.text;
-                                final roomSearch = room.text;
-                                final usernameSearch = username.text;
-
-                                final formKey = GlobalKey<FormState>();
-
-                                void onSubmit(BuildContext context) {
-                                  Navigator.pop(context, true);
-                                  pagination.offset = 0;
-                                  reload();
-                                }
-
-                                final submitted = await showDialog(
-                                  context: context,
-                                  builder: (context) => SimpleDialog(
-                                    contentPadding: const EdgeInsets.all(10),
-                                    title: Text(AppLocale.Search.getString(context)),
-                                    children: [
-                                      Form(
-                                        key: formKey,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        child: Column(
-                                          children: [
-                                            TextFormField(
-                                              controller: name,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.badge_outlined),
-                                                label: Text(AppLocale.Fullname.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => nameValidator(context, required: false, value: value),
-                                            ),
-                                            TextFormField(
-                                              controller: room,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.room_outlined),
-                                                label: Text(AppLocale.Room.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => roomValidator(context, required: false, value: value),
-                                            ),
-                                            TextFormField(
-                                              controller: username,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.person_outlined),
-                                                label: Text(AppLocale.Username.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => usernameValidator(context, required: false, value: value),
-                                            ),
-                                            const SizedBox.square(dimension: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.done_outlined),
-                                                    label: Text(AppLocale.Search.getString(context)),
-                                                    onPressed: () {
-                                                      if (formKey.currentState?.validate() ?? false) {
-                                                        onSubmit(context);
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.clear_outlined),
-                                                    label: Text(AppLocale.ClearAll.getString(context)),
-                                                    onPressed: () {
-                                                      name.clear();
-                                                      room.clear();
-                                                      username.clear();
-
-                                                      onSubmit(context);
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (submitted == null) {
-                                  // Dialog dismissed. Restore field values
-                                  name.text = nameSearch;
-                                  room.text = roomSearch;
-                                  username.text = usernameSearch;
-                                }
-                              },
+                            AdminAccountSearchButton(
+                              getName: () => name,
+                              getRoom: () => room,
+                              getUsername: () => username,
+                              setName: (value) => name = value,
+                              setRoom: (value) => room = value,
+                              setUsername: (value) => username = value,
+                              getSearching: () => searching,
+                              setPageOffset: (value) => pagination.offset = value,
+                              reload: reload,
                             ),
                           ],
                         ),

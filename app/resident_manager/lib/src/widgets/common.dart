@@ -78,9 +78,20 @@ class CommonScaffold<T extends StateAwareWidget> extends StatefulWidget {
 class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaffold<T>> {
   /// The [GlobalKey] for the underlying [Scaffold]
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  ScrollPosition? scrollPosition;
 
   ScrollController? _scrollController;
-  ScrollController get scrollController => _scrollController ??= ScrollController();
+  ScrollController get scrollController => _scrollController ??= ScrollController(
+        onAttach: (position) {
+          position.isScrollingNotifier.addListener(
+            () {
+              if (mounted) {
+                setState(() => scrollPosition = position);
+              }
+            },
+          );
+        },
+      );
 
   /// Open the [Scaffold.drawer]
   void openDrawer() {
@@ -132,21 +143,23 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
           ...widget.slivers,
         ],
       ),
-      floatingActionButton: Opacity(
-        opacity: 0.5,
-        child: FloatingActionButton(
-          backgroundColor: Colors.lightBlue,
-          foregroundColor: Colors.white,
-          onPressed: () {
-            scrollController.animateTo(
-              scrollController.position.minScrollExtent,
-              curve: Curves.easeOut,
-              duration: const Duration(milliseconds: 500),
-            );
-          },
-          child: const Icon(Icons.arrow_upward_outlined),
-        ),
-      ),
+      floatingActionButton: (scrollPosition == null || scrollPosition!.pixels == 0)
+          ? null
+          : Opacity(
+              opacity: 0.5,
+              child: FloatingActionButton(
+                backgroundColor: Colors.lightBlue,
+                foregroundColor: Colors.white,
+                onPressed: () {
+                  scrollController.animateTo(
+                    scrollController.position.minScrollExtent,
+                    curve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 500),
+                  );
+                },
+                child: const Icon(Icons.arrow_upward_outlined),
+              ),
+            ),
       onDrawerChanged: (isOpened) {
         if (!isOpened) {
           widget.widgetState.refresh();
