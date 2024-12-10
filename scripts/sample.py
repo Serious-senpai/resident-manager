@@ -38,7 +38,7 @@ async def populate_account(index: int) -> None:
         username=username,
         password=password,
     )
-    if index % 2 == 0 and request.data is not None:
+    if index % 3 != 0 and request.data is not None:
         to_approve.append(request.data)
 
 
@@ -68,11 +68,16 @@ async def populate_fee(index: int) -> None:
 
 async def main() -> None:
     await Database.instance.prepare()
+    async with Database.instance.pool.acquire() as connection:
+        await connection.execute("DELETE FROM accounts")
+        await connection.execute("DELETE FROM fee")
+
     tasks = [asyncio.create_task(populate_account(i)) for i in range(10000)]
     tasks.extend(asyncio.create_task(populate_fee(i)) for i in range(10000))
     await asyncio.gather(*tasks)
 
     await RegisterRequest.accept_many(to_approve)
+    await Database.instance.close()
 
 
 asyncio.run(main())

@@ -85,7 +85,7 @@ Future<void> adminSearch(
   );
   await tester.pumpAndSettle();
 
-  final searchDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
+  final searchDialog = find.byWidgetPredicate((widget) => widget is AlertDialog);
   expect(searchDialog, findsOneWidget);
 
   final searchFields = find.descendant(
