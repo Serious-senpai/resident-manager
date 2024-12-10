@@ -63,28 +63,28 @@ class PaymentStatus(pydantic.BaseModel):
         *,
         offset: int = 0,
         paid: Optional[bool] = None,
-        created_from: datetime,
-        created_to: datetime,
+        created_after: datetime,
+        created_before: datetime,
     ) -> List[PaymentStatus]:
-        created_from = max(created_from.astimezone(timezone.utc), EPOCH)
-        created_to = max(created_to.astimezone(timezone.utc), EPOCH)
+        created_after = max(created_after.astimezone(timezone.utc), EPOCH)
+        created_before = max(created_before.astimezone(timezone.utc), EPOCH)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        EXECUTE QueryRoomFee
+                        EXECUTE QueryRoomFees
                             @Room = ?,
                             @Paid = ?,
-                            @CreatedFrom = ?,
-                            @CreatedTo = ?,
+                            @CreatedAfter = ?,
+                            @CreatedBefore = ?,
                             @Offset = ?,
                             @FetchNext = ?
                     """,
                     room,
                     paid,
-                    created_from,
-                    created_to,
+                    created_after,
+                    created_before,
                     offset,
                     DB_PAGINATION_QUERY,
                 )

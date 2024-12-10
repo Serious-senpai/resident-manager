@@ -35,14 +35,14 @@ async def residents_fees(
     *,
     offset: Annotated[int, Query(description="Query offset")] = 0,
     paid: Annotated[Optional[bool], Query(description="Whether to query paid or unpaid queries only")] = None,
-    created_from: Annotated[
+    created_after: Annotated[
         datetime,
-        Query(description="Query fees created from this timestamp"),
+        Query(description="Query fees created after this timestamp"),
     ] = EPOCH,
-    created_to: Annotated[
+    created_before: Annotated[
         datetime,
         Query(
-            description="Query fees created until this timestamp",
+            description="Query fees created before this timestamp",
             default_factory=lambda: datetime.now(timezone.utc),
         ),
     ],
@@ -55,7 +55,7 @@ async def residents_fees(
         resident.data.room,
         offset=offset,
         paid=paid,
-        created_from=created_from,
-        created_to=created_to,
+        created_after=created_after,
+        created_before=created_before,
     )
     return Result(data=st)

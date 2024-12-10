@@ -34,10 +34,10 @@ class _Pagination extends FutureHolder<int?> {
 class _QueryLoader extends FutureHolder<int?> {
   final statuses = <PaymentStatus>[];
   bool? paid;
-  DateTime? createdFrom;
-  DateTime? createdTo;
+  DateTime? createdAfter;
+  DateTime? createdBefore;
 
-  bool get filtering => paid != null || createdFrom != null || createdTo != null;
+  bool get filtering => paid != null || createdAfter != null || createdBefore != null;
 
   final _PaymentPageState _state;
 
@@ -50,8 +50,8 @@ class _QueryLoader extends FutureHolder<int?> {
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
         paid: paid,
-        createdFrom: createdFrom ?? epoch,
-        createdTo: createdTo ?? DateTime.now().toUtc(),
+        createdAfter: createdAfter ?? epoch,
+        createdBefore: createdBefore ?? DateTime.now().toUtc(),
       );
 
       final data = result.data;
@@ -255,8 +255,8 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                           icon: Icon(queryLoader.filtering ? Icons.filter_alt_outlined : Icons.filter_alt_off_outlined),
                           onPressed: () async {
                             bool? tempPaid = queryLoader.paid;
-                            DateTime? tempCreatedFrom = queryLoader.createdFrom;
-                            DateTime? tempCreatedTo = queryLoader.createdTo;
+                            DateTime? tempCreatedFrom = queryLoader.createdAfter;
+                            DateTime? tempCreatedTo = queryLoader.createdBefore;
 
                             await showDialog(
                               context: context,
@@ -349,8 +349,8 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                           onPressed: () {
                                             // Save the selected values
                                             queryLoader.paid = tempPaid;
-                                            queryLoader.createdFrom = tempCreatedFrom;
-                                            queryLoader.createdTo = tempCreatedTo;
+                                            queryLoader.createdAfter = tempCreatedFrom;
+                                            queryLoader.createdBefore = tempCreatedTo;
 
                                             Navigator.of(context).pop();
                                             reload();

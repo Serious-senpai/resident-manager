@@ -1,8 +1,8 @@
-CREATE OR ALTER PROCEDURE QueryRoomFee
+CREATE OR ALTER PROCEDURE QueryRoomFees
     @Room SMALLINT,
     @Paid BIT,
-    @CreatedFrom DATETIME2,
-    @CreatedTo DATETIME2,
+    @CreatedAfter DATETIME2,
+    @CreatedBefore DATETIME2,
     @Offset INT,
     @FetchNext INT
 AS
@@ -12,8 +12,8 @@ BEGIN
     DECLARE @Epoch DATETIME2
     SELECT @Epoch = value FROM config_datetime2 WHERE name = 'epoch'
 
-    DECLARE @FromId BIGINT = DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedFrom) << 16
-    DECLARE @ToId BIGINT = (DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedTo) << 16) | 0xFFFF
+    DECLARE @FromId BIGINT = DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedAfter) << 16
+    DECLARE @ToId BIGINT = (DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedBefore) << 16) | 0xFFFF
 
     SELECT
         fee.id AS fee_id,

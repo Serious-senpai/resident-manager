@@ -30,16 +30,16 @@ class PaymentStatus {
     required ApplicationState state,
     required int offset,
     required bool? paid,
-    required DateTime createdFrom,
-    required DateTime createdTo,
+    required DateTime createdAfter,
+    required DateTime createdBefore,
   }) async {
     final response = await state.get(
       "/api/v1/residents/fees",
       queryParameters: {
         "offset": offset.toString(),
         if (paid != null) "paid": paid.toString(),
-        "created_from": createdFrom.toUtc().toIso8601String(),
-        "created_to": createdTo.toUtc().toIso8601String(),
+        "created_after": createdAfter.toUtc().toIso8601String(),
+        "created_before": createdBefore.toUtc().toIso8601String(),
       },
     );
     final result = json.decode(utf8.decode(response.bodyBytes));
