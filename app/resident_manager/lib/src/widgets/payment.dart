@@ -260,9 +260,9 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
 
                             await showDialog(
                               context: context,
-                              builder: (BuildContext context) {
+                              builder: (context) {
                                 return StatefulBuilder(
-                                  builder: (BuildContext context, StateSetter setState) {
+                                  builder: (context, setState) {
                                     return AlertDialog(
                                       title: Text(AppLocale.ConfigureFilter.getString(context)),
                                       content: Column(

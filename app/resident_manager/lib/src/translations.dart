@@ -111,6 +111,9 @@ class AppLocale {
   static const String RejectNRegistrationRequests = "RejectNRegistrationRequests";
   static const String Delete1ResidentAccount = "Delete1ResidentAccount";
   static const String DeleteNResidentAccounts = "DeleteNResidentAccounts";
+  static const String FeeList = "FeeList";
+  static const String FeeLowerBound = "FeeLowerBound";
+  static const String FeeUpperBound = "FeeUpperBound";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -243,6 +246,9 @@ class AppLocale {
     RejectNRegistrationRequests: "Reject {n} registration requests?",
     Delete1ResidentAccount: "Delete 1 resident account?",
     DeleteNResidentAccounts: "Delete {n} resident accounts?",
+    FeeList: "Fee list",
+    FeeLowerBound: "Fee lower bound",
+    FeeUpperBound: "Fee upper bound",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -376,6 +382,9 @@ class AppLocale {
     RejectNRegistrationRequests: "Từ chối {n} yêu cầu?",
     Delete1ResidentAccount: "Xóa 1 tài khoản cư dân?",
     DeleteNResidentAccounts: "Xóa {n} tài khoản cư dân?",
+    FeeList: "Danh sách phí",
+    FeeLowerBound: "Nộp tối thiểu",
+    FeeUpperBound: "Nộp tối đa",
 
     // Error codes
     Error0: "Thao tác thành công.",

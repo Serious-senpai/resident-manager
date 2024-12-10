@@ -231,6 +231,12 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
                     route: ApplicationRoute.adminRoomsPage,
                     popAll: false,
                   ),
+                  routeTile(
+                    leading: const Icon(Icons.payment_outlined),
+                    title: AppLocale.FeeList.getString(context),
+                    route: ApplicationRoute.adminFeesPage,
+                    popAll: false,
+                  ),
                 ],
               );
             } else {

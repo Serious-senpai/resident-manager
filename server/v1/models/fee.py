@@ -153,56 +153,30 @@ class Fee(Snowflake):
         cls,
         *,
         offset: int = 0,
-        id: Optional[int] = None,
+        created_after: datetime,
+        created_before: datetime,
         name: Optional[str] = None,
-        order_by: Literal[
-            "id",
-            "name",
-            "lower",
-            "upper",
-            "per_area",
-            "per_motorbike",
-            "per_car",
-            "deadline",
-        ] = "id",
-        ascending: bool = True,
+        order_by: Literal[1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8] = -1,
     ) -> List[Fee]:
-        where: List[str] = []
-        params: List[Any] = []
-
-        if id is not None:
-            where.append("id = ?")
-            params.append(id)
-
-        if name is not None:
-            if not validate_fee_name(name):
-                return []
-
-            where.append("CHARINDEX(?, name) > 0")
-            params.append(name)
-
-        query = ["SELECT * FROM fee"]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
-
-        if order_by not in {
-            "id",
-            "name",
-            "lower",
-            "upper",
-            "per_area",
-            "per_motorbike",
-            "per_car",
-            "deadline",
-        }:
-            order_by = "id"
-
-        asc_desc = "ASC" if ascending else "DESC"
-        query.append(f"ORDER BY {order_by} {asc_desc} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
-
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
+                await cursor.execute(
+                    """
+                        EXECUTE QueryFees
+                            @CreatedAfter = ?,
+                            @CreatedBefore = ?,
+                            @Name = ?,
+                            @OrderBy = ?,
+                            @Offset = ?,
+                            @FetchNext = ?
+                    """,
+                    created_after,
+                    created_before,
+                    name,
+                    order_by,
+                    offset,
+                    DB_PAGINATION_QUERY,
+                )
 
                 rows = await cursor.fetchall()
                 return [cls.from_row(row) for row in rows]

@@ -7,4 +7,5 @@ class ApplicationRoute {
   static const String adminRegisterQueue = "/admin/register-queue";
   static const String adminResidentsPage = "/admin/residents";
   static const String adminRoomsPage = "/admin/rooms";
+  static const String adminFeesPage = "/admin/fees";
 }

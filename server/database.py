@@ -19,6 +19,7 @@ from .utils import hash_password
 
 __all__ = ("Database",)
 logger = logging.getLogger("uvicorn")
+synchronize_file = ROOT / ".sync"
 
 
 class Database:
@@ -65,9 +66,8 @@ class Database:
             autocommit=True,
         )
 
-        synchronize = ROOT / ".sync"
         try:
-            fd = os.open(str(synchronize), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            fd = os.open(str(synchronize_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             os.close(fd)
         except FileExistsError:
             return
@@ -105,6 +105,8 @@ class Database:
 
         self.__prepared = False
         self.__pool = None
+
+        synchronize_file.unlink(missing_ok=True)
 
 
 Database.instance = Database()

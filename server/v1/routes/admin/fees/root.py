@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Annotated, List, Literal, Optional
 
-from fastapi import Depends, Response, status
+from fastapi import Depends, Query, Response, status
+from pydantic import BeforeValidator
 
 from ....app import api_v1
 from ....models import AdminPermission, Fee, Result
+from .....config import EPOCH
 
 
 __all__ = ("admin_fees",)
@@ -31,29 +34,30 @@ __all__ = ("admin_fees",)
 async def admin_fees(
     admin: Annotated[AdminPermission, Depends(AdminPermission.from_token)],
     response: Response,
+    *,
     offset: int = 0,
-    id: Optional[int] = None,
+    created_after: Annotated[
+        datetime,
+        Query(description="Query requests created after this timestamp"),
+    ] = EPOCH,
+    created_before: Annotated[
+        datetime,
+        Query(
+            description="Query requests created before this timestamp",
+            default_factory=lambda: datetime.now(timezone.utc),
+        ),
+    ],
     name: Optional[str] = None,
-    order_by: Literal[
-        "id",
-        "name",
-        "lower",
-        "upper",
-        "per_area",
-        "per_motorbike",
-        "per_car",
-        "deadline",
-    ] = "id",
-    ascending: bool = True,
+    order_by: Annotated[Literal[1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8], BeforeValidator(int)] = -1,
 ) -> Result[Optional[List[Fee]]]:
     if admin.admin:
         return Result(
             data=await Fee.query(
                 offset=offset,
-                id=id,
+                created_after=created_after,
+                created_before=created_before,
                 name=name,
                 order_by=order_by,
-                ascending=ascending
             )
         )
 

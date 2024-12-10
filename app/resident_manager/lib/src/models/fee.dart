@@ -1,4 +1,8 @@
+import "dart:convert";
+
+import "results.dart";
 import "snowflake.dart";
+import "../state.dart";
 import "../utils.dart";
 
 class Fee with Snowflake {
@@ -41,4 +45,64 @@ class Fee with Snowflake {
           description: data["description"] as String,
           flags: data["flags"] as int,
         );
+
+  /// Queries the server for fees
+  ///
+  /// If [state] hasn't been authorized as an administratoor yet, the result will always be empty.
+  static Future<Result<List<Fee>?>> query({
+    required ApplicationState state,
+    required int offset,
+    required DateTime createdAfter,
+    required DateTime createdBefore,
+    String? name,
+    required int orderBy,
+    required bool ascending,
+  }) async {
+    if (!state.loggedInAsAdmin) {
+      return Result(-1, null);
+    }
+
+    orderBy = ascending ? orderBy.abs() : -orderBy.abs();
+    final response = await state.get(
+      "/api/v1/admin/fees",
+      queryParameters: {
+        "offset": offset.toString(),
+        "created_after": createdAfter.toUtc().toIso8601String(),
+        "created_before": createdBefore.toUtc().toIso8601String(),
+        if (name != null && name.isNotEmpty) "name": name,
+        "order_by": orderBy.toString(),
+      },
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) {
+      final data = result["data"] as List<dynamic>;
+      return Result(0, List<Fee>.from(data.map(Fee.fromJson)));
+    }
+
+    return Result(result["code"], null);
+  }
+
+  /// Count the number of fees.
+  static Future<Result<int?>> count({
+    required ApplicationState state,
+    required DateTime createdAfter,
+    required DateTime createdBefore,
+    String? name,
+  }) async {
+    final response = await state.get(
+      "/api/v1/admin/fees/count",
+      queryParameters: {
+        "created_after": createdAfter.toUtc().toIso8601String(),
+        "created_before": createdBefore.toUtc().toIso8601String(),
+        if (name != null && name.isNotEmpty) "name": name,
+      },
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    if (response.statusCode == 200) {
+      return Result(0, result["data"]);
+    }
+
+    return Result(result["code"], null);
+  }
 }
