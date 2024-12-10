@@ -38,7 +38,7 @@ async def residents_pay(
     amount: float,
 ) -> RedirectResponse:
     date = snowflake_time(fee_id)
-    all_status = await PaymentStatus.query(room, created_from=date, created_to=date)
+    all_status = await PaymentStatus.query(room, created_after=date, created_before=date)
     for st in all_status:
         if st.payment is None and st.fee.id == fee_id:
             break
