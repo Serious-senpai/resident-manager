@@ -22,6 +22,6 @@ starlette==0.41.3
 typing_extensions==4.12.2
 uvicorn==0.32.1
 uvloop==0.21.0; sys_platform == "linux"
-watchfiles==1.0.0
+watchfiles==1.0.3
 websockets==14.1
 yarl==1.18.3
