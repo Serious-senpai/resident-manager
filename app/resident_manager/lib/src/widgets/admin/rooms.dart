@@ -22,18 +22,6 @@ class RoomsPage extends StateAwareWidget {
   AbstractCommonState<RoomsPage> createState() => _RoomsPageState();
 }
 
-class _SearchField {
-  final room = TextEditingController();
-  final floor = TextEditingController();
-
-  bool get searching => room.text.isNotEmpty || floor.text.isNotEmpty;
-
-  void dispose() {
-    room.dispose();
-    floor.dispose();
-  }
-}
-
 class _Pagination extends FutureHolder<int?> {
   int offset = 0;
   int offsetLimit = 0;
@@ -47,8 +35,8 @@ class _Pagination extends FutureHolder<int?> {
     try {
       final result = await Room.count(
         state: _state.state,
-        room: int.tryParse(_state.search.room.text),
-        floor: int.tryParse(_state.search.floor.text),
+        room: int.tryParse(_state.room ?? ""),
+        floor: int.tryParse(_state.floor ?? ""),
       );
 
       final data = result.data;
@@ -86,8 +74,8 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await Room.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        room: int.tryParse(_state.search.room.text),
-        floor: int.tryParse(_state.search.floor.text),
+        room: int.tryParse(_state.room ?? ""),
+        floor: int.tryParse(_state.floor ?? ""),
       );
 
       final data = result.data;
@@ -111,7 +99,10 @@ class _QueryLoader extends FutureHolder<int?> {
 }
 
 class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffoldStateMixin<RoomsPage> {
-  final search = _SearchField();
+  String? room;
+  String? floor;
+
+  bool get searching => room != null || floor != null;
 
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
@@ -127,12 +118,6 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
     pagination.reload();
     queryLoader.reload();
     refresh();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    search.dispose();
   }
 
   @override
@@ -435,7 +420,10 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       children: [
-                        AdminMonitorWidget(state: state),
+                        AdminMonitorWidget(
+                          state: state,
+                          pushNamed: pushNamedAndRefresh,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -472,91 +460,80 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
                               },
                             ),
                             TextButton.icon(
-                              icon: Icon(search.searching ? Icons.search_outlined : Icons.search_off_outlined),
+                              icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
                               label: Text(
-                                search.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: search.searching ? TextDecoration.underline : null),
+                                searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                               ),
                               onPressed: () async {
                                 // Save current values for restoration
-                                final roomSearch = search.room.text;
-                                final floorSearch = search.floor.text;
-
+                                final roomController = TextEditingController(text: room);
+                                final floorController = TextEditingController(text: floor);
                                 final formKey = GlobalKey<FormState>();
 
                                 void onSubmit(BuildContext context) {
-                                  Navigator.pop(context, true);
-                                  pagination.offset = 0;
-                                  reload();
+                                  if (formKey.currentState?.validate() ?? false) {
+                                    room = roomController.text;
+                                    floor = floorController.text;
+                                    pagination.offset = 0;
+
+                                    Navigator.pop(context, true);
+                                    reload();
+                                  }
                                 }
 
-                                final submitted = await showDialog(
+                                await showDialog(
                                   context: context,
-                                  builder: (context) => SimpleDialog(
+                                  builder: (context) => AlertDialog(
                                     contentPadding: const EdgeInsets.all(10),
                                     title: Text(AppLocale.Search.getString(context)),
-                                    children: [
-                                      Form(
-                                        key: formKey,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        child: Column(
-                                          children: [
-                                            TextFormField(
-                                              controller: search.room,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.room_outlined),
-                                                label: Text(AppLocale.Room.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
-                                              validator: (value) => roomValidator(context, required: false, value: value),
+                                    content: Form(
+                                      key: formKey,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextFormField(
+                                            controller: roomController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              icon: const Icon(Icons.room_outlined),
+                                              label: Text(AppLocale.Room.getString(context)),
                                             ),
-                                            TextFormField(
-                                              controller: search.floor,
-                                              decoration: InputDecoration(
-                                                contentPadding: const EdgeInsets.all(8.0),
-                                                icon: const Icon(Icons.apartment_outlined),
-                                                label: Text(AppLocale.Floor.getString(context)),
-                                              ),
-                                              onFieldSubmitted: (_) => onSubmit(context),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => roomValidator(context, required: false, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: floorController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              icon: const Icon(Icons.apartment_outlined),
+                                              label: Text(AppLocale.Floor.getString(context)),
                                             ),
-                                            const SizedBox.square(dimension: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.done_outlined),
-                                                    label: Text(AppLocale.Search.getString(context)),
-                                                    onPressed: () => onSubmit(context),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: TextButton.icon(
-                                                    icon: const Icon(Icons.clear_outlined),
-                                                    label: Text(AppLocale.ClearAll.getString(context)),
-                                                    onPressed: () {
-                                                      search.room.clear();
-                                                      search.floor.clear();
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.done_outlined),
+                                        label: Text(AppLocale.Search.getString(context)),
+                                        onPressed: () => onSubmit(context),
+                                      ),
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.clear_outlined),
+                                        label: Text(AppLocale.ClearAll.getString(context)),
+                                        onPressed: () {
+                                          roomController.clear();
+                                          floorController.clear();
 
-                                                      onSubmit(context);
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                          onSubmit(context);
+                                        },
                                       ),
                                     ],
                                   ),
                                 );
-
-                                if (submitted == null) {
-                                  // Dialog dismissed. Restore field values
-                                  search.room.text = roomSearch;
-                                  search.floor.text = floorSearch;
-                                }
                               },
                             ),
                           ],

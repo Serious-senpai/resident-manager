@@ -51,11 +51,10 @@ async def residents_fees(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return Result(code=402, data=None)
 
-    st = await PaymentStatus.query(
+    return await PaymentStatus.query(
         resident.data.room,
         offset=offset,
         paid=paid,
         created_after=created_after,
         created_before=created_before,
     )
-    return Result(data=st)

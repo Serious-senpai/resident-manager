@@ -134,6 +134,10 @@ class Room(pydantic.BaseModel):
     car: Annotated[Optional[int], pydantic.Field(description="The number of cars")]
     residents: Annotated[int, pydantic.Field(description="The number of residents in this room")]
 
+    @property
+    def has_data(self) -> bool:
+        return self.area is not None and self.motorbike is not None and self.car is not None
+
     @classmethod
     def from_row(cls, row: Row) -> Room:
         return cls(
@@ -187,6 +191,7 @@ class Room(pydantic.BaseModel):
     @classmethod
     async def query(
         cls,
+        *,
         offset: int,
         room: Optional[int] = None,
         floor: Optional[int] = None,

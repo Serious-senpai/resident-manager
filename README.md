@@ -37,3 +37,4 @@ message into a specific language.
 | 603 | Invalid fee per area |
 | 604 | Invalid fee per motorbike |
 | 605 | Invalid fee per car |
+| 606 | Resident's room has not been updated by administrator yet |

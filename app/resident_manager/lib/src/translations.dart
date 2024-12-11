@@ -115,6 +115,13 @@ class AppLocale {
   static const String FeeLowerBound = "FeeLowerBound";
   static const String FeeUpperBound = "FeeUpperBound";
   static const String FeeName = "FeeName";
+  static const String YourRoomHasNotBeenUpdatedByAdmin = "YourRoomHasNotBeenUpdatedByAdmin";
+  static const String AddANewFee = "AddANewFee";
+  static const String MissingRequiredValue = "MissingRequiredValue";
+  static const String InvalidValue = "InvalidValue";
+  static const String FeePerArea = "FeePerArea";
+  static const String FeePerMotorbike = "FeePerMotorbike";
+  static const String FeePerCar = "FeePerCar";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -251,6 +258,13 @@ class AppLocale {
     FeeLowerBound: "Fee lower bound",
     FeeUpperBound: "Fee upper bound",
     FeeName: "Fee name",
+    YourRoomHasNotBeenUpdatedByAdmin: "Your room has not been updated by administrator yet.",
+    AddANewFee: "Add a new fee",
+    MissingRequiredValue: "Missing required value",
+    InvalidValue: "Invalid value",
+    FeePerArea: "Fee per area (m²)",
+    FeePerMotorbike: "Fee per motorbike",
+    FeePerCar: "Fee per car",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -318,7 +332,7 @@ class AppLocale {
     Search: "Tìm kiếm",
     Searching: "Đang tìm kiếm",
     ResidentsList: "Danh sách cư dân",
-    Area1: "Diện tích",
+    Area1: "Diện tích (m²)",
     MotorbikesCount: "Số lượng xe máy",
     CarsCount: "Số lượng ô tô",
     ResidentsCount: "Số lượng cư dân",
@@ -388,6 +402,13 @@ class AppLocale {
     FeeLowerBound: "Nộp tối thiểu",
     FeeUpperBound: "Nộp tối đa",
     FeeName: "Tên phí",
+    YourRoomHasNotBeenUpdatedByAdmin: "Thông tin phòng của bạn chưa được cập nhật bởi quản trị viên.",
+    AddANewFee: "Thêm khoản phí mới",
+    MissingRequiredValue: "Thiếu thông tin bắt buộc",
+    InvalidValue: "Thông tin không hợp lệ",
+    FeePerArea: "Phí theo diện tích (m²)",
+    FeePerMotorbike: "Phí theo số lượng xe máy",
+    FeePerCar: "Phí theo số lượng ô tô",
 
     // Error codes
     Error0: "Thao tác thành công.",

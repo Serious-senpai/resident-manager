@@ -33,11 +33,6 @@ class _Pagination extends FutureHolder<int?> {
 
 class _QueryLoader extends FutureHolder<int?> {
   final statuses = <PaymentStatus>[];
-  bool? paid;
-  DateTime? createdAfter;
-  DateTime? createdBefore;
-
-  bool get filtering => paid != null || createdAfter != null || createdBefore != null;
 
   final _PaymentPageState _state;
 
@@ -49,9 +44,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await PaymentStatus.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        paid: paid,
-        createdAfter: createdAfter ?? epoch,
-        createdBefore: createdBefore ?? DateTime.now().toUtc(),
+        paid: _state.paid,
+        createdAfter: _state.createdAfter ?? epoch,
+        createdBefore: _state.createdBefore ?? DateTime.now().toUtc(),
       );
 
       final data = result.data;
@@ -184,6 +179,12 @@ class _PayButton extends StatelessWidget {
 }
 
 class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaffoldStateMixin<PaymentPage> {
+  bool? paid;
+  DateTime? createdAfter;
+  DateTime? createdBefore;
+
+  bool get searching => paid != null || createdAfter != null || createdBefore != null;
+
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination();
 
@@ -251,12 +252,26 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                             reload();
                           },
                         ),
-                        IconButton(
-                          icon: Icon(queryLoader.filtering ? Icons.filter_alt_outlined : Icons.filter_alt_off_outlined),
+                        TextButton.icon(
+                          icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
+                          label: Text(
+                            searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                            style: TextStyle(decoration: searching ? TextDecoration.underline : null),
+                          ),
                           onPressed: () async {
-                            bool? tempPaid = queryLoader.paid;
-                            DateTime? tempCreatedFrom = queryLoader.createdAfter;
-                            DateTime? tempCreatedTo = queryLoader.createdBefore;
+                            bool? tempPaid = paid;
+                            DateTime? tempCreatedAfter = createdAfter;
+                            DateTime? tempCreatedBefore = createdBefore;
+
+                            void onSubmit(BuildContext context) {
+                              paid = tempPaid;
+                              createdAfter = tempCreatedAfter;
+                              createdBefore = tempCreatedBefore;
+                              pagination.offset = 0;
+
+                              Navigator.pop(context, true);
+                              reload();
+                            }
 
                             await showDialog(
                               context: context,
@@ -281,11 +296,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                                   DropdownMenuItem(value: false, child: Text(AppLocale.NotPaid.getString(context))),
                                                 ],
                                                 onChanged: (value) {
-                                                  setState(
-                                                    () {
-                                                      tempPaid = value;
-                                                    },
-                                                  );
+                                                  setState(() => tempPaid = value);
                                                 },
                                               ),
                                             ],
@@ -299,17 +310,13 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                                 onPressed: () async {
                                                   DateTime? picked = await showDatePicker(
                                                     context: context,
-                                                    initialDate: tempCreatedFrom,
+                                                    initialDate: tempCreatedAfter,
                                                     firstDate: DateTime(2024),
                                                     lastDate: DateTime(2100),
                                                   );
-                                                  setState(
-                                                    () {
-                                                      tempCreatedFrom = picked;
-                                                    },
-                                                  );
+                                                  setState(() => tempCreatedAfter = picked);
                                                 },
-                                                child: Text(tempCreatedFrom?.toLocal().toString() ?? "---"),
+                                                child: Text(tempCreatedAfter?.toLocal().toString() ?? "---"),
                                               ),
                                             ],
                                           ),
@@ -322,17 +329,13 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                                 onPressed: () async {
                                                   DateTime? picked = await showDatePicker(
                                                     context: context,
-                                                    initialDate: tempCreatedTo,
+                                                    initialDate: tempCreatedBefore,
                                                     firstDate: DateTime(2024),
                                                     lastDate: DateTime(2100),
                                                   );
-                                                  setState(
-                                                    () {
-                                                      tempCreatedTo = picked;
-                                                    },
-                                                  );
+                                                  setState(() => tempCreatedBefore = picked);
                                                 },
-                                                child: Text(tempCreatedTo?.toLocal().toString() ?? "---"),
+                                                child: Text(tempCreatedBefore?.toLocal().toString() ?? "---"),
                                               ),
                                             ],
                                           ),
@@ -341,20 +344,16 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                       actions: [
                                         TextButton(
                                           onPressed: () {
-                                            Navigator.pop(context);
+                                            tempPaid = null;
+                                            tempCreatedAfter = null;
+                                            tempCreatedBefore = null;
+
+                                            onSubmit(context);
                                           },
-                                          child: Text(AppLocale.Cancel.getString(context)),
+                                          child: Text(AppLocale.ClearAll.getString(context)),
                                         ),
                                         TextButton(
-                                          onPressed: () {
-                                            // Save the selected values
-                                            queryLoader.paid = tempPaid;
-                                            queryLoader.createdAfter = tempCreatedFrom;
-                                            queryLoader.createdBefore = tempCreatedTo;
-
-                                            Navigator.of(context).pop();
-                                            reload();
-                                          },
+                                          onPressed: () => onSubmit(context),
                                           child: Text(AppLocale.Search.getString(context)),
                                         ),
                                       ],
@@ -506,24 +505,19 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                 ),
               ],
             );
+          } else if (code == 606) {
+            return SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  AppLocale.YourRoomHasNotBeenUpdatedByAdmin.getString(context),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            );
           }
 
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox.square(
-                    dimension: 50,
-                    child: Icon(Icons.highlight_off_outlined),
-                  ),
-                  const SizedBox.square(dimension: 5),
-                  Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
-                ],
-              ),
-            ),
-          );
+          return SliverErrorFullScreen(errorCode: code, callback: reload);
         },
       ),
     );

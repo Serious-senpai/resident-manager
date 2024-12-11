@@ -3,6 +3,7 @@ import "dart:collection";
 import "dart:io";
 import "dart:math";
 
+import "package:async_locks/async_locks.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -38,7 +39,7 @@ class _Pagination extends FutureHolder<int?> {
         // Query does not support filtering by time yet
         createdAfter: epoch,
         createdBefore: DateTime.now(),
-        name: _state.queryLoader.name,
+        name: _state.name,
       );
 
       final data = result.data;
@@ -64,12 +65,6 @@ class _QueryLoader extends FutureHolder<int?> {
   final fees = <Fee>[];
   final selected = SplayTreeSet<Fee>((k1, k2) => k1.id.compareTo(k2.id));
 
-  String? name;
-  DateTime? createdAfter;
-  DateTime? createdBefore;
-
-  bool get searching => name != null || createdAfter != null || createdBefore != null;
-
   int orderBy = -1;
   bool ascending = false;
 
@@ -83,9 +78,9 @@ class _QueryLoader extends FutureHolder<int?> {
       final result = await Fee.query(
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
-        createdAfter: createdAfter ?? epoch,
-        createdBefore: createdBefore ?? DateTime.now(),
-        name: name,
+        createdAfter: _state.createdAfter ?? epoch,
+        createdBefore: _state.createdBefore ?? DateTime.now(),
+        name: _state.name,
         orderBy: orderBy,
         ascending: ascending,
       );
@@ -113,11 +108,20 @@ class _QueryLoader extends FutureHolder<int?> {
 }
 
 class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaffoldStateMixin<FeeListPage> {
+  String? name;
+  DateTime? createdAfter;
+  DateTime? createdBefore;
+
+  bool get searching => name != null || createdAfter != null || createdBefore != null;
+
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
 
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
+
+  final _actionLock = Lock();
+  Widget _notification = const SizedBox.shrink();
 
   void reload() {
     pagination.reload();
@@ -270,7 +274,229 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       children: [
-                        AdminMonitorWidget(state: state),
+                        AdminMonitorWidget(
+                          state: state,
+                          pushNamed: pushNamedAndRefresh,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              icon: const Icon(Icons.add_outlined),
+                              label: Text(AppLocale.AddANewFee.getString(context)),
+                              onPressed: () async {
+                                final nameController = TextEditingController();
+                                final lowerController = TextEditingController();
+                                final upperController = TextEditingController();
+                                final perAreaController = TextEditingController();
+                                final perMotorbikeController = TextEditingController();
+                                final perCarController = TextEditingController();
+                                var deadline = Date.now();
+                                final descriptionController = TextEditingController();
+                                final formKey = GlobalKey<FormState>();
+
+                                Future<void> onSubmit(BuildContext context) async {
+                                  return; // TODO: Fix the dialog below
+                                  await _actionLock.run(
+                                    () async {
+                                      if (formKey.currentState?.validate() ?? false) {
+                                        Navigator.pop(context);
+
+                                        _notification = Builder(
+                                          builder: (context) => Text(
+                                            AppLocale.Loading.getString(context),
+                                            style: const TextStyle(color: Colors.blue),
+                                          ),
+                                        );
+                                        refresh();
+
+                                        try {
+                                          await Fee.create(
+                                            state: state,
+                                            name: nameController.text,
+                                            lower: double.parse(lowerController.text),
+                                            upper: double.parse(upperController.text),
+                                            perArea: double.parse(perAreaController.text),
+                                            perMotorbike: double.parse(perMotorbikeController.text),
+                                            perCar: double.parse(perCarController.text),
+                                            deadline: deadline,
+                                            description: descriptionController.text,
+                                            flags: 0,
+                                          );
+
+                                          _notification = const SizedBox.shrink();
+                                        } catch (e) {
+                                          await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
+                                          _notification = Builder(
+                                            builder: (context) => Text(
+                                              AppLocale.ConnectionError.getString(context),
+                                              style: const TextStyle(color: Colors.red),
+                                            ),
+                                          );
+
+                                          if (!(e is SocketException || e is TimeoutException)) {
+                                            rethrow;
+                                          }
+                                        }
+                                      }
+                                    },
+                                  );
+                                }
+
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    contentPadding: const EdgeInsets.all(10),
+                                    title: Text(AppLocale.AddANewFee.getString(context)),
+                                    content: Form(
+                                      key: formKey,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextFormField(
+                                            controller: nameController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeeName.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => nameValidator(context, required: true, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: lowerController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeeLowerBound.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => feeLowerValidator(context, required: true, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: upperController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeeUpperBound.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => feeUpperValidator(context, required: true, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: perAreaController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeePerArea.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => feePerAreaValidator(context, required: true, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: perMotorbikeController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeePerMotorbike.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => feePerMotorbikeValidator(context, required: true, value: value),
+                                          ),
+                                          TextFormField(
+                                            controller: perCarController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.FeePerCar.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            validator: (value) => feePerCarValidator(context, required: true, value: value),
+                                          ),
+                                          const SizedBox.square(dimension: 5),
+                                          Row(
+                                            children: [
+                                              Text(AppLocale.Deadline.getString(context)),
+                                              const SizedBox.square(dimension: 5),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  DateTime? picked = await showDatePicker(
+                                                    context: context,
+                                                    initialDate: deadline.toDateTime(),
+                                                    firstDate: DateTime(2024),
+                                                    lastDate: DateTime(2100),
+                                                  );
+                                                  setState(
+                                                    () {
+                                                      if (picked != null) deadline = Date.fromDateTime(picked);
+                                                    },
+                                                  );
+                                                },
+                                                child: Text(deadline.format("dd/mm/yyyy")),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox.square(dimension: 5),
+                                          TextFormField(
+                                            controller: descriptionController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              enabledBorder: const OutlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.black, width: 1),
+                                              ),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.Description.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            maxLength: 4000,
+                                            maxLines: 4,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.done_outlined),
+                                        label: Text(AppLocale.Confirm.getString(context)),
+                                        onPressed: () => onSubmit(context),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox.square(dimension: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -307,23 +533,29 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                               },
                             ),
                             TextButton.icon(
-                              icon: Icon(queryLoader.searching ? Icons.search_outlined : Icons.search_off_outlined),
+                              icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
                               label: Text(
-                                queryLoader.searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
-                                style: TextStyle(decoration: queryLoader.searching ? TextDecoration.underline : null),
+                                searching ? AppLocale.Searching.getString(context) : AppLocale.Search.getString(context),
+                                style: TextStyle(decoration: searching ? TextDecoration.underline : null),
                               ),
                               onPressed: () async {
+                                final nameController = TextEditingController(text: name);
+                                var tempCreatedAfter = createdAfter;
+                                var tempCreatedBefore = createdBefore;
+                                final formKey = GlobalKey<FormState>();
+
                                 void onSubmit(BuildContext context) {
-                                  Navigator.pop(context, true);
-                                  pagination.offset = 0;
-                                  reload();
+                                  if (formKey.currentState?.validate() ?? false) {
+                                    name = nameController.text;
+                                    createdAfter = tempCreatedAfter;
+                                    createdBefore = tempCreatedBefore;
+                                    pagination.offset = 0;
+
+                                    Navigator.pop(context, true);
+                                    reload();
+                                  }
                                 }
 
-                                DateTime? tempCreatedAfter = queryLoader.createdAfter;
-                                DateTime? tempCreatedBefore = queryLoader.createdBefore;
-
-                                final formKey = GlobalKey<FormState>();
-                                final nameController = TextEditingController(text: queryLoader.name);
                                 await showDialog(
                                   context: context,
                                   builder: (context) {
@@ -343,10 +575,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                     icon: const Icon(Icons.payment_outlined),
                                                     label: Text(AppLocale.FeeName.getString(context)),
                                                   ),
-                                                  onFieldSubmitted: (_) {
-                                                    queryLoader.name = nameController.text;
-                                                    onSubmit(context);
-                                                  },
+                                                  onFieldSubmitted: (_) => onSubmit(context),
                                                   validator: (value) => nameValidator(context, required: false, value: value),
                                                 ),
                                                 const SizedBox.square(dimension: 10),
@@ -362,11 +591,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                           firstDate: DateTime(2024),
                                                           lastDate: DateTime(2100),
                                                         );
-                                                        setState(
-                                                          () {
-                                                            tempCreatedAfter = picked;
-                                                          },
-                                                        );
+                                                        setState(() => tempCreatedAfter = picked);
                                                       },
                                                       child: Text(tempCreatedAfter?.toLocal().toString() ?? "---"),
                                                     ),
@@ -385,11 +610,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                           firstDate: DateTime(2024),
                                                           lastDate: DateTime(2100),
                                                         );
-                                                        setState(
-                                                          () {
-                                                            tempCreatedBefore = picked;
-                                                          },
-                                                        );
+                                                        setState(() => tempCreatedBefore = picked);
                                                       },
                                                       child: Text(tempCreatedBefore?.toLocal().toString() ?? "---"),
                                                     ),
@@ -399,29 +620,21 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                             ),
                                           ),
                                           actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                // Clear all values
-                                                queryLoader.name = null;
-                                                queryLoader.createdAfter = null;
-                                                queryLoader.createdBefore = null;
-
-                                                Navigator.pop(context);
-                                                reload();
-                                              },
-                                              child: Text(AppLocale.ClearAll.getString(context)),
+                                            TextButton.icon(
+                                              icon: const Icon(Icons.done_outlined),
+                                              label: Text(AppLocale.Search.getString(context)),
+                                              onPressed: () => onSubmit(context),
                                             ),
-                                            TextButton(
+                                            TextButton.icon(
+                                              icon: const Icon(Icons.clear_outlined),
+                                              label: Text(AppLocale.ClearAll.getString(context)),
                                               onPressed: () {
-                                                // Save the selected values
-                                                queryLoader.name = nameController.text;
-                                                queryLoader.createdAfter = tempCreatedAfter;
-                                                queryLoader.createdBefore = tempCreatedBefore;
+                                                nameController.clear();
+                                                tempCreatedAfter = null;
+                                                tempCreatedBefore = null;
 
-                                                Navigator.pop(context);
-                                                reload();
+                                                onSubmit(context);
                                               },
-                                              child: Text(AppLocale.Search.getString(context)),
                                             ),
                                           ],
                                         );
@@ -439,6 +652,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(child: _notification),
                 SliverPadding(
                   padding: const EdgeInsets.all(5),
                   sliver: SliverToBoxAdapter(

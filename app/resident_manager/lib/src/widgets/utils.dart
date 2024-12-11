@@ -493,8 +493,9 @@ class _NewAccountGraphState extends AbstractCommonState<NewAccountGraph> {
 
 class AdminMonitorWidget extends StatelessWidget {
   final ApplicationState state;
+  final void Function(BuildContext context, String routeName) pushNamed;
 
-  const AdminMonitorWidget({super.key, required this.state});
+  const AdminMonitorWidget({super.key, required this.state, required this.pushNamed});
 
   @override
   Widget build(BuildContext context) {
@@ -502,7 +503,7 @@ class AdminMonitorWidget extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       child: Card(
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminRegisterQueue),
+          onTap: () => pushNamed(context, ApplicationRoute.adminRegisterQueue),
           child: Padding(
             padding: const EdgeInsets.all(40),
             child: RegistrationRequestCounter(
@@ -518,7 +519,7 @@ class AdminMonitorWidget extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       child: Card(
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminResidentsPage),
+          onTap: () => pushNamed(context, ApplicationRoute.adminResidentsPage),
           child: Padding(
             padding: const EdgeInsets.all(40),
             child: ResidentCounter(
@@ -534,7 +535,7 @@ class AdminMonitorWidget extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       child: Card(
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, ApplicationRoute.adminRoomsPage),
+          onTap: () => pushNamed(context, ApplicationRoute.adminRoomsPage),
           child: Padding(
             padding: const EdgeInsets.all(40),
             child: RoomCounter(
@@ -553,12 +554,13 @@ class AdminMonitorWidget extends StatelessWidget {
       graphPadding /= 2;
     }
 
+    const chartBoxHeight = 200.0;
     final newAccountGraph = Padding(
       padding: const EdgeInsets.all(5),
       child: Card(
         child: Padding(
           padding: graphPadding,
-          child: NewAccountGraph(state: state),
+          child: NewAccountGraph(state: state, height: chartBoxHeight),
         ),
       ),
     );
@@ -567,7 +569,7 @@ class AdminMonitorWidget extends StatelessWidget {
       child: Card(
         child: Padding(
           padding: graphPadding,
-          child: AccountsPieChart(state: state),
+          child: AccountsPieChart(state: state, height: chartBoxHeight),
         ),
       ),
     );
@@ -575,24 +577,18 @@ class AdminMonitorWidget extends StatelessWidget {
     return mediaQuery.size.width > ScreenWidth.LARGE
         ? Column(
             children: [
-              SizedBox(
-                height: 200,
-                child: Row(
-                  children: [
-                    Expanded(child: requestCounter),
-                    Expanded(child: residentCounter),
-                    Expanded(child: roomCounter),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(child: requestCounter),
+                  Expanded(child: residentCounter),
+                  Expanded(child: roomCounter),
+                ],
               ),
-              SizedBox(
-                height: 200,
-                child: Row(
-                  children: [
-                    Expanded(flex: 2, child: newAccountGraph),
-                    Expanded(flex: 1, child: pieChart),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(flex: 2, child: newAccountGraph),
+                  Expanded(flex: 1, child: pieChart),
+                ],
               ),
             ],
           )
@@ -602,8 +598,6 @@ class AdminMonitorWidget extends StatelessWidget {
                 requestCounter,
                 residentCounter,
                 roomCounter,
-                newAccountGraph,
-                pieChart,
               ].map(
                 (w) => Row(
                   children: [Expanded(child: w)],
@@ -644,6 +638,7 @@ class AdminAccountSearchButton extends StatelessWidget {
     final room = getRoom();
     final username = getUsername();
     final searching = getSearching();
+
     return TextButton.icon(
       icon: Icon(searching ? Icons.search_outlined : Icons.search_off_outlined),
       label: Text(
@@ -654,18 +649,20 @@ class AdminAccountSearchButton extends StatelessWidget {
         final nameController = TextEditingController(text: name);
         final roomController = TextEditingController(text: room);
         final usernameController = TextEditingController(text: username);
+        final formKey = GlobalKey<FormState>();
 
         void onSubmit(BuildContext context) {
-          setName(nameController.text);
-          setRoom(roomController.text);
-          setUsername(usernameController.text);
-          setPageOffset(0);
+          if (formKey.currentState?.validate() ?? false) {
+            setName(nameController.text);
+            setRoom(roomController.text);
+            setUsername(usernameController.text);
+            setPageOffset(0);
 
-          Navigator.pop(context, true);
-          reload();
+            Navigator.pop(context, true);
+            reload();
+          }
         }
 
-        final formKey = GlobalKey<FormState>();
         await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -714,11 +711,7 @@ class AdminAccountSearchButton extends StatelessWidget {
               TextButton.icon(
                 icon: const Icon(Icons.done_outlined),
                 label: Text(AppLocale.Search.getString(context)),
-                onPressed: () {
-                  if (formKey.currentState?.validate() ?? false) {
-                    onSubmit(context);
-                  }
-                },
+                onPressed: () => onSubmit(context),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.clear_outlined),

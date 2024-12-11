@@ -327,7 +327,10 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       children: [
-                        AdminMonitorWidget(state: state),
+                        AdminMonitorWidget(
+                          state: state,
+                          pushNamed: pushNamedAndRefresh,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

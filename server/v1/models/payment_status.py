@@ -8,6 +8,8 @@ from pyodbc import Row  # type: ignore
 
 from .fee import Fee
 from .payment import Payment
+from .results import Result
+from .rooms import Room
 from ...config import DB_PAGINATION_QUERY, EPOCH
 from ...database import Database
 
@@ -65,7 +67,11 @@ class PaymentStatus(pydantic.BaseModel):
         paid: Optional[bool] = None,
         created_after: datetime,
         created_before: datetime,
-    ) -> List[PaymentStatus]:
+    ) -> Result[Optional[List[PaymentStatus]]]:
+        matching_rooms = await Room.query(offset=0, room=room)
+        if len(matching_rooms) == 0 or not matching_rooms[0].has_data:
+            return Result(code=606, data=None)
+
         created_after = max(created_after.astimezone(timezone.utc), EPOCH)
         created_before = max(created_before.astimezone(timezone.utc), EPOCH)
 
@@ -90,4 +96,4 @@ class PaymentStatus(pydantic.BaseModel):
                 )
 
                 rows = await cursor.fetchall()
-                return [PaymentStatus.from_row(row) for row in rows]
+                return Result(data=[PaymentStatus.from_row(row) for row in rows])

@@ -44,7 +44,7 @@ class PaymentStatus {
     );
     final result = json.decode(utf8.decode(response.bodyBytes));
 
-    if (response.statusCode == 200) {
+    if (result["code"] == 0) {
       final data = result["data"] as List<dynamic>;
       return Result(0, List<PaymentStatus>.from(data.map(PaymentStatus.fromJson)));
     }

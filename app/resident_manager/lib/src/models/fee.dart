@@ -105,4 +105,35 @@ class Fee with Snowflake {
 
     return Result(result["code"], null);
   }
+
+  static Future<Result<Fee?>> create({
+    required ApplicationState state,
+    required String name,
+    required double lower,
+    required double upper,
+    required double perArea,
+    required double perMotorbike,
+    required double perCar,
+    required Date deadline,
+    required String description,
+    required int flags,
+  }) async {
+    final response = await state.post(
+      "/api/v1/admin/fees/create",
+      queryParameters: {
+        "name": name,
+        "lower": lower.toString(),
+        "upper": upper.toString(),
+        "per_area": perArea.toString(),
+        "per_motorbike": perMotorbike.toString(),
+        "per_car": perCar.toString(),
+        "deadline": deadline.toDateTime().toIso8601String(),
+        "description": description,
+        "flags": flags.toString(),
+      },
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    return Result(result["code"], result["data"]);
+  }
 }

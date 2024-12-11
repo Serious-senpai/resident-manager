@@ -351,3 +351,88 @@ String? carsCountValidator(BuildContext context, {required bool required, requir
 
   return null;
 }
+
+String? feeLowerValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,8}(?:\.\d{1,2})?$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+}
+
+String? feeUpperValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,8}(?:\.\d{1,2})?$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+}
+
+String? feePerAreaValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,8}(?:\.\d{1,2})?$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+}
+
+String? feePerMotorbikeValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,8}(?:\.\d{1,2})?$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+}
+
+String? feePerCarValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
+    }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\d{1,8}(?:\.\d{1,2})?$");
+  if (!pattern.hasMatch(value)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+}

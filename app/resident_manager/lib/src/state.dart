@@ -134,8 +134,12 @@ class ApplicationState {
       final password = data["password"];
       final isAdmin = data["is_admin"];
 
-      // For the authorization data to exist in the file, `remember` must have been set to `true`.
-      await authorize(username: username, password: password, isAdmin: isAdmin, remember: true);
+      try {
+        // For the authorization data to exist in the file, `remember` must have been set to `true`.
+        await authorize(username: username, password: password, isAdmin: isAdmin, remember: true);
+      } catch (_) {
+        // This method is called at application startup, it must ignore all HTTP exceptions (since network maybe unavailable).
+      }
     }
   }
 

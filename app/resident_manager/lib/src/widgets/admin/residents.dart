@@ -520,7 +520,10 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       children: [
-                        AdminMonitorWidget(state: state),
+                        AdminMonitorWidget(
+                          state: state,
+                          pushNamed: pushNamedAndRefresh,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
