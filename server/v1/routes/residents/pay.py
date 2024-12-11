@@ -39,7 +39,10 @@ async def residents_pay(
 ) -> RedirectResponse:
     date = snowflake_time(fee_id)
     all_status = await PaymentStatus.query(room, created_after=date, created_before=date)
-    for st in all_status:
+    if all_status.data is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST)
+
+    for st in all_status.data:
         if st.payment is None and st.fee.id == fee_id:
             break
 
