@@ -131,6 +131,9 @@ class Fee with Snowflake {
         "description": description,
         "flags": flags.toString(),
       },
+      headers: {
+        "content-type": "application/json",
+      },
     );
     final result = json.decode(utf8.decode(response.bodyBytes));
 

@@ -204,6 +204,9 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                   headerCeil(AppLocale.Description.getString(context)),
                   headerCeil(AppLocale.FeeLowerBound.getString(context), 3),
                   headerCeil(AppLocale.FeeUpperBound.getString(context), 4),
+                  headerCeil(AppLocale.FeePerArea.getString(context)),
+                  headerCeil(AppLocale.FeePerMotorbike.getString(context)),
+                  headerCeil(AppLocale.FeePerCar.getString(context)),
                 ],
               ),
             ];
@@ -262,6 +265,24 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                         child: Text(fee.upper.round().toString()),
                       ),
                     ),
+                    TableCell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Text(fee.perArea.round().toString()),
+                      ),
+                    ),
+                    TableCell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Text(fee.perMotorbike.round().toString()),
+                      ),
+                    ),
+                    TableCell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Text(fee.perCar.round().toString()),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -296,7 +317,6 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                 final formKey = GlobalKey<FormState>();
 
                                 Future<void> onSubmit(BuildContext context) async {
-                                  return; // TODO: Fix the dialog below
                                   await _actionLock.run(
                                     () async {
                                       if (formKey.currentState?.validate() ?? false) {
@@ -325,6 +345,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                           );
 
                                           _notification = const SizedBox.shrink();
+                                          refresh();
                                         } catch (e) {
                                           await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
                                           _notification = Builder(
@@ -338,6 +359,8 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                             rethrow;
                                           }
                                         }
+
+                                        reload();
                                       }
                                     },
                                   );
@@ -652,7 +675,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(child: _notification),
+                SliverToBoxAdapter(child: Center(child: _notification)),
                 SliverPadding(
                   padding: const EdgeInsets.all(5),
                   sliver: SliverToBoxAdapter(

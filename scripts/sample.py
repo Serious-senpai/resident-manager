@@ -55,11 +55,11 @@ async def populate_fee(index: int) -> None:
 
     await Fee.create(
         name=name,
-        lower=lower,
-        upper=upper,
-        per_area=per_area,
-        per_motorbike=per_motorbike,
-        per_car=per_car,
+        lower=lower * 1000,
+        upper=upper * 1000,
+        per_area=per_area * 1000,
+        per_motorbike=per_motorbike * 1000,
+        per_car=per_car * 1000,
         deadline=deadline,
         description=description,
         flags=flags,
