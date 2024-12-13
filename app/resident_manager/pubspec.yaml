@@ -38,7 +38,7 @@ dependencies:
   http: ^1.2.2
   meta: ^1.15.0
   one_clock: ^2.0.1
-  package_info_plus: ^8.1.1
+  package_info_plus: ^8.1.2
   path: ^1.9.0
   path_provider: ^2.1.5
   url_launcher: ^6.3.1
