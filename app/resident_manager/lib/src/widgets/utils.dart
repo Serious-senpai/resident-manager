@@ -133,33 +133,61 @@ Future<bool> showConfirmDialog({
   return result ?? false;
 }
 
-Future<int> _countRegistrationRequests(ApplicationState state) async {
-  final result = await RegisterRequest.count(state: state);
-  return result.data ?? 0;
+abstract class _CounterFuture extends FutureHolder<int> {
+  final ApplicationState state;
+
+  _CounterFuture(this.state);
 }
 
-Future<int> _countResidents(ApplicationState state) async {
-  final result = await Resident.count(state: state);
-  return result.data ?? 0;
+class _RegistrationRequestCount extends _CounterFuture {
+  static _RegistrationRequestCount? instance;
+
+  _RegistrationRequestCount(super.state);
+
+  @override
+  Future<int> run() async {
+    final result = await RegisterRequest.count(state: state);
+    return result.data ?? 0;
+  }
 }
 
-Future<int> _countRooms(ApplicationState state) async {
-  final result = await Room.count(state: state);
-  return result.data ?? 0;
+class _ResidentCount extends _CounterFuture {
+  static _ResidentCount? instance;
+
+  _ResidentCount(super.state);
+
+  @override
+  Future<int> run() async {
+    final result = await Resident.count(state: state);
+    return result.data ?? 0;
+  }
+}
+
+class _RoomCount extends _CounterFuture {
+  static _RoomCount? instance;
+
+  _RoomCount(super.state);
+
+  @override
+  Future<int> run() async {
+    final result = await Room.count(state: state);
+    return result.data ?? 0;
+  }
 }
 
 abstract class _AccountCountWidget extends StateAwareWidget {
   final TextStyle? numberStyle;
   final TextStyle? labelStyle;
+  final _CounterFuture holder;
 
   const _AccountCountWidget({
     super.key,
     required super.state,
     this.numberStyle,
     this.labelStyle,
+    required this.holder,
   });
 
-  Future<int> run(BuildContext context);
   String getLabel(BuildContext context, int quantity);
 
   @override
@@ -167,15 +195,12 @@ abstract class _AccountCountWidget extends StateAwareWidget {
 }
 
 class _AccountCountWidgetState extends State<_AccountCountWidget> {
-  Future<int>? _future;
-
   @override
   Widget build(BuildContext context) {
-    _future ??= widget.run(context);
     return FutureBuilder(
-      future: _future,
+      future: widget.holder.future,
       builder: (context, snapshot) {
-        final data = snapshot.data;
+        final data = widget.holder.lastData;
         if (data == null) {
           return const Center(
             heightFactor: 1,
@@ -195,15 +220,12 @@ class _AccountCountWidgetState extends State<_AccountCountWidget> {
 }
 
 class RegistrationRequestCounter extends _AccountCountWidget {
-  const RegistrationRequestCounter({
+  RegistrationRequestCounter({
     super.key,
     required super.state,
     super.numberStyle,
     super.labelStyle,
-  });
-
-  @override
-  Future<int> run(BuildContext context) => _countRegistrationRequests(state);
+  }) : super(holder: _RegistrationRequestCount.instance ??= _RegistrationRequestCount(state));
 
   @override
   String getLabel(BuildContext context, int quantity) {
@@ -213,15 +235,12 @@ class RegistrationRequestCounter extends _AccountCountWidget {
 }
 
 class ResidentCounter extends _AccountCountWidget {
-  const ResidentCounter({
+  ResidentCounter({
     super.key,
     required super.state,
     super.numberStyle,
     super.labelStyle,
-  });
-
-  @override
-  Future<int> run(BuildContext context) => _countResidents(state);
+  }) : super(holder: _ResidentCount.instance ??= _ResidentCount(state));
 
   @override
   String getLabel(BuildContext context, int quantity) {
@@ -231,15 +250,12 @@ class ResidentCounter extends _AccountCountWidget {
 }
 
 class RoomCounter extends _AccountCountWidget {
-  const RoomCounter({
+  RoomCounter({
     super.key,
     required super.state,
     super.numberStyle,
     super.labelStyle,
-  });
-
-  @override
-  Future<int> run(BuildContext context) => _countRooms(state);
+  }) : super(holder: _RoomCount.instance ??= _RoomCount(state));
 
   @override
   String getLabel(BuildContext context, int quantity) {
@@ -295,19 +311,10 @@ class AccountsPieChart extends StateAwareWidget {
 }
 
 class _AccountsPieChartState extends AbstractCommonState<AccountsPieChart> {
-  Future<int>? _requestsFuture;
-  Future<int> get requests => _requestsFuture ??= _countRegistrationRequests(state);
-
-  Future<int>? _residentsFuture;
-  Future<int> get residents => _residentsFuture ??= _countResidents(state);
-
-  void reload() {
-    _requestsFuture = null;
-    _residentsFuture = null;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final requestsHolder = _RegistrationRequestCount.instance ??= _RegistrationRequestCount(state);
+    final residentsHolder = _ResidentCount.instance ??= _ResidentCount(state);
     return SizedBox(
       height: widget.height,
       width: widget.width,
@@ -315,11 +322,11 @@ class _AccountsPieChartState extends AbstractCommonState<AccountsPieChart> {
         children: [
           Expanded(
             child: FutureBuilder(
-              future: requests,
-              builder: (context, snapshot1) => FutureBuilder(
-                future: residents,
-                builder: (context, snapshot2) {
-                  final requests = snapshot1.data, residents = snapshot2.data;
+              future: requestsHolder.future,
+              builder: (context, _) => FutureBuilder(
+                future: residentsHolder.future,
+                builder: (context, _) {
+                  final requests = requestsHolder.lastData, residents = residentsHolder.lastData;
                   return Center(
                     child: (requests == null || residents == null)
                         ? const CircularProgressIndicator()
@@ -499,6 +506,10 @@ class AdminMonitorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _RegistrationRequestCount.instance?.reload();
+    _ResidentCount.instance?.reload();
+    _RoomCount.instance?.reload();
+
     final requestCounter = Padding(
       padding: const EdgeInsets.all(5),
       child: Card(
