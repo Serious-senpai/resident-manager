@@ -26,6 +26,29 @@ class PaymentStatus {
           payment: data["payment"] == null ? null : Payment.fromJson(data["payment"]),
         );
 
+  static Future<Result<int?>> count({
+    required ApplicationState state,
+    required bool? paid,
+    required DateTime createdAfter,
+    required DateTime createdBefore,
+  }) async {
+    final response = await state.get(
+      "/api/v1/residents/fees/count",
+      queryParameters: {
+        if (paid != null) "paid": paid.toString(),
+        "created_after": createdAfter.toUtc().toIso8601String(),
+        "created_before": createdBefore.toUtc().toIso8601String(),
+      },
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    if (result["code"] == 0) {
+      return Result(0, result["data"]);
+    }
+
+    return Result(result["code"], null);
+  }
+
   static Future<Result<List<PaymentStatus>?>> query({
     required ApplicationState state,
     required int offset,

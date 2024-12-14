@@ -24,10 +24,39 @@ class PaymentPage extends StateAwareWidget {
 
 class _Pagination extends FutureHolder<int?> {
   int offset = 0;
+  int count = 0;
+  int get offsetLimit => max(offset, (count + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1);
+
+  final _PaymentPageState _state;
+
+  _Pagination(this._state);
 
   @override
   Future<int?> run() async {
-    return offset;
+    try {
+      final result = await PaymentStatus.count(
+        state: _state.state,
+        paid: _state.paid,
+        createdAfter: _state.createdAfter ?? epoch,
+        createdBefore: _state.createdBefore ?? DateTime.now().toUtc(),
+      );
+
+      final data = result.data;
+      if (data != null) {
+        count = data;
+      }
+
+      return result.code;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
+        return null;
+      }
+
+      rethrow;
+    } finally {
+      _state.refresh();
+    }
   }
 }
 
@@ -186,7 +215,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
   bool get searching => paid != null || createdAfter != null || createdBefore != null;
 
   _Pagination? _pagination;
-  _Pagination get pagination => _pagination ??= _Pagination();
+  _Pagination get pagination => _pagination ??= _Pagination(this);
 
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
@@ -234,8 +263,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                         FutureBuilder(
                           future: pagination.future,
                           builder: (context, _) {
-                            final offset = pagination.offset;
-                            return Text("${offset + 1}");
+                            return Text("${pagination.offset + 1}/${pagination.offsetLimit + 1}");
                           },
                         ),
                         IconButton(
@@ -510,7 +538,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
               hasScrollBody: false,
               child: Center(
                 child: Text(
-                  AppLocale.YourRoomHasNotBeenUpdatedByAdmin.getString(context),
+                  AppLocale.Error606.getString(context),
                   style: const TextStyle(color: Colors.red),
                 ),
               ),

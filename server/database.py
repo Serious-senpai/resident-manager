@@ -19,7 +19,7 @@ from .utils import hash_password
 
 __all__ = ("Database",)
 logger = logging.getLogger("uvicorn")
-synchronize_file = ROOT / ".sync"
+synchronize_file = ROOT / "database.lock"
 
 
 class Database:

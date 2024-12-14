@@ -115,7 +115,6 @@ class AppLocale {
   static const String FeeLowerBound = "FeeLowerBound";
   static const String FeeUpperBound = "FeeUpperBound";
   static const String FeeName = "FeeName";
-  static const String YourRoomHasNotBeenUpdatedByAdmin = "YourRoomHasNotBeenUpdatedByAdmin";
   static const String AddANewFee = "AddANewFee";
   static const String MissingRequiredValue = "MissingRequiredValue";
   static const String InvalidValue = "InvalidValue";
@@ -139,6 +138,7 @@ class AppLocale {
   static const String Error501 = "Error501";
   static const String Error502 = "Error502";
   static const String Error503 = "Error503";
+  static const String Error606 = "Error606";
   static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
@@ -258,7 +258,6 @@ class AppLocale {
     FeeLowerBound: "Fee lower bound",
     FeeUpperBound: "Fee upper bound",
     FeeName: "Fee name",
-    YourRoomHasNotBeenUpdatedByAdmin: "Your room has not been updated by administrator yet.",
     AddANewFee: "Add a new fee",
     MissingRequiredValue: "Missing required value",
     InvalidValue: "Invalid value",
@@ -282,6 +281,7 @@ class AppLocale {
     Error501: "The provided room area is invalid.",
     Error502: "The provided motorbikes count is invalid.",
     Error503: "The provided cars count is invalid.",
+    Error606: "Room data has not been updated by administrator yet.",
     ErrorUnknown: "An unknown error occurred.",
   };
 
@@ -402,7 +402,6 @@ class AppLocale {
     FeeLowerBound: "Nộp tối thiểu",
     FeeUpperBound: "Nộp tối đa",
     FeeName: "Tên phí",
-    YourRoomHasNotBeenUpdatedByAdmin: "Thông tin phòng của bạn chưa được cập nhật bởi quản trị viên.",
     AddANewFee: "Thêm khoản phí mới",
     MissingRequiredValue: "Thiếu thông tin bắt buộc",
     InvalidValue: "Thông tin không hợp lệ",
@@ -426,6 +425,7 @@ class AppLocale {
     Error501: "Diện tích phòng không hợp lệ.",
     Error502: "Số lượng xe máy không hợp lệ.",
     Error503: "Số lượng ô tô không hợp lệ.",
+    Error606: "Thông tin phòng chưa được cập nhật bởi quản trị viên.",
     ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
 
@@ -455,6 +455,14 @@ class AppLocale {
         return Error401;
       case 402:
         return Error402;
+      case 501:
+        return Error501;
+      case 502:
+        return Error502;
+      case 503:
+        return Error503;
+      case 606:
+        return Error606;
       default:
         return ErrorUnknown;
     }
