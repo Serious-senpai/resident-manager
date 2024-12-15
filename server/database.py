@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import atexit
 import logging
 import os
 from pathlib import Path
@@ -19,7 +20,6 @@ from .utils import hash_password
 
 __all__ = ("Database",)
 logger = logging.getLogger("uvicorn")
-synchronize_file = ROOT / "database.lock"
 
 
 class Database:
@@ -66,11 +66,14 @@ class Database:
             autocommit=True,
         )
 
+        lock_file = ROOT / "database.lock"
         try:
-            fd = os.open(str(synchronize_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            fd = os.open(str(lock_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             os.close(fd)
         except FileExistsError:
             return
+        else:
+            atexit.register(lock_file.unlink, missing_ok=True)
 
         async with pool.acquire() as connection:
             async with connection.cursor() as cursor:
@@ -105,8 +108,6 @@ class Database:
 
         self.__prepared = False
         self.__pool = None
-
-        synchronize_file.unlink(missing_ok=True)
 
 
 Database.instance = Database()
