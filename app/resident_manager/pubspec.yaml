@@ -34,7 +34,7 @@ dependencies:
   async_locks: ^4.0.1
   data_table_2: ^2.5.16
   fl_chart: ^0.69.2
-  flutter_localization: ^0.2.3
+  flutter_localization: ^0.3.0
   fluttertoast: ^8.2.10
   http: ^1.2.2
   package_info_plus: ^8.1.2
