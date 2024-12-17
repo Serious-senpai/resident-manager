@@ -1,3 +1,4 @@
+import "package:data_table_2/data_table_2.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -64,6 +65,7 @@ class _MainApplicationState extends AbstractCommonState<MainApplication> {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  dataTableShowLogs = false;
 
   final state = ApplicationState();
   await state.prepare();

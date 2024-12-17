@@ -1,9 +1,9 @@
 import "dart:async";
-import "dart:collection";
 import "dart:io";
 import "dart:math";
 
 import "package:async_locks/async_locks.dart";
+import "package:data_table_2/data_table_2.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
@@ -40,7 +40,7 @@ class _Pagination extends FutureHolder<int?> {
       final result = await RegisterRequest.count(
         state: _state.state,
         name: _state.name,
-        room: int.tryParse(_state.room ?? ""),
+        room: int.tryParse(_state.room),
         username: _state.username,
       );
 
@@ -65,9 +65,27 @@ class _Pagination extends FutureHolder<int?> {
 
 class _QueryLoader extends FutureHolder<int?> {
   final requests = <RegisterRequest>[];
-  final selected = SplayTreeSet<RegisterRequest>((k1, k2) => k1.id.compareTo(k2.id));
+  final selected = <RegisterRequest>{};
 
-  String orderBy = "id";
+  static final _orderByMapping = [
+    "name",
+    "room",
+    null,
+    null,
+    null,
+    "id",
+    "username",
+  ];
+
+  int _sortIndex = 5;
+  int? get sortIndex => _orderByMapping[_sortIndex] == null ? null : _sortIndex;
+  set sortIndex(int? value) {
+    if (value != null) {
+      assert(_orderByMapping[_sortIndex] != null);
+      _sortIndex = value;
+    }
+  }
+
   bool ascending = false;
 
   final _RegisterQueuePageState _state;
@@ -81,18 +99,17 @@ class _QueryLoader extends FutureHolder<int?> {
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
         name: _state.name,
-        room: int.tryParse(_state.room ?? ""),
+        room: int.tryParse(_state.room),
         username: _state.username,
-        orderBy: orderBy,
+        orderBy: _orderByMapping[_sortIndex],
         ascending: ascending,
       );
 
       final data = result.data;
       if (data != null) {
+        selected.clear();
         requests.clear();
         requests.addAll(data);
-        requests.removeWhere(selected.contains);
-        requests.addAll(selected);
       }
 
       return result.code;
@@ -110,11 +127,11 @@ class _QueryLoader extends FutureHolder<int?> {
 }
 
 class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> with CommonScaffoldStateMixin<RegisterQueuePage> {
-  String? name;
-  String? room;
-  String? username;
+  String name = "";
+  String room = "";
+  String username = "";
 
-  bool get searching => name != null || room != null || username != null;
+  bool get searching => name.isNotEmpty || room.isNotEmpty || username.isNotEmpty;
 
   _Pagination? _pagination;
   _Pagination get pagination => _pagination ??= _Pagination(this);
@@ -175,280 +192,220 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
     );
   }
 
+  final _horizontalScroll = ScrollController();
+
   @override
   CommonScaffold<RegisterQueuePage> build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
-    return CommonScaffold.single(
+    return CommonScaffold(
       widgetState: this,
       title: Text(AppLocale.RegisterQueue.getString(context), style: const TextStyle(fontWeight: FontWeight.bold)),
-      sliver: FutureBuilder(
-        future: queryLoader.future,
-        initialData: queryLoader.lastData,
-        builder: (context, _) {
-          if (queryLoader.isLoading) {
-            return const SliverCircularProgressFullScreen();
-          }
-
-          final code = queryLoader.lastData;
-          if (code == 0) {
-            TableCell headerCeil(String text, [String? newOrderBy]) {
-              if (newOrderBy != null) {
-                if (queryLoader.orderBy == newOrderBy) {
-                  text += queryLoader.ascending ? " ▴" : " ▾";
-                } else {
-                  text += " ▴▾";
-                }
-              }
-
-              return TableCell(
-                child: Padding(
-                  padding: const EdgeInsets.all(5),
-                  child: GestureDetector(
-                    onTap: () {
-                      if (newOrderBy != null) {
-                        if (newOrderBy == queryLoader.orderBy) {
-                          queryLoader.ascending = !queryLoader.ascending;
-                        } else {
-                          queryLoader.ascending = true;
-                        }
-
-                        queryLoader.orderBy = newOrderBy;
-                        pagination.offset = 0;
-                        reload();
-                      }
-                    },
-                    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(5),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              children: [
+                AdminMonitorWidget(
+                  state: state,
+                  pushNamed: pushNamedAndRefresh,
                 ),
-              );
-            }
-
-            final rows = [
-              TableRow(
-                decoration: const BoxDecoration(border: BorderDirectional(bottom: BorderSide(width: 1))),
-                children: [
-                  TableCell(
-                    child: Checkbox.adaptive(
-                      value: queryLoader.selected.containsAll(queryLoader.requests),
-                      onChanged: (state) {
-                        if (state != null) {
-                          if (state) {
-                            queryLoader.selected.addAll(queryLoader.requests);
-                          } else {
-                            queryLoader.selected.removeAll(queryLoader.requests);
-                          }
-                        }
-
-                        refresh();
-                      },
-                    ),
-                  ),
-                  headerCeil(AppLocale.Fullname.getString(context), "name"),
-                  headerCeil(AppLocale.Room.getString(context), "room"),
-                  headerCeil(AppLocale.DateOfBirth.getString(context)),
-                  headerCeil(AppLocale.Phone.getString(context)),
-                  headerCeil(AppLocale.Email.getString(context)),
-                  headerCeil(AppLocale.CreationTime.getString(context), "id"),
-                  headerCeil(AppLocale.Username.getString(context), "username"),
-                ],
-              ),
-            ];
-
-            for (final request in queryLoader.requests) {
-              rows.add(
-                TableRow(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Checkbox.adaptive(
-                      value: queryLoader.selected.contains(request),
-                      onChanged: (state) {
-                        if (state != null) {
-                          if (state) {
-                            queryLoader.selected.add(request);
-                          } else {
-                            queryLoader.selected.remove(request);
+                    TextButton.icon(
+                      icon: const Icon(Icons.done_outlined),
+                      label: Text("${AppLocale.Approve.getString(context)} (${queryLoader.selected.length})"),
+                      onPressed: () async {
+                        if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
+                          final fmt = queryLoader.selected.length == 1 ? AppLocale.Approve1RegistrationRequest : AppLocale.ApproveNRegistrationRequests;
+                          final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
+
+                          final confirm = await showConfirmDialog(
+                            context: context,
+                            title: Text(AppLocale.Confirm.getString(context)),
+                            content: Text(content),
+                          );
+
+                          if (confirm) {
+                            _approveOrReject(RegisterRequest.approve);
                           }
                         }
-
-                        refresh();
                       },
                     ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.name),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.room.toString()),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.birthday?.format("dd/mm/yyyy") ?? "---"),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.phone ?? "---"),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.email ?? "---"),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.createdAt.toLocal().toString()),
-                      ),
-                    ),
-                    TableCell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(request.username ?? "---"),
-                      ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.close_outlined),
+                      label: Text("${AppLocale.Reject.getString(context)} (${queryLoader.selected.length})"),
+                      onPressed: () async {
+                        if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
+                          final fmt = queryLoader.selected.length == 1 ? AppLocale.Reject1RegistrationRequest : AppLocale.RejectNRegistrationRequests;
+                          final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
+
+                          final confirm = await showConfirmDialog(
+                            context: context,
+                            title: Text(AppLocale.Confirm.getString(context)),
+                            content: Text(content),
+                          );
+
+                          if (confirm) {
+                            _approveOrReject(RegisterRequest.reject);
+                          }
+                        }
+                      },
                     ),
                   ],
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left_outlined),
+                      onPressed: () {
+                        if (pagination.offset > 0) {
+                          pagination.offset--;
+                          reload();
+                        }
+                      },
+                    ),
+                    FutureBuilder(
+                      future: pagination.future,
+                      builder: (context, _) {
+                        return Text("${pagination.offset + 1}/${pagination.offsetLimit + 1}");
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right_outlined),
+                      onPressed: () {
+                        if (pagination.offset < pagination.offsetLimit) {
+                          pagination.offset++;
+                          reload();
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_outlined),
+                      onPressed: () {
+                        pagination.offset = 0;
+                        reload();
+                      },
+                    ),
+                    AdminAccountSearchButton(
+                      getName: () => name,
+                      getRoom: () => room,
+                      getUsername: () => username,
+                      setName: (value) => name = value,
+                      setRoom: (value) => room = value,
+                      setUsername: (value) => username = value,
+                      getSearching: () => searching,
+                      setPageOffset: (value) => pagination.offset = value,
+                      reload: reload,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(child: Center(child: _notification)),
+        FutureBuilder(
+          future: queryLoader.future,
+          initialData: queryLoader.lastData,
+          builder: (context, _) {
+            if (queryLoader.isLoading) {
+              return const SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 500,
+                  child: LoadingIndicator(),
+                ),
               );
             }
 
-            return SliverMainAxisGroup(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(5),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      children: [
-                        AdminMonitorWidget(
-                          state: state,
-                          pushNamed: pushNamedAndRefresh,
+            final code = queryLoader.lastData;
+            if (code != 0) {
+              return SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 500,
+                  child: ErrorIndicator(errorCode: code, callback: reload),
+                ),
+              );
+            }
+
+            void onSort(int column, bool ascending) {
+              queryLoader.sortIndex = column;
+              queryLoader.ascending = ascending;
+              reload();
+            }
+
+            return SliverLayoutBuilder(
+              builder: (context, constraints) => SliverToBoxAdapter(
+                child: SizedBox(
+                  height: constraints.remainingPaintExtent,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: DataTable2(
+                      columns: [
+                        DataColumn2(
+                          label: Text(AppLocale.Fullname.getString(context)),
+                          size: ColumnSize.L,
+                          onSort: onSort,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton.icon(
-                              icon: const Icon(Icons.done_outlined),
-                              label: Text("${AppLocale.Approve.getString(context)} (${queryLoader.selected.length})"),
-                              onPressed: () async {
-                                if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
-                                  final fmt = queryLoader.selected.length == 1 ? AppLocale.Approve1RegistrationRequest : AppLocale.ApproveNRegistrationRequests;
-                                  final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
-
-                                  final confirm = await showConfirmDialog(
-                                    context: context,
-                                    title: Text(AppLocale.Confirm.getString(context)),
-                                    content: Text(content),
-                                  );
-
-                                  if (confirm) {
-                                    _approveOrReject(RegisterRequest.approve);
-                                  }
-                                }
-                              },
-                            ),
-                            TextButton.icon(
-                              icon: const Icon(Icons.close_outlined),
-                              label: Text("${AppLocale.Reject.getString(context)} (${queryLoader.selected.length})"),
-                              onPressed: () async {
-                                if (!_actionLock.locked && queryLoader.selected.isNotEmpty) {
-                                  final fmt = queryLoader.selected.length == 1 ? AppLocale.Reject1RegistrationRequest : AppLocale.RejectNRegistrationRequests;
-                                  final content = fmt.getString(context).replaceFirst("{n}", queryLoader.selected.length.toString());
-
-                                  final confirm = await showConfirmDialog(
-                                    context: context,
-                                    title: Text(AppLocale.Confirm.getString(context)),
-                                    content: Text(content),
-                                  );
-
-                                  if (confirm) {
-                                    _approveOrReject(RegisterRequest.reject);
-                                  }
-                                }
-                              },
-                            ),
-                          ],
+                        DataColumn2(
+                          label: Text(AppLocale.Room.getString(context)),
+                          onSort: onSort,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left_outlined),
-                              onPressed: () {
-                                if (pagination.offset > 0) {
-                                  pagination.offset--;
-                                  reload();
-                                }
-                              },
-                            ),
-                            FutureBuilder(
-                              future: pagination.future,
-                              builder: (context, _) {
-                                final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
-                                return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right_outlined),
-                              onPressed: () {
-                                if (pagination.offset < pagination.offsetLimit) {
-                                  pagination.offset++;
-                                  reload();
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.refresh_outlined),
-                              onPressed: () {
-                                pagination.offset = 0;
-                                reload();
-                              },
-                            ),
-                            AdminAccountSearchButton(
-                              getName: () => name,
-                              getRoom: () => room,
-                              getUsername: () => username,
-                              setName: (value) => name = value,
-                              setRoom: (value) => room = value,
-                              setUsername: (value) => username = value,
-                              getSearching: () => searching,
-                              setPageOffset: (value) => pagination.offset = value,
-                              reload: reload,
-                            ),
-                          ],
+                        DataColumn2(label: Text(AppLocale.DateOfBirth.getString(context))),
+                        DataColumn2(label: Text(AppLocale.Phone.getString(context))),
+                        DataColumn2(label: Text(AppLocale.Email.getString(context)), size: ColumnSize.L),
+                        DataColumn2(
+                          label: Text(AppLocale.CreationTime.getString(context)),
+                          size: ColumnSize.L,
+                          onSort: onSort,
+                        ),
+                        DataColumn2(
+                          label: Text(AppLocale.Username.getString(context)),
+                          size: ColumnSize.L,
+                          onSort: onSort,
                         ),
                       ],
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(child: Center(child: _notification)),
-                SliverPadding(
-                  padding: const EdgeInsets.all(5),
-                  sliver: SliverToBoxAdapter(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Container(
-                        width: max(mediaQuery.size.width, 1000),
-                        padding: const EdgeInsets.all(5),
-                        child: Table(children: rows),
+                      fixedTopRows: 1,
+                      horizontalScrollController: _horizontalScroll,
+                      minWidth: 1200,
+                      rows: List<DataRow2>.from(
+                        queryLoader.requests.map(
+                          (r) => DataRow2(
+                            cells: [
+                              DataCell(Text(r.name)),
+                              DataCell(Text(r.room.toString())),
+                              DataCell(Text(r.birthday?.format("dd/mm/yyyy") ?? "---")),
+                              DataCell(Text(r.phone ?? "---")),
+                              DataCell(Text(r.email ?? "---")),
+                              DataCell(Text(Date.fromDateTime(r.createdAt.toLocal()).format("dd/mm/yyyy"))),
+                              DataCell(Text(r.username ?? "---")),
+                            ],
+                            onSelectChanged: (selected) {
+                              if (selected != null) {
+                                if (selected) {
+                                  queryLoader.selected.add(r);
+                                } else {
+                                  queryLoader.selected.remove(r);
+                                }
+                                refresh();
+                              }
+                            },
+                            selected: queryLoader.selected.contains(r),
+                          ),
+                        ),
                       ),
+                      showCheckboxColumn: true,
+                      sortAscending: queryLoader.ascending,
+                      sortColumnIndex: queryLoader.sortIndex,
                     ),
                   ),
                 ),
-              ],
+              ),
             );
-          }
-
-          return SliverErrorFullScreen(errorCode: code, callback: reload);
-        },
-      ),
+          },
+        ),
+      ],
     );
   }
 }

@@ -40,35 +40,32 @@ class _HoverContainerState extends State<HoverContainer> {
   }
 }
 
-class SliverCircularProgressFullScreen extends StatelessWidget {
-  const SliverCircularProgressFullScreen({super.key});
+class LoadingIndicator extends StatelessWidget {
+  const LoadingIndicator({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox.square(
-              dimension: 50,
-              child: CircularProgressIndicator(),
-            ),
-            const SizedBox.square(dimension: 5),
-            Text(AppLocale.Loading.getString(context)),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox.square(
+            dimension: 50,
+            child: CircularProgressIndicator(),
+          ),
+          const SizedBox.square(dimension: 5),
+          Text(AppLocale.Loading.getString(context)),
+        ],
       ),
     );
   }
 }
 
-class SliverErrorFullScreen extends StatelessWidget {
+class ErrorIndicator extends StatelessWidget {
   final int? _errorCode;
   final void Function()? _callback;
 
-  const SliverErrorFullScreen({
+  const ErrorIndicator({
     super.key,
     required int? errorCode,
     required void Function()? callback,
@@ -78,26 +75,23 @@ class SliverErrorFullScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final code = _errorCode;
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox.square(
-              dimension: 50,
-              child: Icon(Icons.highlight_off_outlined),
-            ),
-            const SizedBox.square(dimension: 5),
-            Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
-            const SizedBox.square(dimension: 5),
-            TextButton.icon(
-              icon: const Icon(Icons.refresh_outlined),
-              label: Text(AppLocale.Retry.getString(context)),
-              onPressed: _callback,
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox.square(
+            dimension: 50,
+            child: Icon(Icons.highlight_off_outlined),
+          ),
+          const SizedBox.square(dimension: 5),
+          Text((code == null ? AppLocale.ConnectionError : AppLocale.errorMessage(code)).getString(context)),
+          const SizedBox.square(dimension: 5),
+          TextButton.icon(
+            icon: const Icon(Icons.refresh_outlined),
+            label: Text(AppLocale.Retry.getString(context)),
+            onPressed: _callback,
+          ),
+        ],
       ),
     );
   }
@@ -209,9 +203,10 @@ class _AccountCountWidgetState extends State<_AccountCountWidget> {
           );
         }
         return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(data.toString(), style: widget.numberStyle),
-            Text(widget.getLabel(context, data), style: widget.labelStyle),
+            Text(data.toString(), style: widget.numberStyle, textAlign: TextAlign.center),
+            Text(widget.getLabel(context, data), style: widget.labelStyle, textAlign: TextAlign.center),
           ],
         );
       },
@@ -268,12 +263,12 @@ class RoomCounter extends _AccountCountWidget {
 class _ChartIndicator extends StatelessWidget {
   final Color color;
   final bool square;
-  final Text text;
+  final Widget label;
 
   const _ChartIndicator({
     required this.color,
     required this.square,
-    required this.text,
+    required this.label,
   });
 
   @override
@@ -289,7 +284,7 @@ class _ChartIndicator extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        text,
+        label,
       ],
     );
   }
@@ -298,12 +293,14 @@ class _ChartIndicator extends StatelessWidget {
 class AccountsPieChart extends StateAwareWidget {
   final double? height;
   final double? width;
+  final TextStyle? labelStyle;
 
   const AccountsPieChart({
     super.key,
     required super.state,
     this.height,
     this.width,
+    this.labelStyle,
   });
 
   @override
@@ -334,7 +331,7 @@ class _AccountsPieChartState extends AbstractCommonState<AccountsPieChart> {
                             PieChartData(
                               borderData: FlBorderData(show: false),
                               sectionsSpace: 0,
-                              centerSpaceRadius: 40,
+                              centerSpaceRadius: 0,
                               sections: [
                                 PieChartSectionData(
                                   color: Colors.red,
@@ -360,139 +357,23 @@ class _AccountsPieChartState extends AbstractCommonState<AccountsPieChart> {
               _ChartIndicator(
                 color: Colors.red,
                 square: true,
-                text: Text(AppLocale.RegistrationRequests.getString(context)),
+                label: Text(
+                  AppLocale.RegistrationRequests.getString(context),
+                  style: widget.labelStyle,
+                ),
               ),
               const SizedBox.square(dimension: 5),
               _ChartIndicator(
                 color: Colors.blue,
                 square: true,
-                text: Text(AppLocale.Residents.getString(context)),
+                label: Text(
+                  AppLocale.Residents.getString(context),
+                  style: widget.labelStyle,
+                ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class NewAccountGraph extends StateAwareWidget {
-  final double? height;
-  final double? width;
-
-  const NewAccountGraph({
-    super.key,
-    required super.state,
-    this.height,
-    this.width,
-  });
-
-  @override
-  State<NewAccountGraph> createState() => _NewAccountGraphState();
-}
-
-class _NewAccountGraphState extends AbstractCommonState<NewAccountGraph> {
-  static const int MONTHS = 6;
-  Future<List<int>>? _future;
-  Future<List<int>> get future => _future ??= _countResidents();
-
-  DateTime _subtractMonth(DateTime date, int months) {
-    if (months > 0) {
-      if (months < date.month) {
-        return DateTime(date.year, date.month - months);
-      } else {
-        return DateTime(date.year - 1, date.month + 12 - months);
-      }
-    } else {
-      return date;
-    }
-  }
-
-  Future<List<int>> _countResidents() async {
-    final now = DateTime.now();
-    final results = await Future.wait(
-      List<Future<int>>.generate(
-        MONTHS,
-        (index) async {
-          final createdAfter = _subtractMonth(now, index);
-          final createdBefore = _subtractMonth(now, index - 1);
-
-          final result = await Resident.count(
-            state: state,
-            createdAfter: createdAfter,
-            createdBefore: createdBefore,
-          );
-
-          return result.data ?? 0;
-        },
-      ),
-    );
-
-    return List<int>.from(results.reversed);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    return SizedBox(
-      height: widget.height,
-      width: widget.width,
-      child: FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          final data = snapshot.data;
-          if (data == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceEvenly,
-              barGroups: List.generate(
-                data.length,
-                (index) => BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: data[index].toDouble(),
-                      color: Colors.blue,
-                    ),
-                  ],
-                ),
-              ),
-              barTouchData: BarTouchData(enabled: false),
-              borderData: FlBorderData(show: false),
-              gridData: const FlGridData(show: false),
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 24,
-                    getTitlesWidget: (value, metadata) {
-                      final date = _subtractMonth(DateTime.now(), MONTHS - (value.toInt() + 1));
-                      return Text(
-                        mediaQuery.size.width < ScreenWidth.MEDIUM ? date.month.toString() : "${date.month}/${date.year}",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  axisNameWidget: Text(
-                    AppLocale.NumberOfNewResidents.getString(context),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  axisNameSize: 32,
-                  sideTitles: const SideTitles(showTitles: false),
-                ),
-                show: true,
-              ),
-            ),
-          );
-        },
       ),
     );
   }
@@ -506,9 +387,24 @@ class AdminMonitorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    if (mediaQuery.size.width < ScreenWidth.LARGE) {
+      return const SizedBox.shrink();
+    }
+
     _RegistrationRequestCount.instance?.reload();
     _ResidentCount.instance?.reload();
     _RoomCount.instance?.reload();
+
+    const cardPadding = EdgeInsets.all(20);
+    const numberStyle = TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.bold,
+    );
+    const labelStyle = TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+    );
 
     final requestCounter = Padding(
       padding: const EdgeInsets.all(5),
@@ -516,11 +412,11 @@ class AdminMonitorWidget extends StatelessWidget {
         child: InkWell(
           onTap: () => pushNamed(context, ApplicationRoute.adminRegisterQueue),
           child: Padding(
-            padding: const EdgeInsets.all(40),
+            padding: cardPadding,
             child: RegistrationRequestCounter(
               state: state,
-              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              numberStyle: numberStyle,
+              labelStyle: labelStyle,
             ),
           ),
         ),
@@ -532,11 +428,11 @@ class AdminMonitorWidget extends StatelessWidget {
         child: InkWell(
           onTap: () => pushNamed(context, ApplicationRoute.adminResidentsPage),
           child: Padding(
-            padding: const EdgeInsets.all(40),
+            padding: cardPadding,
             child: ResidentCounter(
               state: state,
-              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              numberStyle: numberStyle,
+              labelStyle: labelStyle,
             ),
           ),
         ),
@@ -548,30 +444,13 @@ class AdminMonitorWidget extends StatelessWidget {
         child: InkWell(
           onTap: () => pushNamed(context, ApplicationRoute.adminRoomsPage),
           child: Padding(
-            padding: const EdgeInsets.all(40),
+            padding: cardPadding,
             child: RoomCounter(
               state: state,
-              numberStyle: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-              labelStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              numberStyle: numberStyle,
+              labelStyle: labelStyle,
             ),
           ),
-        ),
-      ),
-    );
-
-    final mediaQuery = MediaQuery.of(context);
-    var graphPadding = const EdgeInsets.fromLTRB(40, 10, 40, 10);
-    if (mediaQuery.size.width < ScreenWidth.LARGE) {
-      graphPadding /= 2;
-    }
-
-    const chartBoxHeight = 200.0;
-    final newAccountGraph = Padding(
-      padding: const EdgeInsets.all(5),
-      child: Card(
-        child: Padding(
-          padding: graphPadding,
-          child: NewAccountGraph(state: state, height: chartBoxHeight),
         ),
       ),
     );
@@ -579,43 +458,23 @@ class AdminMonitorWidget extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       child: Card(
         child: Padding(
-          padding: graphPadding,
-          child: AccountsPieChart(state: state, height: chartBoxHeight),
+          padding: cardPadding,
+          child: AccountsPieChart(state: state),
         ),
       ),
     );
 
-    return mediaQuery.size.width > ScreenWidth.LARGE
-        ? Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: requestCounter),
-                  Expanded(child: residentCounter),
-                  Expanded(child: roomCounter),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(flex: 2, child: newAccountGraph),
-                  Expanded(flex: 1, child: pieChart),
-                ],
-              ),
-            ],
-          )
-        : Column(
-            children: List<Widget>.from(
-              [
-                requestCounter,
-                residentCounter,
-                roomCounter,
-              ].map(
-                (w) => Row(
-                  children: [Expanded(child: w)],
-                ),
-              ),
-            ),
-          );
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(child: requestCounter),
+          Expanded(child: residentCounter),
+          Expanded(child: roomCounter),
+          Expanded(child: pieChart),
+        ],
+      ),
+    );
   }
 }
 
@@ -624,9 +483,9 @@ class AdminAccountSearchButton extends StatelessWidget {
   final String? Function() getRoom;
   final String? Function() getUsername;
   final bool Function() getSearching;
-  final void Function(String?) setName;
-  final void Function(String?) setRoom;
-  final void Function(String?) setUsername;
+  final void Function(String) setName;
+  final void Function(String) setRoom;
+  final void Function(String) setUsername;
   final void Function(int) setPageOffset;
   final void Function() reload;
 
