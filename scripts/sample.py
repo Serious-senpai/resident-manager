@@ -14,7 +14,7 @@ root = Path(__file__).parent.parent.resolve()
 sys.path.append(str(root))
 
 
-from server import Database, Fee, RegisterRequest  # noqa
+from server import Database, Fee, RegisterRequest, RoomData  # noqa
 
 
 now = datetime.now(timezone.utc)
@@ -23,7 +23,7 @@ to_approve: List[RegisterRequest] = []
 
 async def populate_account(index: int) -> None:
     name = generate()
-    room = 100 + (index + 1) % 100
+    room = 100 + index % 100
     birthday = now - timedelta(days=random.randint(6500, 22000))
     phone = f"09999{index:05}"
     email = f"test{index:05}@example.com"
@@ -40,6 +40,19 @@ async def populate_account(index: int) -> None:
     )
     if index % 3 != 0 and request.data is not None:
         to_approve.append(request.data)
+
+
+async def populate_room() -> None:
+    await RoomData.update_many(
+        [
+            RoomData(
+                room=room,
+                area=100 * random.random(),
+                motorbike=random.randint(0, 2),
+                car=random.randint(0, 2),
+            ) for room in range(100, 200)
+        ]
+    )
 
 
 async def populate_fee(index: int) -> None:
@@ -69,10 +82,13 @@ async def populate_fee(index: int) -> None:
 async def main() -> None:
     await Database.instance.prepare()
     async with Database.instance.pool.acquire() as connection:
+        await connection.execute("DELETE FROM payments")
         await connection.execute("DELETE FROM accounts")
+        await connection.execute("DELETE FROM rooms")
         await connection.execute("DELETE FROM fee")
 
     tasks = [asyncio.create_task(populate_account(i)) for i in range(10000)]
+    tasks.append(asyncio.create_task(populate_room()))
     tasks.extend(asyncio.create_task(populate_fee(i)) for i in range(10000))
     await asyncio.gather(*tasks)
 
