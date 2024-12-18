@@ -561,107 +561,123 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
             }
 
             return SliverLayoutBuilder(
-              builder: (context, constraints) => SliverToBoxAdapter(
-                child: SizedBox(
-                  height: constraints.remainingPaintExtent,
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final columns = [
-                          DataColumn2(label: Text(AppLocale.FeeName.getString(context)), size: ColumnSize.L, onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.CreationTime.getString(context)), onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.Deadline.getString(context))),
-                          DataColumn2(label: Text(AppLocale.Description.getString(context)), size: ColumnSize.L),
-                          DataColumn2(label: Text(AppLocale.FeeLowerBound.getString(context)), onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.FeeUpperBound.getString(context)), onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.FeePerArea.getString(context)), onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.FeePerMotorbike.getString(context)), onSort: onSort),
-                          DataColumn2(label: Text(AppLocale.FeePerCar.getString(context)), onSort: onSort),
-                        ];
-                        final scale = columns.map(
-                          (c) {
-                            switch (c.size) {
-                              case ColumnSize.S:
-                                return 0.67;
-                              case ColumnSize.M:
-                                return 1.0;
-                              case ColumnSize.L:
-                                return 1.2;
-                            }
-                          },
-                        ).toList();
-                        final baseWidth = constraints.maxWidth / scale.reduce((f, s) => f + s);
+              builder: (context, constraints) {
+                const fontSize = 14.0, height = 1.1;
+                final headerText = [
+                  AppLocale.FeeName.getString(context),
+                  AppLocale.CreationTime.getString(context),
+                  AppLocale.Deadline.getString(context),
+                  AppLocale.Description.getString(context),
+                  AppLocale.FeeLowerBound.getString(context),
+                  AppLocale.FeeUpperBound.getString(context),
+                  AppLocale.FeePerArea.getString(context),
+                  AppLocale.FeePerMotorbike.getString(context),
+                  AppLocale.FeePerCar.getString(context),
+                ];
 
-                        return DataTable2(
-                          columns: columns,
-                          fixedTopRows: 1,
-                          horizontalScrollController: _horizontalScroll,
-                          minWidth: 1200,
-                          rows: queryLoader.fees.map(
-                            (f) {
-                              final data = [
-                                f.name,
-                                f.createdAt.toLocal().toString(),
-                                f.deadline.format("dd/mm/yyyy"),
-                                f.description,
-                                f.lower.round().toString(),
-                                f.upper.round().toString(),
-                                f.perArea.round().toString(),
-                                f.perMotorbike.round().toString(),
-                                f.perCar.round().toString(),
-                              ];
+                final columnSort = [true, true, false, false, true, true, true, true, true];
+                final columnNumeric = [false, false, false, false, true, true, true, true, true];
+                final columnSize = [
+                  ColumnSize.M,
+                  ColumnSize.M,
+                  ColumnSize.M,
+                  ColumnSize.L,
+                  ColumnSize.M,
+                  ColumnSize.M,
+                  ColumnSize.M,
+                  ColumnSize.M,
+                  ColumnSize.M,
+                ];
+                final columns = List<DataColumn2>.generate(
+                  headerText.length,
+                  (index) => DataColumn2(
+                    label: Text(
+                      headerText[index],
+                      softWrap: true,
+                      style: const TextStyle(fontSize: fontSize, height: height),
+                    ),
+                    onSort: columnSort[index] ? onSort : null,
+                    numeric: columnNumeric[index],
+                    size: columnSize[index],
+                  ),
+                );
 
-                              // Estimate row height from column size and text data
-                              var maxHeight = 0.0;
-                              for (var i = 0; i < data.length; i++) {
-                                if (data[i].isEmpty) {
-                                  continue;
-                                }
+                return SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: constraints.remainingPaintExtent,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: DataTable2(
+                        columns: columns,
+                        fixedTopRows: 1,
+                        headingRowHeight: 4 * height * fontSize,
+                        horizontalScrollController: _horizontalScroll,
+                        minWidth: 1200,
+                        rows: queryLoader.fees.map(
+                          (f) {
+                            final text = [
+                              f.name,
+                              f.createdAt.toLocal().toString(),
+                              f.deadline.format("dd/mm/yyyy"),
+                              f.description,
+                              f.lower.round().toString(),
+                              f.upper.round().toString(),
+                              f.perArea.round().toString(),
+                              f.perMotorbike.round().toString(),
+                              f.perCar.round().toString(),
+                            ];
 
-                                final painter = TextPainter(
-                                  text: TextSpan(text: data[i]),
-                                  textDirection: TextDirection.ltr,
-                                );
-                                painter.layout(maxWidth: baseWidth * scale[i]);
-                                maxHeight = max(maxHeight, painter.height);
-                              }
-
-                              return DataRow2(
-                                cells: data
-                                    .map(
-                                      (s) => DataCell(
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                                          child: Text(s),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(growable: false),
-                                onSelectChanged: (selected) {
-                                  if (selected != null) {
-                                    if (selected) {
-                                      queryLoader.selected.add(f);
-                                    } else {
-                                      queryLoader.selected.remove(f);
-                                    }
-                                    refresh();
+                            return DataRow2(
+                              cells: List<DataCell>.generate(
+                                text.length,
+                                (index) => DataCell(
+                                  Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Text(
+                                      text[index],
+                                      maxLines: 5,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: fontSize, height: height),
+                                    ),
+                                  ),
+                                  onTap: () => showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text(headerText[index]),
+                                      content: Builder(builder: (context) {
+                                        final mediaQuery = MediaQuery.of(context);
+                                        return ConstrainedBox(
+                                          constraints: BoxConstraints(maxHeight: 0.75 * mediaQuery.size.height),
+                                          child: SingleChildScrollView(child: Text(text[index])),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                                ),
+                              ).toList(growable: false),
+                              onSelectChanged: (selected) {
+                                if (selected != null) {
+                                  if (selected) {
+                                    queryLoader.selected.add(f);
+                                  } else {
+                                    queryLoader.selected.remove(f);
                                   }
-                                },
-                                selected: queryLoader.selected.contains(f),
-                                specificRowHeight: maxHeight > 0.0 ? 10 + maxHeight : null,
-                              );
-                            },
-                          ).toList(growable: false),
-                          showCheckboxColumn: true,
-                          sortAscending: queryLoader.ascending,
-                          sortColumnIndex: queryLoader.sortIndex,
-                        );
-                      },
+                                  refresh();
+                                }
+                              },
+                              selected: queryLoader.selected.contains(f),
+                              specificRowHeight: 5 * fontSize * height,
+                            );
+                          },
+                        ).toList(growable: false),
+                        showCheckboxColumn: true,
+                        sortAscending: queryLoader.ascending,
+                        sortColumnIndex: queryLoader.sortIndex,
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),

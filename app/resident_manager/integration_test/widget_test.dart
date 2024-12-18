@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:math";
 
+import "package:data_table_2/data_table_2.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:integration_test/integration_test.dart";
@@ -102,7 +103,7 @@ Future<void> adminSearch(
   await tester.pumpAndSettle();
 
   // Wait until loading is completed
-  await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
+  await pumpUntilFound((widget) => widget is DataTable2, findsOneWidget, tester);
 }
 
 void main() {
@@ -231,7 +232,7 @@ void main() {
       await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Wait until loading is completed
-      await pumpUntilFound((widget) => widget is Table, findsOneWidget, tester);
+      await pumpUntilFound((widget) => widget is DataTable2, findsOneWidget, tester);
 
       // Search for resident
       await adminSearch(tester, fullname: fullname, room: room, username: username);
