@@ -266,8 +266,8 @@ void main() {
       expect(confirmDialog, findsOneWidget);
       await tester.tap(find.descendant(of: confirmDialog, matching: find.byIcon(Icons.done_outlined)));
 
-      // Wait until loading is completed (only 1 checkbox remains)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
+      // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
 
       // Ensure drawer is visible
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
@@ -371,8 +371,8 @@ void main() {
 
       await tester.tap(find.descendant(of: editDialog, matching: find.byIcon(Icons.done_outlined)));
 
-      // Wait until loading is completed (only 1 checkbox remains)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
+      // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
 
       // Search the resident again using updated information
       await adminSearch(tester, fullname: fullname, room: room, username: username);
@@ -406,8 +406,8 @@ void main() {
       expect(confirmDialog2, findsOneWidget);
       await tester.tap(find.descendant(of: confirmDialog2, matching: find.byIcon(Icons.done_outlined)));
 
-      // Wait until loading is completed (only 1 checkbox remains)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsOne), tester);
+      // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
+      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
 
       // Ensure drawer is visible
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
