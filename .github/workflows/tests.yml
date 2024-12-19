@@ -96,6 +96,7 @@ jobs:
       PORT: 8000
 
     strategy:
+      fail-fast: false
       matrix:
         resolution: [375x667x24, 1024x768x32, 1920x1080x24]
 
@@ -150,7 +151,7 @@ jobs:
       - name: Run integration tests
         timeout-minutes: 30
         working-directory: app/resident_manager
-        run: xvfb-run --server-args="-screen 0 ${{ matrix.resolution }}" flutter test integration_test
+        run: xvfb-run --debug --server-args="-screen 0 ${{ matrix.resolution }}" flutter test integration_test
 
       - name: Stop API server
         run: |
