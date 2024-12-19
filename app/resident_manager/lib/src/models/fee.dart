@@ -136,7 +136,10 @@ class Fee with Snowflake {
       },
     );
     final result = json.decode(utf8.decode(response.bodyBytes));
+    if (result["code"] == 0) {
+      return Result(0, Fee.fromJson(result["data"]));
+    }
 
-    return Result(result["code"], result["data"]);
+    return Result(result["code"], null);
   }
 }

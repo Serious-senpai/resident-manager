@@ -207,7 +207,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
               children: [
                 AdminMonitorWidget(
                   state: state,
-                  pushNamed: pushNamedAndRefresh,
+                  pushNamed: Navigator.pushReplacementNamed,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

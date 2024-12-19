@@ -39,7 +39,7 @@ class _Pagination extends FutureHolder<int?> {
         state: _state.state,
         paid: _state.paid,
         createdAfter: _state.createdAfter ?? epoch,
-        createdBefore: _state.createdBefore ?? DateTime.now().toUtc(),
+        createdBefore: _state.createdBefore ?? DateTime.now().add(const Duration(seconds: 3)), // SQL server timestamp may not synchronize with client
       );
 
       final data = result.data;
@@ -76,7 +76,7 @@ class _QueryLoader extends FutureHolder<int?> {
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
         paid: _state.paid,
         createdAfter: _state.createdAfter ?? epoch,
-        createdBefore: _state.createdBefore ?? DateTime.now().toUtc(),
+        createdBefore: _state.createdBefore ?? DateTime.now().add(const Duration(seconds: 3)), // SQL server timestamp may not synchronize with client
       );
 
       final data = result.data;
@@ -421,6 +421,39 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
               );
             }
 
+            const fontSize = 14.0, height = 1.2;
+            final headerText = [
+              AppLocale.Fee.getString(context),
+              AppLocale.Description.getString(context),
+              AppLocale.Minimum.getString(context),
+              AppLocale.Maximum.getString(context),
+              AppLocale.CreationTime.getString(context),
+              AppLocale.AmountPaid.getString(context),
+              AppLocale.Option.getString(context),
+            ];
+            final columnNumeric = [false, false, true, true, false, true, false];
+            final columnSize = [
+              ColumnSize.M,
+              ColumnSize.L,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+            ];
+            final columns = List<DataColumn2>.generate(
+              headerText.length,
+              (index) => DataColumn2(
+                label: Text(
+                  headerText[index],
+                  softWrap: true,
+                  style: const TextStyle(fontSize: fontSize, height: height),
+                ),
+                numeric: columnNumeric[index],
+                size: columnSize[index],
+              ),
+            );
+
             return SliverLayoutBuilder(
               builder: (context, constraints) => SliverToBoxAdapter(
                 child: SizedBox(
@@ -428,39 +461,71 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                   child: Padding(
                     padding: const EdgeInsets.all(5),
                     child: DataTable2(
-                      columns: [
-                        DataColumn2(label: Text(AppLocale.Fee.getString(context)), size: ColumnSize.M),
-                        DataColumn2(label: Text(AppLocale.Description.getString(context)), size: ColumnSize.L),
-                        DataColumn2(label: Text(AppLocale.Minimum.getString(context)), size: ColumnSize.M),
-                        DataColumn2(label: Text(AppLocale.Maximum.getString(context)), size: ColumnSize.M),
-                        DataColumn2(label: Text(AppLocale.CreationTime.getString(context)), size: ColumnSize.M),
-                        DataColumn2(label: Text(AppLocale.AmountPaid.getString(context)), size: ColumnSize.M),
-                        DataColumn2(label: Text(AppLocale.Option.getString(context)), size: ColumnSize.M),
-                      ],
+                      columns: columns,
+                      dataRowHeight: 4 * height * fontSize,
                       fixedTopRows: 1,
+                      headingRowHeight: 4 * height * fontSize,
                       horizontalScrollController: _horizontalScroll,
                       minWidth: 1200,
-                      rows: queryLoader.statuses
-                          .map(
-                            (s) => DataRow2(
-                              cells: [
-                                DataCell(Text(s.fee.name)),
-                                DataCell(Text(s.fee.description)),
-                                DataCell(Text(s.lowerBound.round().toString())),
-                                DataCell(Text(s.upperBound.round().toString())),
-                                DataCell(Text(s.fee.createdAt.toString())),
-                                DataCell(Text(s.payment?.amount.round().toString() ?? "---")),
-                                DataCell(
-                                  Row(
-                                    children: [
-                                      _PayButton(state: state, status: s),
-                                    ],
+                      rows: queryLoader.statuses.map(
+                        (s) {
+                          final text = [
+                            s.fee.name,
+                            s.fee.description,
+                            s.lowerBound.round().toString(),
+                            s.upperBound.round().toString(),
+                            s.fee.createdAt.toString(),
+                            s.payment?.amount.round().toString() ?? "---",
+                          ];
+                          return DataRow2(
+                            cells: [
+                              ...List<DataCell>.generate(
+                                text.length,
+                                (index) => DataCell(
+                                  Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Text(
+                                      text[index],
+                                      maxLines: 3,
+                                      overflow: TextOverflow.visible,
+                                      softWrap: true,
+                                      style: const TextStyle(fontSize: fontSize, height: height),
+                                    ),
+                                  ),
+                                  onTap: () => showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text(headerText[index]),
+                                      content: Builder(
+                                        builder: (context) {
+                                          final mediaQuery = MediaQuery.of(context);
+                                          return ConstrainedBox(
+                                            constraints: BoxConstraints(maxHeight: 0.75 * mediaQuery.size.height),
+                                            child: SingleChildScrollView(child: Text(text[index])),
+                                          );
+                                        },
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: Text(AppLocale.OK.getString(context)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          )
-                          .toList(),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    _PayButton(state: state, status: s),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ).toList(growable: false),
                     ),
                   ),
                 ),

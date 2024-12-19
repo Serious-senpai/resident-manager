@@ -17,5 +17,5 @@ BEGIN
     WHERE name = 'id_counter'
 
     DECLARE @Tail BIGINT = (SELECT value FROM @TailTable)
-    SET @Id = LEFT_SHIFT(@TimestampMs, 16) | @Tail
+    SET @Id = (@TimestampMs << 16) | @Tail
 END

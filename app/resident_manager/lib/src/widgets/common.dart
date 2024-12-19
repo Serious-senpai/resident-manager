@@ -204,7 +204,7 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.pushReplacementNamed(context, route);
                     } else {
-                      widget.widgetState.pushNamedAndRefresh(context, route);
+                      Navigator.pushReplacementNamed(context, route);
                     }
                   }
                 },

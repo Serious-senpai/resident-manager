@@ -369,7 +369,7 @@ String? feeLowerValidator(BuildContext context, {required bool required, require
   return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
 }
 
-String? feeUpperValidator(BuildContext context, {required bool required, required String? value}) {
+String? feeUpperValidator(BuildContext context, {required double? lower, required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
       return AppLocale.MissingRequiredValue.getString(context);
@@ -383,7 +383,12 @@ String? feeUpperValidator(BuildContext context, {required bool required, require
     return AppLocale.InvalidValue.getString(context);
   }
 
-  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+  final val = double.tryParse(value);
+  if (val == null || (lower != null && val < lower)) {
+    return AppLocale.InvalidValue.getString(context);
+  }
+
+  return null;
 }
 
 String? feePerAreaValidator(BuildContext context, {required bool required, required String? value}) {

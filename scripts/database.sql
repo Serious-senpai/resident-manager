@@ -44,7 +44,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'rooms' AND type = 'U')
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'accounts' AND type = 'U')
     CREATE TABLE accounts (
         id BIGINT PRIMARY KEY,
-        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
+        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS NOT NULL,
         room SMALLINT NOT NULL,
         birthday DATE,
         phone NVARCHAR(15),
@@ -58,14 +58,14 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'accounts' AND type = 'U')
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'fee' AND type = 'U')
     CREATE TABLE fee (
         id BIGINT PRIMARY KEY,
-        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8 NOT NULL,
+        name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS NOT NULL,
         lower BIGINT NOT NULL, -- lower = 100 * [amount in VND]
         upper BIGINT NOT NULL, -- upper = 100 * [amount in VND]
         per_area INT NOT NULL, -- per_area = 100 * [amount in VND]
         per_motorbike INT NOT NULL, -- per_motorbike = 100 * [amount in VND]
         per_car INT NOT NULL, -- per_car = 100 * [amount in VND]
         deadline DATE NOT NULL,
-        description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS_SC_UTF8,
+        description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS,
         flags TINYINT NOT NULL,
         CONSTRAINT CHECK_fee CHECK (lower <= upper)
     )

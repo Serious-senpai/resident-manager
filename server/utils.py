@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 from typing import Optional
 
@@ -103,7 +103,7 @@ def validate_fee_name(name: str) -> bool:
 
 
 def validate_fee_bounds(lower: float, upper: float) -> bool:
-    return lower >= 0 and lower < upper and upper <= 21474835
+    return lower >= 0 and lower <= upper and upper <= 21474835
 
 
 def validate_fee_per_area(value: float) -> bool:
@@ -116,3 +116,11 @@ def validate_fee_per_motorbike(value: float) -> bool:
 
 def validate_fee_per_car(value: float) -> bool:
     return -21474835 <= value <= 21474835
+
+
+def validate_fee_deadline(deadline: date) -> bool:
+    return deadline >= datetime.now(timezone.utc).date()
+
+
+def validate_fee_description(description: str) -> bool:
+    return len(description) < 2048

@@ -36,9 +36,8 @@ class _Pagination extends FutureHolder<int?> {
     try {
       final result = await Fee.count(
         state: _state.state,
-        // Query does not support filtering by time yet
-        createdAfter: epoch,
-        createdBefore: DateTime.now(),
+        createdAfter: _state.createdAfter ?? epoch,
+        createdBefore: _state.createdBefore ?? DateTime.now().add(const Duration(seconds: 3)), // SQL server timestamp may not synchronize with client
         name: _state.name,
       );
 
@@ -89,7 +88,7 @@ class _QueryLoader extends FutureHolder<int?> {
         state: _state.state,
         offset: DB_PAGINATION_QUERY * _state.pagination.offset,
         createdAfter: _state.createdAfter ?? epoch,
-        createdBefore: _state.createdBefore ?? DateTime.now(),
+        createdBefore: _state.createdBefore ?? DateTime.now().add(const Duration(seconds: 3)), // SQL server timestamp may not synchronize with client
         name: _state.name,
         orderBy: _orderByMapping[_sortIndex] ?? -1,
         ascending: ascending,
@@ -153,7 +152,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
               children: [
                 AdminMonitorWidget(
                   state: state,
-                  pushNamed: pushNamedAndRefresh,
+                  pushNamed: Navigator.pushReplacementNamed,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -187,7 +186,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                 refresh();
 
                                 try {
-                                  await Fee.create(
+                                  final result = await Fee.create(
                                     state: state,
                                     name: nameController.text,
                                     lower: double.parse(lowerController.text),
@@ -200,8 +199,18 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                     flags: 0,
                                   );
 
-                                  _notification = const SizedBox.shrink();
-                                  refresh();
+                                  if (result.code == 0) {
+                                    _notification = const SizedBox.shrink();
+                                  } else {
+                                    _notification = Builder(
+                                      builder: (context) => Text(
+                                        AppLocale.errorMessage(result.code).getString(context),
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                    );
+                                  }
+
+                                  reload();
                                 } catch (e) {
                                   await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
                                   _notification = Builder(
@@ -222,144 +231,161 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                           );
                         }
 
+                        final mediaQuery = MediaQuery.of(context);
                         await showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
                             contentPadding: const EdgeInsets.all(10),
                             title: Text(AppLocale.AddANewFee.getString(context)),
-                            content: Form(
-                              key: formKey,
-                              autovalidateMode: AutovalidateMode.onUserInteraction,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextFormField(
-                                    controller: nameController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeeName.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
+                            content: SizedBox(
+                              height: 0.8 * mediaQuery.size.height,
+                              width: 0.5 * mediaQuery.size.width,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: StatefulBuilder(
+                                  builder: (context, setState) => Form(
+                                    key: formKey,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextFormField(
+                                          controller: nameController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeeName.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => nameValidator(context, required: true, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: lowerController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeeLowerBound.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => feeLowerValidator(context, required: true, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: upperController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeeUpperBound.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => feeUpperValidator(
+                                            context,
+                                            lower: double.tryParse(lowerController.text),
+                                            required: true,
+                                            value: value,
+                                          ),
+                                        ),
+                                        TextFormField(
+                                          controller: perAreaController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeePerArea.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => feePerAreaValidator(context, required: true, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: perMotorbikeController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeePerMotorbike.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => feePerMotorbikeValidator(context, required: true, value: value),
+                                        ),
+                                        TextFormField(
+                                          controller: perCarController,
+                                          decoration: InputDecoration(
+                                            contentPadding: const EdgeInsets.all(8.0),
+                                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                                            label: FieldLabel(
+                                              AppLocale.FeePerCar.getString(context),
+                                              style: const TextStyle(color: Colors.black),
+                                              required: true,
+                                            ),
+                                          ),
+                                          onFieldSubmitted: (_) => onSubmit(context),
+                                          validator: (value) => feePerCarValidator(context, required: true, value: value),
+                                        ),
+                                        const SizedBox.square(dimension: 5),
+                                        Row(
+                                          children: [
+                                            Text(AppLocale.Deadline.getString(context)),
+                                            const SizedBox.square(dimension: 5),
+                                            TextButton(
+                                              onPressed: () async {
+                                                DateTime? picked = await showDatePicker(
+                                                  context: context,
+                                                  initialDate: deadline.toDateTime(),
+                                                  firstDate: DateTime.now(),
+                                                  lastDate: DateTime(2100),
+                                                );
+                                                setState(
+                                                  () {
+                                                    if (picked != null) deadline = Date.fromDateTime(picked);
+                                                  },
+                                                );
+                                              },
+                                              child: Text(deadline.format("dd/mm/yyyy")),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox.square(dimension: 5),
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: descriptionController,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.all(8.0),
+                                              enabledBorder: const OutlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.black, width: 1),
+                                              ),
+                                              floatingLabelBehavior: FloatingLabelBehavior.always,
+                                              label: FieldLabel(
+                                                AppLocale.Description.getString(context),
+                                                style: const TextStyle(color: Colors.black),
+                                                required: true,
+                                              ),
+                                            ),
+                                            onFieldSubmitted: (_) => onSubmit(context),
+                                            maxLength: 1500,
+                                            maxLines: 20,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => nameValidator(context, required: true, value: value),
                                   ),
-                                  TextFormField(
-                                    controller: lowerController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeeLowerBound.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => feeLowerValidator(context, required: true, value: value),
-                                  ),
-                                  TextFormField(
-                                    controller: upperController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeeUpperBound.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => feeUpperValidator(context, required: true, value: value),
-                                  ),
-                                  TextFormField(
-                                    controller: perAreaController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeePerArea.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => feePerAreaValidator(context, required: true, value: value),
-                                  ),
-                                  TextFormField(
-                                    controller: perMotorbikeController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeePerMotorbike.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => feePerMotorbikeValidator(context, required: true, value: value),
-                                  ),
-                                  TextFormField(
-                                    controller: perCarController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.FeePerCar.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    validator: (value) => feePerCarValidator(context, required: true, value: value),
-                                  ),
-                                  const SizedBox.square(dimension: 5),
-                                  Row(
-                                    children: [
-                                      Text(AppLocale.Deadline.getString(context)),
-                                      const SizedBox.square(dimension: 5),
-                                      TextButton(
-                                        onPressed: () async {
-                                          DateTime? picked = await showDatePicker(
-                                            context: context,
-                                            initialDate: deadline.toDateTime(),
-                                            firstDate: DateTime(2024),
-                                            lastDate: DateTime(2100),
-                                          );
-                                          setState(
-                                            () {
-                                              if (picked != null) deadline = Date.fromDateTime(picked);
-                                            },
-                                          );
-                                        },
-                                        child: Text(deadline.format("dd/mm/yyyy")),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox.square(dimension: 5),
-                                  TextFormField(
-                                    controller: descriptionController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.all(8.0),
-                                      enabledBorder: const OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.black, width: 1),
-                                      ),
-                                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                                      label: FieldLabel(
-                                        AppLocale.Description.getString(context),
-                                        style: const TextStyle(color: Colors.black),
-                                        required: true,
-                                      ),
-                                    ),
-                                    onFieldSubmitted: (_) => onSubmit(context),
-                                    maxLength: 4000,
-                                    maxLines: 4,
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                             actions: [
@@ -560,124 +586,131 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
               reload();
             }
 
+            const fontSize = 14.0, height = 1.2;
+            final headerText = [
+              AppLocale.FeeName.getString(context),
+              AppLocale.CreationTime.getString(context),
+              AppLocale.Deadline.getString(context),
+              AppLocale.Description.getString(context),
+              AppLocale.FeeLowerBound.getString(context),
+              AppLocale.FeeUpperBound.getString(context),
+              AppLocale.FeePerArea.getString(context),
+              AppLocale.FeePerMotorbike.getString(context),
+              AppLocale.FeePerCar.getString(context),
+            ];
+
+            final columnSort = [true, true, false, false, true, true, true, true, true];
+            final columnNumeric = [false, false, false, false, true, true, true, true, true];
+            final columnSize = [
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.L,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+              ColumnSize.M,
+            ];
+            final columns = List<DataColumn2>.generate(
+              headerText.length,
+              (index) => DataColumn2(
+                label: Text(
+                  headerText[index],
+                  softWrap: true,
+                  style: const TextStyle(fontSize: fontSize, height: height),
+                ),
+                onSort: columnSort[index] ? onSort : null,
+                numeric: columnNumeric[index],
+                size: columnSize[index],
+              ),
+            );
+
             return SliverLayoutBuilder(
-              builder: (context, constraints) {
-                const fontSize = 14.0, height = 1.1;
-                final headerText = [
-                  AppLocale.FeeName.getString(context),
-                  AppLocale.CreationTime.getString(context),
-                  AppLocale.Deadline.getString(context),
-                  AppLocale.Description.getString(context),
-                  AppLocale.FeeLowerBound.getString(context),
-                  AppLocale.FeeUpperBound.getString(context),
-                  AppLocale.FeePerArea.getString(context),
-                  AppLocale.FeePerMotorbike.getString(context),
-                  AppLocale.FeePerCar.getString(context),
-                ];
+              builder: (context, constraints) => SliverToBoxAdapter(
+                child: SizedBox(
+                  height: constraints.remainingPaintExtent,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: DataTable2(
+                      columns: columns,
+                      dataRowHeight: 4 * height * fontSize,
+                      fixedTopRows: 1,
+                      headingRowHeight: 4 * height * fontSize,
+                      horizontalScrollController: _horizontalScroll,
+                      minWidth: 1200,
+                      rows: queryLoader.fees.map(
+                        (f) {
+                          final text = [
+                            f.name,
+                            f.createdAt.toLocal().toString(),
+                            f.deadline.format("dd/mm/yyyy"),
+                            f.description,
+                            f.lower.round().toString(),
+                            f.upper.round().toString(),
+                            f.perArea.round().toString(),
+                            f.perMotorbike.round().toString(),
+                            f.perCar.round().toString(),
+                          ];
 
-                final columnSort = [true, true, false, false, true, true, true, true, true];
-                final columnNumeric = [false, false, false, false, true, true, true, true, true];
-                final columnSize = [
-                  ColumnSize.M,
-                  ColumnSize.M,
-                  ColumnSize.M,
-                  ColumnSize.L,
-                  ColumnSize.M,
-                  ColumnSize.M,
-                  ColumnSize.M,
-                  ColumnSize.M,
-                  ColumnSize.M,
-                ];
-                final columns = List<DataColumn2>.generate(
-                  headerText.length,
-                  (index) => DataColumn2(
-                    label: Text(
-                      headerText[index],
-                      softWrap: true,
-                      style: const TextStyle(fontSize: fontSize, height: height),
-                    ),
-                    onSort: columnSort[index] ? onSort : null,
-                    numeric: columnNumeric[index],
-                    size: columnSize[index],
-                  ),
-                );
-
-                return SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: constraints.remainingPaintExtent,
-                    child: Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: DataTable2(
-                        columns: columns,
-                        fixedTopRows: 1,
-                        headingRowHeight: 4 * height * fontSize,
-                        horizontalScrollController: _horizontalScroll,
-                        minWidth: 1200,
-                        rows: queryLoader.fees.map(
-                          (f) {
-                            final text = [
-                              f.name,
-                              f.createdAt.toLocal().toString(),
-                              f.deadline.format("dd/mm/yyyy"),
-                              f.description,
-                              f.lower.round().toString(),
-                              f.upper.round().toString(),
-                              f.perArea.round().toString(),
-                              f.perMotorbike.round().toString(),
-                              f.perCar.round().toString(),
-                            ];
-
-                            return DataRow2(
-                              cells: List<DataCell>.generate(
-                                text.length,
-                                (index) => DataCell(
-                                  Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Text(
-                                      text[index],
-                                      maxLines: 5,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: fontSize, height: height),
-                                    ),
+                          return DataRow2(
+                            cells: List<DataCell>.generate(
+                              text.length,
+                              (index) => DataCell(
+                                Padding(
+                                  padding: const EdgeInsets.all(5),
+                                  child: Text(
+                                    text[index],
+                                    maxLines: 3,
+                                    overflow: TextOverflow.visible,
+                                    softWrap: true,
+                                    style: const TextStyle(fontSize: fontSize, height: height),
                                   ),
-                                  onTap: () => showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(headerText[index]),
-                                      content: Builder(builder: (context) {
+                                ),
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(headerText[index]),
+                                    content: Builder(
+                                      builder: (context) {
                                         final mediaQuery = MediaQuery.of(context);
                                         return ConstrainedBox(
                                           constraints: BoxConstraints(maxHeight: 0.75 * mediaQuery.size.height),
                                           child: SingleChildScrollView(child: Text(text[index])),
                                         );
-                                      }),
+                                      },
                                     ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(AppLocale.OK.getString(context)),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ).toList(growable: false),
-                              onSelectChanged: (selected) {
-                                if (selected != null) {
-                                  if (selected) {
-                                    queryLoader.selected.add(f);
-                                  } else {
-                                    queryLoader.selected.remove(f);
-                                  }
-                                  refresh();
+                              ),
+                            ).toList(growable: false),
+                            onSelectChanged: (selected) {
+                              if (selected != null) {
+                                if (selected) {
+                                  queryLoader.selected.add(f);
+                                } else {
+                                  queryLoader.selected.remove(f);
                                 }
-                              },
-                              selected: queryLoader.selected.contains(f),
-                              specificRowHeight: 5 * fontSize * height,
-                            );
-                          },
-                        ).toList(growable: false),
-                        showCheckboxColumn: true,
-                        sortAscending: queryLoader.ascending,
-                        sortColumnIndex: queryLoader.sortIndex,
-                      ),
+                                refresh();
+                              }
+                            },
+                            selected: queryLoader.selected.contains(f),
+                          );
+                        },
+                      ).toList(growable: false),
+                      showCheckboxColumn: true,
+                      sortAscending: queryLoader.ascending,
+                      sortColumnIndex: queryLoader.sortIndex,
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             );
           },
         ),

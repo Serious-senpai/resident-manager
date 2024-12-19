@@ -393,7 +393,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
               children: [
                 AdminMonitorWidget(
                   state: state,
-                  pushNamed: pushNamedAndRefresh,
+                  pushNamed: Navigator.pushReplacementNamed,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

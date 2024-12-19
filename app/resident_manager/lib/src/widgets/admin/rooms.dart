@@ -134,7 +134,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
               children: [
                 AdminMonitorWidget(
                   state: state,
-                  pushNamed: pushNamedAndRefresh,
+                  pushNamed: Navigator.pushReplacementNamed,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -314,7 +314,7 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
                                       icon: const Icon(Icons.search_outlined),
                                       onPressed: () async {
                                         state.extras["room-search"] = room;
-                                        await pushNamedAndRefresh(context, ApplicationRoute.adminResidentsPage);
+                                        await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
                                       },
                                     ),
                                     IconButton(

@@ -73,7 +73,7 @@ async def populate_fee(index: int) -> None:
         per_area=per_area * 1000,
         per_motorbike=per_motorbike * 1000,
         per_car=per_car * 1000,
-        deadline=deadline,
+        deadline=deadline.date(),
         description=description,
         flags=flags,
     )

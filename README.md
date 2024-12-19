@@ -38,3 +38,5 @@ message into a specific language.
 | 604 | Invalid fee per motorbike |
 | 605 | Invalid fee per car |
 | 606 | Resident's room has not been updated by administrator yet |
+| 607 | Invalid fee deadline |
+| 608 | Invalid fee description |

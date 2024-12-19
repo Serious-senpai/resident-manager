@@ -121,6 +121,7 @@ class AppLocale {
   static const String FeePerArea = "FeePerArea";
   static const String FeePerMotorbike = "FeePerMotorbike";
   static const String FeePerCar = "FeePerCar";
+  static const String OK = "OK";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -138,7 +139,14 @@ class AppLocale {
   static const String Error501 = "Error501";
   static const String Error502 = "Error502";
   static const String Error503 = "Error503";
+  static const String Error601 = "Error601";
+  static const String Error602 = "Error602";
+  static const String Error603 = "Error603";
+  static const String Error604 = "Error604";
+  static const String Error605 = "Error605";
   static const String Error606 = "Error606";
+  static const String Error607 = "Error607";
+  static const String Error608 = "Error608";
   static const String ErrorUnknown = "ErrorUnknown";
 
   static const Map<String, dynamic> EN = {
@@ -264,6 +272,7 @@ class AppLocale {
     FeePerArea: "Fee per area (m²)",
     FeePerMotorbike: "Fee per motorbike",
     FeePerCar: "Fee per car",
+    OK: "OK",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -281,7 +290,14 @@ class AppLocale {
     Error501: "The provided room area is invalid.",
     Error502: "The provided motorbikes count is invalid.",
     Error503: "The provided cars count is invalid.",
+    Error601: "The provided fee name is invalid",
+    Error602: "The provided fee bounds are invalid",
+    Error603: "The provided fee per area is invalid",
+    Error604: "The provided fee per motorbike is invalid",
+    Error605: "The provided fee per car is invalid",
     Error606: "Room data has not been updated by administrator yet.",
+    Error607: "The provided deadline is invalid.",
+    Error608: "The provided description is invalid.",
     ErrorUnknown: "An unknown error occurred.",
   };
 
@@ -408,6 +424,7 @@ class AppLocale {
     FeePerArea: "Phí theo diện tích (m²)",
     FeePerMotorbike: "Phí theo số lượng xe máy",
     FeePerCar: "Phí theo số lượng ô tô",
+    OK: "OK",
 
     // Error codes
     Error0: "Thao tác thành công.",
@@ -425,46 +442,39 @@ class AppLocale {
     Error501: "Diện tích phòng không hợp lệ.",
     Error502: "Số lượng xe máy không hợp lệ.",
     Error503: "Số lượng ô tô không hợp lệ.",
+    Error601: "Tên phí không hợp lệ.",
+    Error602: "Giới hạn phí không hợp lệ.",
+    Error603: "Phí theo diện tích không hợp lệ.",
+    Error604: "Phí theo số lượng xe máy không hợp lệ.",
+    Error605: "Phí theo số lượng ô tô không hợp lệ.",
     Error606: "Thông tin phòng chưa được cập nhật bởi quản trị viên.",
+    Error607: "Hạn thanh toán không hợp lệ.",
+    Error608: "Mô tả không hợp lệ.",
     ErrorUnknown: "Đã xảy ra lỗi không xác định.",
   };
 
+  static final _errorMapping = {
+    0: Error0,
+    101: Error101,
+    102: Error102,
+    103: Error103,
+    104: Error104,
+    105: Error105,
+    106: Error106,
+    107: Error107,
+    201: Error201,
+    301: Error301,
+    401: Error401,
+    402: Error402,
+    501: Error501,
+    502: Error502,
+    503: Error503,
+    606: Error606,
+    607: Error607,
+    608: Error608,
+  };
+
   static String errorMessage(int code) {
-    switch (code) {
-      case 0:
-        return Error0;
-      case 101:
-        return Error101;
-      case 102:
-        return Error102;
-      case 103:
-        return Error103;
-      case 104:
-        return Error104;
-      case 105:
-        return Error105;
-      case 106:
-        return Error106;
-      case 107:
-        return Error107;
-      case 201:
-        return Error201;
-      case 301:
-        return Error301;
-      case 401:
-        return Error401;
-      case 402:
-        return Error402;
-      case 501:
-        return Error501;
-      case 502:
-        return Error502;
-      case 503:
-        return Error503;
-      case 606:
-        return Error606;
-      default:
-        return ErrorUnknown;
-    }
+    return _errorMapping[code] ?? ErrorUnknown;
   }
 }

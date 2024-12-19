@@ -16,6 +16,8 @@ from ...utils import (
     validate_fee_per_area,
     validate_fee_per_car,
     validate_fee_per_motorbike,
+    validate_fee_deadline,
+    validate_fee_description,
 )
 
 
@@ -93,6 +95,12 @@ class Fee(Snowflake):
 
         if not validate_fee_per_car(per_car):
             return Result(code=605, data=None)
+
+        if not validate_fee_deadline(deadline):
+            return Result(code=607, data=None)
+
+        if not validate_fee_description(description):
+            return Result(code=608, data=None)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
