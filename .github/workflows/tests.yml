@@ -95,6 +95,10 @@ jobs:
       VNPAY_SECRET_KEY: ${{ secrets.VNPAY_SECRET_KEY }}
       PORT: 8000
 
+    strategy:
+      matrix:
+        resolution: [375x667x24, 1024x768x32, 1920x1080x24]
+
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -146,7 +150,7 @@ jobs:
       - name: Run integration tests
         timeout-minutes: 30
         working-directory: app/resident_manager
-        run: xvfb-run flutter test integration_test
+        run: xvfb-run --server-args="-screen 0 ${{ matrix.resolution }}" flutter test integration_test
 
       - name: Stop API server
         run: |
@@ -165,7 +169,7 @@ jobs:
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-flutter-integration
+          name: coverage-flutter-integration-${{ matrix.resolution }}
           path: .coverage.flutter-integration
           include-hidden-files: true
 

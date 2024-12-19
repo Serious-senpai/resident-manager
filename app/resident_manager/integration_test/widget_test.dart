@@ -8,6 +8,7 @@ import "package:integration_test/integration_test.dart";
 import "package:resident_manager/main.dart";
 import "package:resident_manager/src/config.dart";
 import "package:resident_manager/src/state.dart";
+import "package:resident_manager/src/utils.dart";
 import "package:resident_manager/src/widgets/home.dart";
 import "package:resident_manager/src/widgets/login.dart";
 import "package:resident_manager/src/widgets/register.dart";
@@ -113,6 +114,9 @@ void main() {
   testWidgets(
     "Administrator login",
     (tester) async {
+      final screenSize = tester.view.physicalSize;
+      final hiddenDrawer = screenSize.width < ScreenWidth.EXTRA_LARGE;
+
       final state = ApplicationState();
       await state.prepare();
       await state.deauthorize(); // Start integration test without existing authorization data
@@ -132,8 +136,10 @@ void main() {
       await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Open residents list
       await tester.tap(find.byIcon(Icons.people_outlined));
@@ -141,8 +147,10 @@ void main() {
       expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Open rooms list
       await tester.tap(find.byIcon(Icons.room_outlined));
@@ -150,8 +158,10 @@ void main() {
       expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));
@@ -164,6 +174,9 @@ void main() {
   testWidgets(
     "Resident registration",
     (tester) async {
+      final screenSize = tester.view.physicalSize;
+      final hiddenDrawer = screenSize.width < ScreenWidth.EXTRA_LARGE;
+
       final state = ApplicationState();
       await state.prepare();
       await state.deauthorize(); // Start integration test without existing authorization data
@@ -266,8 +279,10 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));
@@ -289,8 +304,10 @@ void main() {
       await pumpUntilFound((widget) => widget is HomePage, findsOneWidget, tester);
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));
@@ -312,8 +329,10 @@ void main() {
       await pumpUntilFound((widget) => widget is RegisterQueuePage, findsOneWidget, tester);
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // View resident list
       await tester.tap(find.byIcon(Icons.people_outlined));
@@ -406,8 +425,10 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
 
       // Open drawer
-      await tester.tap(find.byIcon(Icons.menu_outlined));
-      await tester.pumpAndSettle();
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.menu_outlined));
+        await tester.pumpAndSettle();
+      }
 
       // Logout
       await tester.tap(find.byIcon(Icons.logout_outlined));

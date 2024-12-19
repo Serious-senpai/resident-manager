@@ -73,18 +73,14 @@ class _HomePageState extends AbstractCommonState<HomePage> with CommonScaffoldSt
                     child: TextButton.icon(
                       icon: const Icon(Icons.person_outlined),
                       label: Text(AppLocale.PersonalInfo.getString(context)),
-                      onPressed: () async {
-                        await pushNamedAndRefresh(context, ApplicationRoute.personalInfo);
-                      },
+                      onPressed: () => Navigator.pushReplacementNamed(context, ApplicationRoute.personalInfo),
                     ),
                   ),
                   Expanded(
                     child: TextButton.icon(
                       icon: const Icon(Icons.receipt_long_outlined),
                       label: Text(AppLocale.Payment.getString(context)),
-                      onPressed: () async {
-                        await pushNamedAndRefresh(context, ApplicationRoute.payment);
-                      },
+                      onPressed: () => Navigator.pushReplacementNamed(context, ApplicationRoute.payment),
                     ),
                   ),
                   Expanded(

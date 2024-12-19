@@ -5,6 +5,7 @@ import "state.dart";
 import "../routes.dart";
 import "../state.dart";
 import "../translations.dart";
+import "../utils.dart";
 
 abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> {
   ApplicationState get state => widget.state;
@@ -111,36 +112,214 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
     _scrollController = widget.controller;
   }
 
+  bool get hiddenDrawer => MediaQuery.of(context).size.width < ScreenWidth.EXTRA_LARGE;
+
+  Widget buildDrawer(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final state = widget.widgetState.state;
+    final navigator = <Widget>[
+      DrawerHeader(
+        decoration: const BoxDecoration(color: Colors.grey),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const CircleAvatar(child: Icon(Icons.account_circle_outlined)),
+              Text(state.loggedInAsAdmin ? AppLocale.Admin.getString(context) : state.resident?.name ?? AppLocale.NotYetLoggedIn.getString(context)),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    Widget routeTile({
+      required Icon leading,
+      required String title,
+      required String route,
+      required bool popAll,
+    }) =>
+        ListTile(
+          leading: leading,
+          title: Text(
+            title,
+            style: currentRoute == route ? const TextStyle(color: Colors.blue) : null,
+          ),
+          onTap: () {
+            closeDrawer();
+            if (currentRoute != route) {
+              if (popAll) {
+                Navigator.popUntil(context, (route) => route.isFirst);
+              }
+
+              Navigator.pushReplacementNamed(context, route);
+            }
+          },
+        );
+
+    if (!widget.widgetState.state.loggedIn) {
+      // Not yet logged in
+      navigator.addAll(
+        [
+          routeTile(
+            leading: const Icon(Icons.lock_outlined),
+            title: AppLocale.Login.getString(context),
+            route: ApplicationRoute.login,
+            popAll: true,
+          ),
+          routeTile(
+            leading: const Icon(Icons.how_to_reg_outlined),
+            title: AppLocale.Register.getString(context),
+            route: ApplicationRoute.register,
+            popAll: true,
+          ),
+        ],
+      );
+    } else {
+      // Logged in...
+      if (widget.widgetState.state.loggedInAsAdmin) {
+        // ... as admin
+        navigator.addAll(
+          [
+            routeTile(
+              leading: const Icon(Icons.how_to_reg_outlined),
+              title: AppLocale.RegisterQueue.getString(context),
+              route: ApplicationRoute.adminRegisterQueue,
+              popAll: false,
+            ),
+            routeTile(
+              leading: const Icon(Icons.people_outlined),
+              title: AppLocale.ResidentsList.getString(context),
+              route: ApplicationRoute.adminResidentsPage,
+              popAll: false,
+            ),
+            routeTile(
+              leading: const Icon(Icons.room_outlined),
+              title: AppLocale.RoomsList.getString(context),
+              route: ApplicationRoute.adminRoomsPage,
+              popAll: false,
+            ),
+            routeTile(
+              leading: const Icon(Icons.payment_outlined),
+              title: AppLocale.FeeList.getString(context),
+              route: ApplicationRoute.adminFeesPage,
+              popAll: false,
+            ),
+          ],
+        );
+      } else {
+        // ... as resident
+        navigator.addAll(
+          [
+            routeTile(
+              leading: const Icon(Icons.home_outlined),
+              title: AppLocale.Home.getString(context),
+              route: ApplicationRoute.home,
+              popAll: false,
+            ),
+            routeTile(
+              leading: const Icon(Icons.person_outlined),
+              title: AppLocale.PersonalInfo.getString(context),
+              route: ApplicationRoute.personalInfo,
+              popAll: false,
+            ),
+            routeTile(
+              leading: const Icon(Icons.payment_outlined),
+              title: AppLocale.FeeList.getString(context),
+              route: ApplicationRoute.payment,
+              popAll: false,
+            ),
+          ],
+        );
+      }
+
+      navigator.add(
+        ListTile(
+          leading: const Icon(Icons.logout_outlined),
+          title: Text(AppLocale.Logout.getString(context)),
+          onTap: () async {
+            await widget.widgetState.state.deauthorize();
+            if (context.mounted) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+              await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
+            }
+          },
+        ),
+      );
+    }
+
+    return Drawer(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.zero)),
+      child: Stack(
+        children: [
+          ListView(children: navigator),
+          Positioned(
+            bottom: 5,
+            left: 5,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Image.asset("assets/flags/en.png", height: 20, width: 20),
+                  iconSize: 20,
+                  onPressed: () => widget.widgetState.state.localization.translate("en"),
+                  padding: EdgeInsets.zero,
+                ),
+                const SizedBox.square(dimension: 20),
+                IconButton(
+                  icon: Image.asset("assets/flags/vi.png", height: 20, width: 20),
+                  iconSize: 20,
+                  onPressed: () => widget.widgetState.state.localization.translate("vi"),
+                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
+    final mediaQuery = MediaQuery.of(context);
+
     return Scaffold(
       key: scaffoldKey,
-      body: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          SliverAppBar(
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                "assets/vector-background-blue.png",
-                fit: BoxFit.cover,
-              ),
-            ),
-            floating: true,
-            pinned: false,
-            snap: false,
-            leading: canPop
-                ? IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_outlined),
-                  )
-                : IconButton(
-                    onPressed: () => openDrawer(),
-                    icon: const Icon(Icons.menu_outlined),
+      body: Row(
+        children: [
+          if (!hiddenDrawer) buildDrawer(context),
+          Expanded(
+            child: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                SliverAppBar(
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Image.asset(
+                      "assets/vector-background-blue.png",
+                      fit: BoxFit.cover,
+                    ),
                   ),
-            title: widget.title,
+                  floating: true,
+                  pinned: false,
+                  snap: false,
+                  leading: canPop
+                      ? IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.arrow_back_outlined),
+                        )
+                      : hiddenDrawer
+                          ? IconButton(
+                              onPressed: () => openDrawer(),
+                              icon: const Icon(Icons.menu_outlined),
+                            )
+                          : null,
+                  title: widget.title,
+                ),
+                ...widget.slivers,
+              ],
+            ),
           ),
-          ...widget.slivers,
         ],
       ),
       floatingActionButton: (scrollPosition == null || scrollPosition!.pixels == 0)
@@ -165,164 +344,7 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
           widget.widgetState.refresh();
         }
       },
-      drawer: Builder(
-        builder: (context) {
-          final currentRoute = ModalRoute.of(context)?.settings.name;
-          final state = widget.widgetState.state;
-          final navigator = <Widget>[
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.grey),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const CircleAvatar(child: Icon(Icons.account_circle_outlined)),
-                    Text(state.loggedInAsAdmin ? AppLocale.Admin.getString(context) : state.resident?.name ?? AppLocale.NotYetLoggedIn.getString(context)),
-                  ],
-                ),
-              ),
-            ),
-          ];
-
-          Widget routeTile({
-            required Icon leading,
-            required String title,
-            required String route,
-            required bool popAll,
-          }) =>
-              ListTile(
-                leading: leading,
-                title: Text(
-                  title,
-                  style: currentRoute == route ? const TextStyle(color: Colors.blue) : null,
-                ),
-                onTap: () {
-                  closeDrawer();
-                  if (currentRoute != route) {
-                    if (popAll) {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      Navigator.pushReplacementNamed(context, route);
-                    } else {
-                      Navigator.pushReplacementNamed(context, route);
-                    }
-                  }
-                },
-              );
-
-          if (!widget.widgetState.state.loggedIn) {
-            // Not yet logged in
-            navigator.add(
-              routeTile(
-                leading: const Icon(Icons.lock_outlined),
-                title: AppLocale.Login.getString(context),
-                route: ApplicationRoute.login,
-                popAll: true,
-              ),
-            );
-          } else {
-            // Logged in...
-            if (widget.widgetState.state.loggedInAsAdmin) {
-              // ... as admin
-              navigator.addAll(
-                [
-                  routeTile(
-                    leading: const Icon(Icons.how_to_reg_outlined),
-                    title: AppLocale.RegisterQueue.getString(context),
-                    route: ApplicationRoute.adminRegisterQueue,
-                    popAll: false,
-                  ),
-                  routeTile(
-                    leading: const Icon(Icons.people_outlined),
-                    title: AppLocale.ResidentsList.getString(context),
-                    route: ApplicationRoute.adminResidentsPage,
-                    popAll: false,
-                  ),
-                  routeTile(
-                    leading: const Icon(Icons.room_outlined),
-                    title: AppLocale.RoomsList.getString(context),
-                    route: ApplicationRoute.adminRoomsPage,
-                    popAll: false,
-                  ),
-                  routeTile(
-                    leading: const Icon(Icons.payment_outlined),
-                    title: AppLocale.FeeList.getString(context),
-                    route: ApplicationRoute.adminFeesPage,
-                    popAll: false,
-                  ),
-                ],
-              );
-            } else {
-              // ... as resident
-              navigator.addAll(
-                [
-                  routeTile(
-                    leading: const Icon(Icons.home_outlined),
-                    title: AppLocale.Home.getString(context),
-                    route: ApplicationRoute.home,
-                    popAll: false,
-                  ),
-                  routeTile(
-                    leading: const Icon(Icons.person_outlined),
-                    title: AppLocale.PersonalInfo.getString(context),
-                    route: ApplicationRoute.personalInfo,
-                    popAll: false,
-                  ),
-                  routeTile(
-                    leading: const Icon(Icons.payment_outlined),
-                    title: AppLocale.FeeList.getString(context),
-                    route: ApplicationRoute.payment,
-                    popAll: false,
-                  ),
-                ],
-              );
-            }
-
-            navigator.add(
-              ListTile(
-                leading: const Icon(Icons.logout_outlined),
-                title: Text(AppLocale.Logout.getString(context)),
-                onTap: () async {
-                  await widget.widgetState.state.deauthorize();
-                  if (context.mounted) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                    await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
-                  }
-                },
-              ),
-            );
-          }
-
-          return Drawer(
-            child: Stack(
-              children: [
-                ListView(children: navigator),
-                Positioned(
-                  bottom: 5,
-                  left: 5,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Image.asset("assets/flags/en.png", height: 20, width: 20),
-                        iconSize: 20,
-                        onPressed: () => widget.widgetState.state.localization.translate("en"),
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox.square(dimension: 20),
-                      IconButton(
-                        icon: Image.asset("assets/flags/vi.png", height: 20, width: 20),
-                        iconSize: 20,
-                        onPressed: () => widget.widgetState.state.localization.translate("vi"),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      drawer: hiddenDrawer ? buildDrawer(context) : null,
     );
   }
 }

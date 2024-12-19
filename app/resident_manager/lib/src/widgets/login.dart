@@ -83,10 +83,6 @@ class _LoginPageState extends AbstractCommonState<LoginPage> with CommonScaffold
     );
   }
 
-  Future<void> _residentRegister() async {
-    await pushNamedAndRefresh(context, ApplicationRoute.register);
-  }
-
   @override
   CommonScaffold<LoginPage> build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -186,7 +182,7 @@ class _LoginPageState extends AbstractCommonState<LoginPage> with CommonScaffold
                         AppLocale.RegisterAsResident.getString(context),
                         style: const TextStyle(color: Colors.white),
                       ),
-                      onPressed: _actionLock.locked ? null : () => _residentRegister(),
+                      onPressed: _actionLock.locked ? null : () => pushNamedAndRefresh(context, ApplicationRoute.register),
                     ),
                   ),
                   Container(
