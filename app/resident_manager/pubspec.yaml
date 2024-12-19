@@ -32,7 +32,7 @@ dependencies:
     sdk: flutter
 
   async_locks: ^4.0.1
-  data_table_2: ^2.5.16
+  data_table_2: ^2.5.18
   fl_chart: ^0.69.2
   flutter_localization: ^0.2.3
   fluttertoast: ^8.2.10
