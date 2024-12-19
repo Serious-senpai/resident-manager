@@ -282,8 +282,6 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
   @override
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
-    final mediaQuery = MediaQuery.of(context);
-
     return Scaffold(
       key: scaffoldKey,
       body: Row(

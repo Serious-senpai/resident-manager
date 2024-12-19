@@ -151,7 +151,7 @@ jobs:
       - name: Run integration tests
         timeout-minutes: 30
         working-directory: app/resident_manager
-        run: xvfb-run --debug --server-args="-screen 0 ${{ matrix.resolution }}" flutter test integration_test
+        run: xvfb-run -e /dev/stdout --server-args="-screen 0 ${{ matrix.resolution }}" flutter test integration_test
 
       - name: Stop API server
         run: |
