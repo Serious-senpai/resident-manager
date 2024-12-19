@@ -8,7 +8,6 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
-import "../state.dart";
 import "../utils.dart";
 import "../../config.dart";
 import "../../routes.dart";

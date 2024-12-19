@@ -8,7 +8,6 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
-import "../state.dart";
 import "../utils.dart";
 import "../../config.dart";
 import "../../translations.dart";
@@ -634,6 +633,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                     padding: const EdgeInsets.all(5),
                     child: DataTable2(
                       columns: columns,
+                      columnSpacing: 5,
                       dataRowHeight: 4 * height * fontSize,
                       fixedTopRows: 1,
                       headingRowHeight: 4 * height * fontSize,
@@ -643,7 +643,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                         (f) {
                           final text = [
                             f.name,
-                            f.createdAt.toLocal().toString(),
+                            formatDateTime(f.createdAt.toLocal()),
                             f.deadline.format("dd/mm/yyyy"),
                             f.description,
                             f.lower.round().toString(),
@@ -658,11 +658,11 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                               text.length,
                               (index) => DataCell(
                                 Padding(
-                                  padding: const EdgeInsets.all(5),
+                                  padding: const EdgeInsets.only(top: 5, bottom: 5),
                                   child: Text(
                                     text[index],
                                     maxLines: 3,
-                                    overflow: TextOverflow.visible,
+                                    overflow: TextOverflow.ellipsis,
                                     softWrap: true,
                                     style: const TextStyle(fontSize: fontSize, height: height),
                                   ),

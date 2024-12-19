@@ -19,6 +19,7 @@ from server import Database, Fee, RegisterRequest, RoomData  # noqa
 
 now = datetime.now(timezone.utc)
 to_approve: List[RegisterRequest] = []
+long_text = root.joinpath("scripts", "lorem.txt").read_text(encoding="utf-8")
 
 
 async def populate_account(index: int) -> None:
@@ -63,7 +64,7 @@ async def populate_fee(index: int) -> None:
     per_motorbike = random.randint(0, 100)
     per_car = random.randint(0, 100)
     deadline = now + timedelta(days=random.randint(7, 6500))
-    description = f"[Index {index}] Test phí\nXuống dòng 1\nXuống dòng 2\n"
+    description = f"[Index {index}] {long_text}"
     flags = 0
 
     await Fee.create(

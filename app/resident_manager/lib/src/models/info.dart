@@ -33,7 +33,7 @@ class PersonalInfo {
     return {
       "name": name,
       "room": room,
-      "birthday": birthday?.toJson(),
+      "birthday": birthday?.format("yyyy-mm-dd"),
       "phone": phone,
       "email": email,
     };
@@ -51,7 +51,7 @@ class PersonalInfo {
     return {
       "name": name,
       "room": room.toString(),
-      if (birthday != null) "birthday": birthday!.toJson(),
+      if (birthday != null) "birthday": birthday!.format("yyyy-mm-dd"),
       if (phone != null) "phone": phone!,
       if (email != null) "email": email!,
     };

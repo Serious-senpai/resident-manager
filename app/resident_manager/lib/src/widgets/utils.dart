@@ -3,7 +3,6 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
-import "state.dart";
 import "../routes.dart";
 import "../state.dart";
 import "../translations.dart";
@@ -11,34 +10,6 @@ import "../utils.dart";
 import "../models/reg_request.dart";
 import "../models/residents.dart";
 import "../models/rooms.dart";
-
-class HoverContainer extends StatefulWidget {
-  final Color onHover;
-  final Widget child;
-
-  const HoverContainer({super.key, required this.onHover, required this.child});
-
-  @override
-  State<HoverContainer> createState() => _HoverContainerState();
-}
-
-class _HoverContainerState extends State<HoverContainer> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _hovered ? widget.onHover : null,
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
 
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({super.key});
@@ -92,6 +63,28 @@ class ErrorIndicator extends StatelessWidget {
             onPressed: _callback,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class FieldLabel extends StatelessWidget {
+  final String _label;
+  final TextStyle? _style;
+  final bool _required;
+
+  const FieldLabel(String label, {super.key, TextStyle? style, bool required = false})
+      : _label = label,
+        _style = style,
+        _required = required;
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        text: _label,
+        style: _style,
+        children: _required ? const [TextSpan(text: " *", style: TextStyle(color: Colors.red))] : [],
       ),
     );
   }

@@ -8,7 +8,6 @@ import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
-import "../state.dart";
 import "../utils.dart";
 import "../../config.dart";
 import "../../translations.dart";
@@ -545,7 +544,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                               DataCell(Text(r.birthday?.format("dd/mm/yyyy") ?? "---")),
                               DataCell(Text(r.phone ?? "---")),
                               DataCell(Text(r.email ?? "---")),
-                              DataCell(Text(Date.fromDateTime(r.createdAt.toLocal()).format("dd/mm/yyyy"))),
+                              DataCell(Text(formatDateTime(r.createdAt.toLocal()))),
                               DataCell(Text(r.username ?? "---")),
                               DataCell(Row(children: [_EditButton(r, this)])),
                             ],

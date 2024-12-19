@@ -96,8 +96,6 @@ class Date {
     return fmt;
   }
 
-  String toJson() => format("yyyy-mm-dd");
-
   DateTime toDateTime() => DateTime(year, month, day);
 
   @override
@@ -164,35 +162,11 @@ Future<bool> showToastSafe({
   }
 }
 
-DateTime fromEpoch(Duration dt) {
-  return epoch.add(dt);
-}
+DateTime fromEpoch(Duration dt) => epoch.add(dt);
 
-DateTime snowflakeTime(int id) {
-  return fromEpoch(Duration(milliseconds: id >> 16));
-}
+DateTime snowflakeTime(int id) => fromEpoch(Duration(milliseconds: id >> 16));
 
-class FieldLabel extends StatelessWidget {
-  final String _label;
-  final TextStyle? _style;
-  final bool _required;
-
-  const FieldLabel(String label, {super.key, TextStyle? style, bool required = false})
-      : _label = label,
-        _style = style,
-        _required = required;
-
-  @override
-  Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        text: _label,
-        style: _style,
-        children: _required ? const [TextSpan(text: " *", style: TextStyle(color: Colors.red))] : [],
-      ),
-    );
-  }
-}
+String formatDateTime(DateTime time) => "${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute}:${time.second}";
 
 String? nameValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {

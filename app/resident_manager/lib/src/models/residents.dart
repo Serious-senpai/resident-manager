@@ -39,7 +39,7 @@ class Resident extends PublicInfo {
         "id": id,
         "name": name,
         "room": room,
-        "birthday": birthday?.toJson(),
+        "birthday": birthday?.format("yyyy-mm-dd"),
         "phone": phone,
         "email": email,
       };

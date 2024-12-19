@@ -5,7 +5,6 @@ import "package:flutter_localization/flutter_localization.dart";
 import "src/routes.dart";
 import "src/state.dart";
 import "src/translations.dart";
-import "src/widgets/state.dart";
 import "src/widgets/common.dart";
 import "src/widgets/home.dart";
 import "src/widgets/login.dart";

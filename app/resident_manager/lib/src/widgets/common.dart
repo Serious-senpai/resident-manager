@@ -1,11 +1,16 @@
 import "package:flutter/material.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
-import "state.dart";
 import "../routes.dart";
 import "../state.dart";
 import "../translations.dart";
 import "../utils.dart";
+
+abstract class StateAwareWidget extends StatefulWidget {
+  final ApplicationState state;
+
+  const StateAwareWidget({super.key, required this.state});
+}
 
 abstract class AbstractCommonState<T extends StateAwareWidget> extends State<T> {
   ApplicationState get state => widget.state;

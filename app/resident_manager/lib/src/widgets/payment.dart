@@ -8,7 +8,6 @@ import "package:flutter_localization/flutter_localization.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "common.dart";
-import "state.dart";
 import "utils.dart";
 import "../config.dart";
 import "../state.dart";
@@ -474,7 +473,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                             s.fee.description,
                             s.lowerBound.round().toString(),
                             s.upperBound.round().toString(),
-                            s.fee.createdAt.toString(),
+                            formatDateTime(s.fee.createdAt.toLocal()),
                             s.payment?.amount.round().toString() ?? "---",
                           ];
                           return DataRow2(
@@ -483,11 +482,11 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                 text.length,
                                 (index) => DataCell(
                                   Padding(
-                                    padding: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.only(top: 5, bottom: 5),
                                     child: Text(
                                       text[index],
                                       maxLines: 3,
-                                      overflow: TextOverflow.visible,
+                                      overflow: TextOverflow.ellipsis,
                                       softWrap: true,
                                       style: const TextStyle(fontSize: fontSize, height: height),
                                     ),
