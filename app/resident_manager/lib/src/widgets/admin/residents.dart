@@ -14,7 +14,6 @@ import "../../translations.dart";
 import "../../utils.dart";
 import "../../models/info.dart";
 import "../../models/residents.dart";
-import "../../models/rooms.dart";
 
 class ResidentsPage extends StateAwareWidget {
   const ResidentsPage({super.key, required super.state});
