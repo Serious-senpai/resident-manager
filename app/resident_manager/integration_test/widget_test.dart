@@ -108,6 +108,7 @@ Future<void> adminSearch(
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  dataTableShowLogs = false;
 
   testWidgets(
     "Administrator login",
@@ -139,10 +140,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
 
-      // Back to registration queue page
-      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
-      await tester.pumpAndSettle();
-
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
       await tester.pumpAndSettle();
@@ -151,10 +148,6 @@ void main() {
       await tester.tap(find.byIcon(Icons.room_outlined));
       await tester.pumpAndSettle();
       expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
-
-      // Back to registration queue page
-      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
-      await tester.pumpAndSettle();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
@@ -411,10 +404,6 @@ void main() {
 
       // Ensure drawer is visible
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
-
-      // Back to registration queue page
-      await tester.tap(find.byIcon(Icons.arrow_back_outlined));
-      await tester.pumpAndSettle();
 
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_outlined));
