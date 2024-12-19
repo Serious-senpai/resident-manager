@@ -87,12 +87,12 @@ Future<void> adminSearch(
   );
   await tester.pumpAndSettle();
 
-  final searchDialog = find.byWidgetPredicate((widget) => widget is AlertDialog);
+  final searchDialog = find.bySubtype<AlertDialog>();
   expect(searchDialog, findsOneWidget);
 
   final searchFields = find.descendant(
     of: searchDialog,
-    matching: find.byWidgetPredicate((widget) => widget is TextFormField),
+    matching: find.bySubtype<TextFormField>(),
   );
   expect(searchFields, findsExactly(3));
 
@@ -115,6 +115,8 @@ void main() {
     "Administrator login",
     (tester) async {
       final screenSize = tester.view.physicalSize;
+      print("screenSize = $screenSize"); // ignore: avoid_print
+
       final hiddenDrawer = screenSize.width < ScreenWidth.EXTRA_LARGE;
 
       final state = ApplicationState();
@@ -125,7 +127,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Authorization fields
-      final fields = find.byWidgetPredicate((widget) => widget is TextField);
+      final fields = find.bySubtype<TextField>();
       expect(fields, findsExactly(2));
 
       await tester.enterText(fields.at(0), DEFAULT_ADMIN_USERNAME);
@@ -144,7 +146,7 @@ void main() {
       // Open residents list
       await tester.tap(find.byIcon(Icons.people_outlined));
       await tester.pumpAndSettle();
-      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
+      expect(find.bySubtype<ResidentsPage>(), findsOneWidget);
 
       // Open drawer
       if (hiddenDrawer) {
@@ -155,7 +157,7 @@ void main() {
       // Open rooms list
       await tester.tap(find.byIcon(Icons.room_outlined));
       await tester.pumpAndSettle();
-      expect(find.byWidgetPredicate((widget) => widget is RoomsPage), findsOneWidget);
+      expect(find.bySubtype<RoomsPage>(), findsOneWidget);
 
       // Open drawer
       if (hiddenDrawer) {
@@ -167,7 +169,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.logout_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+      expect(find.bySubtype<LoginPage>(), findsOneWidget);
     },
   );
 
@@ -175,6 +177,8 @@ void main() {
     "Resident registration",
     (tester) async {
       final screenSize = tester.view.physicalSize;
+      print("screenSize = $screenSize"); // ignore: avoid_print
+
       final hiddenDrawer = screenSize.width < ScreenWidth.EXTRA_LARGE;
 
       final state = ApplicationState();
@@ -185,13 +189,17 @@ void main() {
       await tester.pumpAndSettle();
 
       // Press the "Register as resident" button
-      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      } else {
+        await tester.tap(find.descendant(of: find.bySubtype<CustomScrollView>(), matching: find.byIcon(Icons.how_to_reg_outlined)));
+      }
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is RegisterPage), findsOneWidget);
+      expect(find.bySubtype<RegisterPage>(), findsOneWidget);
 
       // Registration form fields
-      final registrationFields = find.byWidgetPredicate((widget) => widget is TextFormField);
+      final registrationFields = find.bySubtype<TextFormField>();
       expect(registrationFields, findsExactly(8));
 
       var fullname = randomString(20); // Will append the string " (edited)" later
@@ -214,17 +222,21 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap the "Register" button
-      await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      if (hiddenDrawer) {
+        await tester.tap(find.byIcon(Icons.how_to_reg_outlined));
+      } else {
+        await tester.tap(find.descendant(of: find.bySubtype<CustomScrollView>(), matching: find.byIcon(Icons.how_to_reg_outlined)));
+      }
       await tester.pumpAndSettle(MAX_WAIT_DURATION);
 
       // Return to login menu
       await tester.tap(find.byIcon(Icons.arrow_back_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+      expect(find.bySubtype<LoginPage>(), findsOneWidget);
 
       // Login as administrator
-      final adminLoginFields = find.byWidgetPredicate((widget) => widget is TextField);
+      final adminLoginFields = find.bySubtype<TextField>();
       expect(adminLoginFields, findsExactly(2));
 
       await tester.enterText(adminLoginFields.at(0), DEFAULT_ADMIN_USERNAME);
@@ -244,7 +256,7 @@ void main() {
       await adminSearch(tester, fullname: fullname, room: room, username: username);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
-      final checkboxes = find.byWidgetPredicate((widget) => widget is Checkbox);
+      final checkboxes = find.bySubtype<Checkbox>();
       expect(checkboxes, findsExactly(2));
 
       // Ensure checkboxes are not offscreen
@@ -273,7 +285,7 @@ void main() {
       await tester.tap(find.descendant(of: confirmDialog, matching: find.byIcon(Icons.done_outlined)));
 
       // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
+      await pumpUntilNoExcept(() => expect(find.bySubtype<Checkbox>(), findsNothing), tester);
 
       // Ensure drawer is visible
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
@@ -288,10 +300,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.logout_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+      expect(find.bySubtype<LoginPage>(), findsOneWidget);
 
       // Login as the newly created resident user
-      final loginFields = find.byWidgetPredicate((widget) => widget is TextField);
+      final loginFields = find.bySubtype<TextField>();
       expect(loginFields, findsExactly(2));
 
       await tester.enterText(loginFields.at(0), username);
@@ -313,10 +325,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.logout_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+      expect(find.bySubtype<LoginPage>(), findsOneWidget);
 
       // Login as administrator
-      final adminLoginFields2 = find.byWidgetPredicate((widget) => widget is TextField);
+      final adminLoginFields2 = find.bySubtype<TextField>();
       expect(adminLoginFields2, findsExactly(2));
 
       await tester.enterText(adminLoginFields2.at(0), DEFAULT_ADMIN_USERNAME);
@@ -338,7 +350,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.people_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is ResidentsPage), findsOneWidget);
+      expect(find.bySubtype<ResidentsPage>(), findsOneWidget);
 
       // Search for resident
       await adminSearch(tester, fullname: fullname, room: room, username: username);
@@ -359,13 +371,13 @@ void main() {
       await tester.tap(edit);
       await tester.pumpAndSettle();
 
-      final editDialog = find.byWidgetPredicate((widget) => widget is SimpleDialog);
+      final editDialog = find.bySubtype<SimpleDialog>();
       expect(editDialog, findsOneWidget);
 
       // Find edit fields
       final editFields = find.descendant(
         of: editDialog,
-        matching: find.byWidgetPredicate((widget) => widget is TextFormField),
+        matching: find.bySubtype<TextFormField>(),
       );
 
       // Update information
@@ -384,13 +396,13 @@ void main() {
       await tester.tap(find.descendant(of: editDialog, matching: find.byIcon(Icons.done_outlined)));
 
       // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
+      await pumpUntilNoExcept(() => expect(find.bySubtype<Checkbox>(), findsNothing), tester);
 
       // Search the resident again using updated information
       await adminSearch(tester, fullname: fullname, room: room, username: username);
 
       // Exactly 2 checkboxes: 1 for "Select all", 1 for our search result
-      final checkboxes2 = find.byWidgetPredicate((widget) => widget is Checkbox);
+      final checkboxes2 = find.bySubtype<Checkbox>();
       expect(checkboxes2, findsExactly(2));
 
       // Ensure checkboxes are not offscreen
@@ -419,7 +431,7 @@ void main() {
       await tester.tap(find.descendant(of: confirmDialog2, matching: find.byIcon(Icons.done_outlined)));
 
       // Wait until loading is completed (no more checkboxes remain - the "Select all" checkbox only exists when there is at least 1 row)
-      await pumpUntilNoExcept(() => expect(find.byWidgetPredicate((widget) => widget is Checkbox), findsNothing), tester);
+      await pumpUntilNoExcept(() => expect(find.bySubtype<Checkbox>(), findsNothing), tester);
 
       // Ensure drawer is visible
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
@@ -434,7 +446,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.logout_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((widget) => widget is LoginPage), findsOneWidget);
+      expect(find.bySubtype<LoginPage>(), findsOneWidget);
     },
   );
 }
