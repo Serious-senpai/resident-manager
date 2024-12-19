@@ -368,9 +368,9 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
 
   @override
   void initState() {
-    final room = state.extras["room-search"] as Room?;
-    if (room != null) {
-      this.room = room.room.toString();
+    final r = state.extras["room-search"] as int?;
+    if (r != null) {
+      room = r.toString();
       state.extras["room-search"] = null;
     }
 

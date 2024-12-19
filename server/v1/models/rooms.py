@@ -169,13 +169,9 @@ class Room(pydantic.BaseModel):
             """
                 WITH rooms_union AS (
                     SELECT t1.room FROM rooms t1
-                    UNION ALL
-                    SELECT DISTINCT t2.room FROM accounts t2
-                    WHERE t2.approved = 1 AND NOT EXISTS (
-                        SELECT 1
-                        FROM rooms
-                        WHERE rooms.room = t2.room
-                    )
+                    UNION
+                    SELECT t2.room FROM accounts t2
+                    WHERE t2.approved = 1
                 )
                 SELECT COUNT(1) FROM rooms_union
             """,
@@ -216,44 +212,19 @@ class Room(pydantic.BaseModel):
         """
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                having: List[str] = []
-                params: List[Any] = []
-
-                if room is not None:
-                    having.append("ru.room = ?")
-                    params.append(room)
-
-                if floor is not None:
-                    having.append("ru.room / 100 = ?")
-                    params.append(floor)
-
-                query = [
+                await cursor.execute(
                     """
-                        WITH rooms_union (room, area, motorbike, car) AS (
-                            SELECT t1.room, t1.area, t1.motorbike, t1.car
-                            FROM rooms t1
-                            UNION ALL
-                            SELECT DISTINCT t2.room, NULL, NULL, NULL
-                            FROM accounts t2
-                            WHERE t2.approved = 1 AND NOT EXISTS (
-                                SELECT 1
-                                FROM rooms
-                                WHERE rooms.room = t2.room
-                            )
-                        )
-                        SELECT ru.room, ru.area, ru.motorbike, ru.car, COUNT(1) AS residents
-                        FROM rooms_union ru
-                        LEFT JOIN accounts ON ru.room = accounts.room
-                        GROUP BY ru.room, ru.area, ru.motorbike, ru.car
+                        EXECUTE QueryRooms
+                            @Room = ?,
+                            @Floor = ?,
+                            @Offset = ?,
+                            @FetchNext = ?
                     """,
-                ]
-
-                if len(having) > 0:
-                    query.append("HAVING " + " AND ".join(having))
-
-                query.append("ORDER BY ru.room OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
-
-                await cursor.execute("\n".join(query), *params, offset, DB_PAGINATION_QUERY)
+                    room,
+                    floor,
+                    offset,
+                    DB_PAGINATION_QUERY,
+                )
 
                 rows = await cursor.fetchall()
                 return [cls.from_row(row) for row in rows]

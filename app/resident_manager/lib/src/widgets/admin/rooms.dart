@@ -311,9 +311,9 @@ class _RoomsPageState extends AbstractCommonState<RoomsPage> with CommonScaffold
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.search_outlined),
-                                      onPressed: () async {
-                                        state.extras["room-search"] = room;
-                                        await Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
+                                      onPressed: () {
+                                        state.extras["room-search"] = r.room;
+                                        Navigator.pushReplacementNamed(context, ApplicationRoute.adminResidentsPage);
                                       },
                                     ),
                                     IconButton(
