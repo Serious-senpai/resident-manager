@@ -11,7 +11,7 @@ idna==3.10
 multidict==6.1.0
 propcache==0.2.1
 pydantic==2.10.3
-pydantic_core==2.27.1
+pydantic_core==2.27.2
 PyJWT==2.10.1
 pyodbc==5.2.0
 python-dotenv==1.0.1
