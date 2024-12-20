@@ -15,7 +15,7 @@ BEGIN
     DECLARE @Id BIGINT
     EXECUTE GenerateId @Id = @Id OUTPUT
 
-    INSERT INTO fee (
+    INSERT INTO fees (
         id,
         name,
         lower,

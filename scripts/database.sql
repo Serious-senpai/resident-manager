@@ -55,8 +55,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'accounts' AND type = 'U')
         -- CONSTRAINT FK_accounts_rooms FOREIGN KEY (room) REFERENCES rooms(room) -- room records are not always available
     )
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'fee' AND type = 'U')
-    CREATE TABLE fee (
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'fees' AND type = 'U')
+    CREATE TABLE fees (
         id BIGINT PRIMARY KEY,
         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS NOT NULL,
         lower BIGINT NOT NULL, -- lower = 100 * [amount in VND]
@@ -67,7 +67,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'fee' AND type = 'U')
         deadline DATE NOT NULL,
         description NVARCHAR(max) COLLATE Vietnamese_100_CS_AS_KS_WS,
         flags TINYINT NOT NULL,
-        CONSTRAINT CHECK_fee CHECK (lower <= upper)
+        CONSTRAINT CHECK_fees CHECK (lower <= upper)
     )
 
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'payments' AND type = 'U')
@@ -77,7 +77,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'payments' AND type = 'U')
         amount BIGINT NOT NULL, -- amount = 100 * [amount in VND]
         fee_id BIGINT NOT NULL,
         CONSTRAINT FK_payments_rooms FOREIGN KEY (room) REFERENCES rooms(room),
-        CONSTRAINT FK_payments_fee FOREIGN KEY (fee_id) REFERENCES fee(id),
+        CONSTRAINT FK_payments_fees FOREIGN KEY (fee_id) REFERENCES fees(id),
         CONSTRAINT UQ_payments_room_fee_id UNIQUE (room, fee_id)
     )
 

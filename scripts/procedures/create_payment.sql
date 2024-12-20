@@ -12,7 +12,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM rooms WHERE room = @Room)
             SELECT '01' AS code, 'Invalid room number' AS message
 
-        ELSE IF NOT EXISTS (SELECT 1 FROM fee WHERE id = @FeeId)
+        ELSE IF NOT EXISTS (SELECT 1 FROM fees WHERE id = @FeeId)
             SELECT '01' AS code, 'Invalid fee ID' AS message
 
         ELSE IF EXISTS (SELECT 1 FROM payments WHERE room = @Room AND fee_id = @FeeId)

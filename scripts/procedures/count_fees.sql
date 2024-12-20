@@ -12,7 +12,7 @@ BEGIN
     DECLARE @FromId BIGINT = DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedAfter) << 16
     DECLARE @ToId BIGINT = (DATEDIFF_BIG(MILLISECOND, @Epoch, @CreatedBefore) << 16) | 0xFFFF
 
-    SELECT COUNT(1) FROM fee
+    SELECT COUNT(1) FROM fees
     WHERE id >= @FromId AND id <= @ToId AND (
         @Name IS NULL
         OR CHARINDEX(@Name, name) > 0
