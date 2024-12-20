@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Annotated, Any, List, Optional
+from typing import Annotated, List, Optional
 
 import pydantic
 from pyodbc import Row  # type: ignore

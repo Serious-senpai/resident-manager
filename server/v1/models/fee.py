@@ -46,7 +46,7 @@ class Fee(Snowflake):
 
         Parameters
         -----
-        row: `Any`
+        row: `Row`
             The database row.
 
         Returns
