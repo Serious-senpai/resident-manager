@@ -122,6 +122,8 @@ class AppLocale {
   static const String FeePerMotorbike = "FeePerMotorbike";
   static const String FeePerCar = "FeePerCar";
   static const String OK = "OK";
+  static const String PaidTimestamp = "PaidTimestamp";
+  static const String PaymentList = "PaymentList";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -273,6 +275,8 @@ class AppLocale {
     FeePerMotorbike: "Fee per motorbike",
     FeePerCar: "Fee per car",
     OK: "OK",
+    PaidTimestamp: "Paid timestamp",
+    PaymentList: "Payment list",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -425,6 +429,8 @@ class AppLocale {
     FeePerMotorbike: "Phí theo số lượng xe máy",
     FeePerCar: "Phí theo số lượng ô tô",
     OK: "OK",
+    PaidTimestamp: "Thời gian thanh toán",
+    PaymentList: "Danh sách thanh toán",
 
     // Error codes
     Error0: "Thao tác thành công.",

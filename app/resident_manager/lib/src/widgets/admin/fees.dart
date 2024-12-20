@@ -646,11 +646,11 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                             formatDateTime(f.createdAt.toLocal()),
                             f.deadline.format("dd/mm/yyyy"),
                             f.description,
-                            f.lower.round().toString(),
-                            f.upper.round().toString(),
-                            f.perArea.round().toString(),
-                            f.perMotorbike.round().toString(),
-                            f.perCar.round().toString(),
+                            formatVND(f.lower),
+                            formatVND(f.upper),
+                            formatVND(f.perArea),
+                            formatVND(f.perMotorbike),
+                            formatVND(f.perCar),
                           ];
 
                           return DataRow2(

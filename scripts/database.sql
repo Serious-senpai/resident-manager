@@ -81,5 +81,13 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'payments' AND type = 'U')
         CONSTRAINT UQ_payments_room_fee_id UNIQUE (room, fee_id)
     )
 
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'bills' AND type = 'U')
+    CREATE TABLE bills (
+        room SMALLINT NOT NULL,
+        month DATE NOT NULL,
+        amount BIGINT NOT NULL, -- amount = 100 * [water/electricity unit]
+        type TINYINT NOT NULL, -- 0: water, 1: electricity
+    )
+
 IF NOT EXISTS (SELECT 1 FROM sys.types WHERE name = 'BIGINTARRAY')
     CREATE TYPE BIGINTARRAY AS TABLE (value BIGINT NOT NULL)

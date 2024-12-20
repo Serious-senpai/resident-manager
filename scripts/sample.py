@@ -86,7 +86,7 @@ async def main() -> None:
         await connection.execute("DELETE FROM payments")
         await connection.execute("DELETE FROM accounts")
         await connection.execute("DELETE FROM rooms")
-        await connection.execute("DELETE FROM fee")
+        await connection.execute("DELETE FROM fees")
 
     tasks = [asyncio.create_task(populate_account(i)) for i in range(10000)]
     tasks.append(asyncio.create_task(populate_room()))

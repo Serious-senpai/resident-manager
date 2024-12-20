@@ -507,33 +507,19 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                     padding: const EdgeInsets.all(5),
                     child: DataTable2(
                       columns: [
-                        DataColumn2(
-                          label: Text(AppLocale.Fullname.getString(context)),
-                          size: ColumnSize.L,
-                          onSort: onSort,
-                        ),
-                        DataColumn2(
-                          label: Text(AppLocale.Room.getString(context)),
-                          onSort: onSort,
-                        ),
+                        DataColumn2(label: Text(AppLocale.Fullname.getString(context)), size: ColumnSize.L, onSort: onSort),
+                        DataColumn2(label: Text(AppLocale.Room.getString(context)), size: ColumnSize.S, onSort: onSort),
                         DataColumn2(label: Text(AppLocale.DateOfBirth.getString(context))),
                         DataColumn2(label: Text(AppLocale.Phone.getString(context))),
                         DataColumn2(label: Text(AppLocale.Email.getString(context)), size: ColumnSize.L),
-                        DataColumn2(
-                          label: Text(AppLocale.CreationTime.getString(context)),
-                          size: ColumnSize.L,
-                          onSort: onSort,
-                        ),
-                        DataColumn2(
-                          label: Text(AppLocale.Username.getString(context)),
-                          size: ColumnSize.L,
-                          onSort: onSort,
-                        ),
-                        DataColumn2(label: Text(AppLocale.Option.getString(context))),
+                        DataColumn2(label: Text(AppLocale.CreationTime.getString(context)), size: ColumnSize.L, onSort: onSort),
+                        DataColumn2(label: Text(AppLocale.Username.getString(context)), size: ColumnSize.L, onSort: onSort),
+                        DataColumn2(label: Text(AppLocale.Option.getString(context)), size: ColumnSize.S),
                       ],
+                      columnSpacing: 5,
                       fixedTopRows: 1,
                       horizontalScrollController: _horizontalScroll,
-                      minWidth: 1200,
+                      minWidth: 1500,
                       rows: List<DataRow2>.from(
                         queryLoader.residents.map(
                           (r) => DataRow2(

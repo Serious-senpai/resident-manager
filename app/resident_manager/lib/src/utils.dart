@@ -168,6 +168,20 @@ DateTime snowflakeTime(int id) => fromEpoch(Duration(milliseconds: id >> 16));
 
 String formatDateTime(DateTime time) => "${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute}:${time.second}";
 
+String formatVND(num value) {
+  final str = value.round().toString();
+  final buffer = StringBuffer();
+
+  for (int i = 0; i < str.length; i++) {
+    if (i > 0 && (str.length - i) % 3 == 0) {
+      buffer.write(",");
+    }
+    buffer.write(str[i]);
+  }
+
+  return buffer.toString();
+}
+
 String? nameValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {

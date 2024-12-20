@@ -31,16 +31,17 @@ BEGIN
         payments.id AS payment_id,
         payments.room AS payment_room,
         payments.amount AS payment_amount,
-        payments.fee_id AS payment_fee_id
+        payments.fee_id AS payment_fee_id,
+        rooms.room AS room
     FROM fees
-    INNER JOIN rooms ON rooms.room = @Room
-    LEFT JOIN payments ON payments.fee_id = fees.id AND payments.room = @Room
+    INNER JOIN rooms ON (@Room IS NULL OR @Room = rooms.room)
+    LEFT JOIN payments ON payments.fee_id = fees.id AND payments.room = rooms.room
     WHERE fees.id >= @FromId AND fees.id <= @ToId AND (
         @Paid IS NULL
         OR (@Paid = 0 AND payments.id IS NULL)
         OR (@Paid = 1 AND payments.id IS NOT NULL)
     )
-    ORDER BY fees.id
+    ORDER BY fees.id DESC
     OFFSET @Offset ROWS
     FETCH NEXT @FetchNext ROWS ONLY
 END

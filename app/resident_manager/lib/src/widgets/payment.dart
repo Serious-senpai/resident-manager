@@ -152,11 +152,11 @@ class _PayButton extends StatelessWidget {
                                     return message
                                         .replaceFirst(
                                           "{min}",
-                                          status.lowerBound.round().toString(),
+                                          formatVND(status.lowerBound),
                                         )
                                         .replaceFirst(
                                           "{max}",
-                                          status.upperBound.round().toString(),
+                                          formatVND(status.upperBound),
                                         );
                                   },
                                 ),
@@ -471,10 +471,10 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                           final text = [
                             s.fee.name,
                             s.fee.description,
-                            s.lowerBound.round().toString(),
-                            s.upperBound.round().toString(),
+                            formatVND(s.lowerBound),
+                            formatVND(s.upperBound),
                             formatDateTime(s.fee.createdAt.toLocal()),
-                            s.payment?.amount.round().toString() ?? "---",
+                            s.payment == null ? "---" : formatVND(s.payment!.amount),
                           ];
                           return DataRow2(
                             cells: [

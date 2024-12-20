@@ -8,4 +8,5 @@ class ApplicationRoute {
   static const String adminResidentsPage = "/admin/residents";
   static const String adminRoomsPage = "/admin/rooms";
   static const String adminFeesPage = "/admin/fees";
+  static const String adminPaymentsPage = "/admin/payments";
 }

@@ -25,6 +25,7 @@ class PaymentStatus(pydantic.BaseModel):
     lower_bound: Annotated[float, pydantic.Field(description="The lower bound of the fee, in VND")]
     upper_bound: Annotated[float, pydantic.Field(description="The upper bound of the fee, in VND")]
     payment: Annotated[Optional[Payment], pydantic.Field(description="The payment associated to the fee if the room has already paid this fee")]
+    room: Annotated[int, pydantic.Field(description="The room associated to this payment status")]
 
     @classmethod
     def from_row(cls, row: Row) -> PaymentStatus:
@@ -56,6 +57,7 @@ class PaymentStatus(pydantic.BaseModel):
             lower_bound=row.lower_bound / 100,
             upper_bound=row.upper_bound / 100,
             payment=payment,
+            room=row.room,
         )
 
     @staticmethod
@@ -91,16 +93,17 @@ class PaymentStatus(pydantic.BaseModel):
     @classmethod
     async def query(
         cls,
-        room: int,
+        room: Optional[int],
         *,
         offset: int = 0,
         paid: Optional[bool] = None,
         created_after: datetime,
         created_before: datetime,
     ) -> Result[Optional[List[PaymentStatus]]]:
-        matching_rooms = await Room.query(offset=0, room=room)
-        if len(matching_rooms) == 0 or not matching_rooms[0].has_data:
-            return Result(code=606, data=None)
+        if room is not None:
+            matching_rooms = await Room.query(offset=0, room=room)
+            if len(matching_rooms) == 0 or not matching_rooms[0].has_data:
+                return Result(code=606, data=None)
 
         created_after = max(created_after.astimezone(timezone.utc), EPOCH)
         created_before = max(created_before.astimezone(timezone.utc), EPOCH)

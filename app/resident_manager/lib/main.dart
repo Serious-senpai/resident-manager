@@ -11,10 +11,11 @@ import "src/widgets/login.dart";
 import "src/widgets/payment.dart";
 import "src/widgets/personal_info.dart";
 import "src/widgets/register.dart";
+import "src/widgets/admin/fees.dart";
+import "src/widgets/admin/payments.dart";
 import "src/widgets/admin/reg_queue.dart";
 import "src/widgets/admin/residents.dart";
 import "src/widgets/admin/rooms.dart";
-import "src/widgets/admin/fees.dart";
 
 class MainApplication extends StateAwareWidget {
   const MainApplication({super.key, required super.state});
@@ -49,6 +50,7 @@ class _MainApplicationState extends AbstractCommonState<MainApplication> {
         ApplicationRoute.adminResidentsPage: (context) => ResidentsPage(state: state),
         ApplicationRoute.adminRoomsPage: (context) => RoomsPage(state: state),
         ApplicationRoute.adminFeesPage: (context) => FeeListPage(state: state),
+        ApplicationRoute.adminPaymentsPage: (context) => PaymentListPage(state: state),
       },
       initialRoute: initialRoute,
       localizationsDelegates: state.localization.localizationsDelegates,
