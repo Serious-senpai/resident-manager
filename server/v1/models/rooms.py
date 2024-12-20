@@ -154,34 +154,9 @@ class Room(pydantic.BaseModel):
         room: Optional[int] = None,
         floor: Optional[int] = None,
     ) -> int:
-        where: List[str] = []
-        params: List[Any] = []
-
-        if room is not None:
-            where.append("room = ?")
-            params.append(room)
-
-        if floor is not None:
-            where.append("room / 100 = ?")
-            params.append(floor)
-
-        query = [
-            """
-                WITH rooms_union AS (
-                    SELECT t1.room FROM rooms t1
-                    UNION
-                    SELECT t2.room FROM accounts t2
-                    WHERE t2.approved = 1
-                )
-                SELECT COUNT(1) FROM rooms_union
-            """,
-        ]
-        if len(where) > 0:
-            query.append("WHERE " + " AND ".join(where))
-
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("\n".join(query), *params)
+                await cursor.execute("EXECUTE CountRooms @Room = ?, @Floor = ?", room, floor)
                 return await cursor.fetchval()
 
     @classmethod
