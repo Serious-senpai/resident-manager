@@ -179,6 +179,7 @@ class ApplicationState {
     Map<String, String>? queryParameters,
     Map<String, String>? headers,
     bool authorize = true,
+    int retry = 3,
   }) async {
     headers ??= {};
     if (authorize) {
@@ -190,12 +191,13 @@ class ApplicationState {
       headers: headers,
     );
 
-    if (response.statusCode >= 400 && await _reauthorize(response)) {
+    if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
       return await get(
         path,
         queryParameters: queryParameters,
         headers: headers,
         authorize: authorize,
+        retry: retry - 1,
       );
     }
 
@@ -209,6 +211,7 @@ class ApplicationState {
     Object? body,
     Encoding? encoding,
     bool authorize = true,
+    int retry = 3,
   }) async {
     headers ??= {};
     if (authorize) {
@@ -222,7 +225,7 @@ class ApplicationState {
       encoding: encoding,
     );
 
-    if (response.statusCode >= 400 && await _reauthorize(response)) {
+    if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
       return await post(
         path,
         queryParameters: queryParameters,
@@ -230,6 +233,7 @@ class ApplicationState {
         body: body,
         encoding: encoding,
         authorize: authorize,
+        retry: retry - 1,
       );
     }
 

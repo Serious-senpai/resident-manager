@@ -124,6 +124,7 @@ class AppLocale {
   static const String OK = "OK";
   static const String PaidTimestamp = "PaidTimestamp";
   static const String PaymentList = "PaymentList";
+  static const String ChangePassword = "ChangePassword";
 
   // Error codes
   static const String Error0 = "Error0";
@@ -277,6 +278,7 @@ class AppLocale {
     OK: "OK",
     PaidTimestamp: "Paid timestamp",
     PaymentList: "Payment list",
+    ChangePassword: "Change password",
 
     // Error codes
     Error0: "Operation completed successfully.",
@@ -431,6 +433,7 @@ class AppLocale {
     OK: "OK",
     PaidTimestamp: "Thời gian thanh toán",
     PaymentList: "Danh sách thanh toán",
+    ChangePassword: "Đổi mật khẩu",
 
     // Error codes
     Error0: "Thao tác thành công.",

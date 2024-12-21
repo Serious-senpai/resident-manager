@@ -216,6 +216,12 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
               route: ApplicationRoute.adminPaymentsPage,
               popAll: false,
             ),
+            routeTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: AppLocale.ChangePassword.getString(context),
+              route: ApplicationRoute.adminChangePassword,
+              popAll: false,
+            ),
           ],
         );
       } else {
