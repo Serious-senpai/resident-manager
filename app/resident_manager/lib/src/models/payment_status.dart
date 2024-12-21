@@ -52,6 +52,35 @@ class PaymentStatus {
     return Result(result["code"], null);
   }
 
+  static Future<Result<int?>> adminCount({
+    required ApplicationState state,
+    required int? room,
+    required bool? paid,
+    required DateTime createdAfter,
+    required DateTime createdBefore,
+  }) async {
+    if (!state.loggedInAsAdmin) {
+      return Result(-1, null);
+    }
+
+    final response = await state.get(
+      "/api/v1/admin/fees/payments/count",
+      queryParameters: {
+        if (room != null) "room": room.toString(),
+        if (paid != null) "paid": paid.toString(),
+        "created_after": createdAfter.toUtc().toIso8601String(),
+        "created_before": createdBefore.toUtc().toIso8601String(),
+      },
+    );
+    final result = json.decode(utf8.decode(response.bodyBytes));
+
+    if (result["code"] == 0) {
+      return Result(0, result["data"]);
+    }
+
+    return Result(result["code"], null);
+  }
+
   static Future<Result<List<PaymentStatus>?>> query({
     required ApplicationState state,
     required int offset,

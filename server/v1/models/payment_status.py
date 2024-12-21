@@ -62,21 +62,22 @@ class PaymentStatus(pydantic.BaseModel):
 
     @staticmethod
     async def count(
-        room: int,
+        room: Optional[int],
         *,
         paid: Optional[bool] = None,
         created_after: datetime,
         created_before: datetime,
     ) -> Result[Optional[int]]:
-        matching_rooms = await Room.query(offset=0, room=room)
-        if len(matching_rooms) == 0 or not matching_rooms[0].has_data:
-            return Result(code=606, data=None)
+        if room is not None:
+            matching_rooms = await Room.query(offset=0, room=room)
+            if len(matching_rooms) == 0 or not matching_rooms[0].has_data:
+                return Result(code=606, data=None)
 
         async with Database.instance.pool.acquire() as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        EXECUTE CountRoomFees
+                        EXECUTE CountPaymentStatus
                             @Room = ?,
                             @Paid = ?,
                             @CreatedAfter = ?,
@@ -112,7 +113,7 @@ class PaymentStatus(pydantic.BaseModel):
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     """
-                        EXECUTE QueryRoomFees
+                        EXECUTE QueryPaymentStatus
                             @Room = ?,
                             @Paid = ?,
                             @CreatedAfter = ?,

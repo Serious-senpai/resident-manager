@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE QueryRoomFees
+CREATE OR ALTER PROCEDURE QueryPaymentStatus
     @Room SMALLINT,
     @Paid BIT,
     @CreatedAfter DATETIME2,

@@ -166,9 +166,19 @@ DateTime fromEpoch(Duration dt) => epoch.add(dt);
 
 DateTime snowflakeTime(int id) => fromEpoch(Duration(milliseconds: id >> 16));
 
-String formatDateTime(DateTime time) => "${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute}:${time.second}";
+String formatDateTime(DateTime? time, {String fallback = "---"}) {
+  if (time == null) {
+    return fallback;
+  }
 
-String formatVND(num value) {
+  return "${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute}:${time.second}";
+}
+
+String formatVND(num? value, {String fallback = "---"}) {
+  if (value == null) {
+    return fallback;
+  }
+
   final str = value.round().toString();
   final buffer = StringBuffer();
 

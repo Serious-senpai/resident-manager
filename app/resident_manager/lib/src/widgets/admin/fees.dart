@@ -403,30 +403,17 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_outlined),
-                      onPressed: () {
-                        if (pagination.offset > 0) {
-                          pagination.offset--;
-                          reload();
-                        }
-                      },
-                    ),
                     FutureBuilder(
                       future: pagination.future,
-                      builder: (context, _) {
-                        final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
-                        return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_outlined),
-                      onPressed: () {
-                        if (pagination.offset < pagination.offsetLimit) {
-                          pagination.offset++;
+                      initialData: pagination.lastData,
+                      builder: (context, _) => PaginationButton(
+                        offset: pagination.offset,
+                        offsetLimit: pagination.offsetLimit,
+                        setOffset: (p) {
+                          pagination.offset = p;
                           reload();
-                        }
-                      },
+                        },
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh_outlined),
@@ -496,7 +483,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                 );
                                                 setState(() => tempCreatedAfter = picked);
                                               },
-                                              child: Text(tempCreatedAfter?.toLocal().toString() ?? "---"),
+                                              child: Text(formatDateTime(tempCreatedAfter?.toLocal())),
                                             ),
                                           ],
                                         ),
@@ -515,7 +502,7 @@ class _FeeListPageState extends AbstractCommonState<FeeListPage> with CommonScaf
                                                 );
                                                 setState(() => tempCreatedBefore = picked);
                                               },
-                                              child: Text(tempCreatedBefore?.toLocal().toString() ?? "---"),
+                                              child: Text(formatDateTime(tempCreatedBefore?.toLocal())),
                                             ),
                                           ],
                                         ),

@@ -5,9 +5,9 @@ from typing import Annotated, List, Optional
 
 from fastapi import Depends, Query, Response, status
 
-from ....app import api_v1
-from ....models import AdminPermission, PaymentStatus, Result
-from .....config import EPOCH
+from .....app import api_v1
+from .....models import AdminPermission, PaymentStatus, Result
+from ......config import EPOCH
 
 
 __all__ = ("admin_fees_payments",)

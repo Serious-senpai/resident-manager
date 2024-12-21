@@ -333,7 +333,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                           );
                                           setState(() => tempCreatedAfter = picked);
                                         },
-                                        child: Text(tempCreatedAfter?.toLocal().toString() ?? "---"),
+                                        child: Text(formatDateTime(tempCreatedAfter?.toLocal())),
                                       ),
                                     ],
                                   ),
@@ -352,7 +352,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                                           );
                                           setState(() => tempCreatedBefore = picked);
                                         },
-                                        child: Text(tempCreatedBefore?.toLocal().toString() ?? "---"),
+                                        child: Text(formatDateTime(tempCreatedBefore?.toLocal())),
                                       ),
                                     ],
                                   ),
@@ -474,7 +474,7 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
                             formatVND(s.lowerBound),
                             formatVND(s.upperBound),
                             formatDateTime(s.fee.createdAt.toLocal()),
-                            s.payment == null ? "---" : formatVND(s.payment!.amount),
+                            formatVND(s.payment?.amount),
                           ];
                           return DataRow2(
                             cells: [

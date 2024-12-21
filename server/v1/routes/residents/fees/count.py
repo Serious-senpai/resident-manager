@@ -33,7 +33,7 @@ async def residents_fees_count(
     resident: Annotated[Result[Optional[Resident]], Depends(Resident.from_token)],
     response: Response,
     *,
-    paid: Annotated[Optional[bool], Query(description="Whether to count paid or unpaid queries only")] = None,
+    paid: Annotated[Optional[bool], Query(description="Whether to count paid or unpaid fees only")] = None,
     created_after: Annotated[
         datetime,
         Query(description="Count fees created after this timestamp"),

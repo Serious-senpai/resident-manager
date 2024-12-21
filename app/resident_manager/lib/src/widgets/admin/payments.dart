@@ -25,12 +25,38 @@ class _Pagination extends FutureHolder<int?> {
   int count = 0;
   int get offsetLimit => max(offset, (count + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1);
 
-  // final _PaymentListPageState _state;
+  final _PaymentListPageState _state;
 
-  // _Pagination(this._state);
+  _Pagination(this._state);
 
   @override
-  Future<int?> run() async => 0;
+  Future<int?> run() async {
+    try {
+      final result = await PaymentStatus.adminCount(
+        state: _state.state,
+        room: int.tryParse(_state.room),
+        paid: _state.paid,
+        createdAfter: _state.createdAfter ?? epoch,
+        createdBefore: _state.createdBefore ?? DateTime.now().add(const Duration(seconds: 3)), // SQL server timestamp may not synchronize with client
+      );
+
+      final data = result.data;
+      if (data != null) {
+        count = data;
+      }
+
+      return result.code;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
+        return null;
+      }
+
+      rethrow;
+    } finally {
+      _state.refresh();
+    }
+  }
 }
 
 class _QueryLoader extends FutureHolder<int?> {
@@ -81,7 +107,7 @@ class _PaymentListPageState extends AbstractCommonState<PaymentListPage> with Co
   bool get searching => room.isNotEmpty || paid != null || createdAfter != null || createdBefore != null;
 
   _Pagination? _pagination;
-  _Pagination get pagination => _pagination ??= _Pagination();
+  _Pagination get pagination => _pagination ??= _Pagination(this);
 
   _QueryLoader? _queryLoader;
   _QueryLoader get queryLoader => _queryLoader ??= _QueryLoader(this);
@@ -112,30 +138,17 @@ class _PaymentListPageState extends AbstractCommonState<PaymentListPage> with Co
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_outlined),
-                      onPressed: () {
-                        if (pagination.offset > 0) {
-                          pagination.offset--;
-                          reload();
-                        }
-                      },
-                    ),
                     FutureBuilder(
                       future: pagination.future,
-                      builder: (context, _) {
-                        final offset = pagination.offset;
-                        return Text("${offset + 1}");
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_outlined),
-                      onPressed: () {
-                        // if (pagination.offset < pagination.offsetLimit) {
-                        pagination.offset++;
-                        reload();
-                        // }
-                      },
+                      initialData: pagination.lastData,
+                      builder: (context, _) => PaginationButton(
+                        offset: pagination.offset,
+                        offsetLimit: pagination.offsetLimit,
+                        setOffset: (p) {
+                          pagination.offset = p;
+                          reload();
+                        },
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh_outlined),
@@ -226,7 +239,7 @@ class _PaymentListPageState extends AbstractCommonState<PaymentListPage> with Co
                                             );
                                             setState(() => tempCreatedAfter = picked);
                                           },
-                                          child: Text(tempCreatedAfter?.toLocal().toString() ?? "---"),
+                                          child: Text(formatDateTime(tempCreatedAfter?.toLocal())),
                                         ),
                                       ],
                                     ),
@@ -245,7 +258,7 @@ class _PaymentListPageState extends AbstractCommonState<PaymentListPage> with Co
                                             );
                                             setState(() => tempCreatedBefore = picked);
                                           },
-                                          child: Text(tempCreatedBefore?.toLocal().toString() ?? "---"),
+                                          child: Text(formatDateTime(tempCreatedBefore?.toLocal())),
                                         ),
                                       ],
                                     ),
@@ -360,10 +373,10 @@ class _PaymentListPageState extends AbstractCommonState<PaymentListPage> with Co
                             p.fee.description,
                             p.room.toString(),
                             formatDateTime(p.fee.createdAt.toLocal()),
-                            p.payment != null ? formatDateTime(p.payment!.createdAt.toLocal()) : "---",
+                            formatDateTime(p.payment?.createdAt.toLocal()),
                             formatVND(p.lowerBound),
                             formatVND(p.upperBound),
-                            p.payment == null ? "---" : formatVND(p.payment!.amount),
+                            formatVND(p.payment?.amount),
                           ];
 
                           return DataRow2(

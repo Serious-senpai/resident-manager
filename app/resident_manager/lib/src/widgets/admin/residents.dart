@@ -24,7 +24,8 @@ class ResidentsPage extends StateAwareWidget {
 
 class _Pagination extends FutureHolder<int?> {
   int offset = 0;
-  int offsetLimit = 0;
+  int count = 0;
+  int get offsetLimit => max(offset, (count + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1);
 
   final _ResidentsPageState _state;
 
@@ -42,14 +43,11 @@ class _Pagination extends FutureHolder<int?> {
 
       final data = result.data;
       if (data != null) {
-        offsetLimit = (data + DB_PAGINATION_QUERY - 1) ~/ DB_PAGINATION_QUERY - 1;
-      } else {
-        offsetLimit = offset;
+        count = data;
       }
 
       return result.code;
     } catch (e) {
-      offsetLimit = offset;
       if (e is SocketException || e is TimeoutException) {
         await showToastSafe(msg: _state.mounted ? AppLocale.ConnectionError.getString(_state.context) : AppLocale.ConnectionError);
         return null;
@@ -420,30 +418,17 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_outlined),
-                      onPressed: () {
-                        if (pagination.offset > 0) {
-                          pagination.offset--;
-                          reload();
-                        }
-                      },
-                    ),
                     FutureBuilder(
                       future: pagination.future,
-                      builder: (context, _) {
-                        final offset = pagination.offset, offsetLimit = pagination.offsetLimit;
-                        return Text("${offset + 1}/${max(offset, offsetLimit) + 1}");
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_outlined),
-                      onPressed: () {
-                        if (pagination.offset < pagination.offsetLimit) {
-                          pagination.offset++;
+                      initialData: pagination.lastData,
+                      builder: (context, _) => PaginationButton(
+                        offset: pagination.offset,
+                        offsetLimit: pagination.offsetLimit,
+                        setOffset: (p) {
+                          pagination.offset = p;
                           reload();
-                        }
-                      },
+                        },
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh_outlined),
@@ -460,7 +445,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                       setRoom: (value) => room = value,
                       setUsername: (value) => username = value,
                       getSearching: () => searching,
-                      setPageOffset: (value) => pagination.offset = value,
+                      setOffset: (value) => pagination.offset = value,
                       reload: reload,
                     ),
                   ],

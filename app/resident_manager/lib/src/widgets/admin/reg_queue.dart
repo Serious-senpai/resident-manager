@@ -256,29 +256,17 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_outlined),
-                      onPressed: () {
-                        if (pagination.offset > 0) {
-                          pagination.offset--;
-                          reload();
-                        }
-                      },
-                    ),
                     FutureBuilder(
                       future: pagination.future,
-                      builder: (context, _) {
-                        return Text("${pagination.offset + 1}/${pagination.offsetLimit + 1}");
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_outlined),
-                      onPressed: () {
-                        if (pagination.offset < pagination.offsetLimit) {
-                          pagination.offset++;
+                      initialData: pagination.lastData,
+                      builder: (context, _) => PaginationButton(
+                        offset: pagination.offset,
+                        offsetLimit: pagination.offsetLimit,
+                        setOffset: (p) {
+                          pagination.offset = p;
                           reload();
-                        }
-                      },
+                        },
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh_outlined),
@@ -295,7 +283,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                       setRoom: (value) => room = value,
                       setUsername: (value) => username = value,
                       getSearching: () => searching,
-                      setPageOffset: (value) => pagination.offset = value,
+                      setOffset: (value) => pagination.offset = value,
                       reload: reload,
                     ),
                   ],

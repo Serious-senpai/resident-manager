@@ -1,5 +1,6 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_localization/flutter_localization.dart";
 
 import "common.dart";
@@ -479,7 +480,7 @@ class AdminAccountSearchButton extends StatelessWidget {
   final void Function(String) setName;
   final void Function(String) setRoom;
   final void Function(String) setUsername;
-  final void Function(int) setPageOffset;
+  final void Function(int) setOffset;
   final void Function() reload;
 
   const AdminAccountSearchButton({
@@ -491,7 +492,7 @@ class AdminAccountSearchButton extends StatelessWidget {
     required this.setName,
     required this.setRoom,
     required this.setUsername,
-    required this.setPageOffset,
+    required this.setOffset,
     required this.reload,
   });
 
@@ -519,7 +520,7 @@ class AdminAccountSearchButton extends StatelessWidget {
             setName(nameController.text);
             setRoom(roomController.text);
             setUsername(usernameController.text);
-            setPageOffset(0);
+            setOffset(0);
 
             Navigator.pop(context, true);
             reload();
@@ -595,6 +596,73 @@ class AdminAccountSearchButton extends StatelessWidget {
         // roomController.dispose();
         // usernameController.dispose();
       },
+    );
+  }
+}
+
+class PaginationButton extends StatelessWidget {
+  final int offset;
+  final int offsetLimit;
+  final void Function(int) setOffset;
+  final TextEditingController offsetController;
+
+  PaginationButton({
+    super.key,
+    required this.offset,
+    required this.offsetLimit,
+    required this.setOffset,
+  }) : offsetController = TextEditingController(text: (offset + 1).toString());
+
+  void _onSubmit() {
+    final page = int.tryParse(offsetController.text);
+    if (page != null) {
+      final newOffset = page - 1;
+      if (newOffset >= 0 && newOffset <= offsetLimit) {
+        setOffset(newOffset);
+        return;
+      }
+    }
+
+    // Invalid input, reset
+    offsetController.text = (offset + 1).toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left_outlined),
+          onPressed: () {
+            if (offset > 0) {
+              setOffset(offset - 1);
+            }
+          },
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: IntrinsicWidth(
+            child: TextField(
+              controller: offsetController,
+              decoration: InputDecoration(suffixText: "/${offsetLimit + 1}", isCollapsed: true),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: TextInputType.number,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              onSubmitted: (_) => _onSubmit(),
+              onTapOutside: (_) => _onSubmit(),
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right_outlined),
+          onPressed: () {
+            if (offset < offsetLimit) {
+              setOffset(offset + 1);
+            }
+          },
+        ),
+      ],
     );
   }
 }
