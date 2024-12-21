@@ -8,6 +8,7 @@ import "package:flutter_localization/flutter_localization.dart";
 
 import "../common.dart";
 import "../utils.dart";
+import "../../routes.dart";
 import "../../translations.dart";
 import "../../utils.dart";
 
@@ -39,28 +40,28 @@ class _ChangePasswordPageState extends AbstractCommonState<ChangePasswordPage> w
           );
           refresh();
 
-          final data = {
-            "username": _username.text,
-            "old_password": _oldPassword.text,
-            "new_password": _newPassword.text,
-          };
-
           try {
             final response = await state.post(
               "/api/v1/admin/password",
-              body: json.encode(data),
+              body: json.encode(
+                {
+                  "username": _username.text,
+                  "old_password": _oldPassword.text,
+                  "new_password": _newPassword.text,
+                },
+              ),
               headers: {"Content-Type": "application/json"},
               authorize: false,
               retry: 0,
             );
 
             if (response.statusCode == 204) {
-              _notification = Builder(
-                builder: (context) => Text(
-                  AppLocale.Successful.getString(context),
-                  style: const TextStyle(color: Colors.green),
-                ),
-              );
+              // Authorization info updated. Logout.
+              await state.deauthorize();
+              if (mounted) {
+                Navigator.popUntil(context, (route) => route.isFirst);
+                await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
+              }
             } else {
               _notification = Builder(
                 builder: (context) => Text(

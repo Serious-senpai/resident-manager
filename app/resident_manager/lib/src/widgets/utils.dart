@@ -606,6 +606,8 @@ class PaginationButton extends StatelessWidget {
   final void Function(int) setOffset;
   final TextEditingController offsetController;
 
+  final _focusNode = FocusNode();
+
   PaginationButton({
     super.key,
     required this.offset,
@@ -614,10 +616,11 @@ class PaginationButton extends StatelessWidget {
   }) : offsetController = TextEditingController(text: (offset + 1).toString());
 
   void _onSubmit() {
+    _focusNode.unfocus();
     final page = int.tryParse(offsetController.text);
     if (page != null) {
       final newOffset = page - 1;
-      if (newOffset >= 0 && newOffset <= offsetLimit) {
+      if (newOffset >= 0 && newOffset <= offsetLimit && newOffset != offset) {
         setOffset(newOffset);
         return;
       }
@@ -645,6 +648,7 @@ class PaginationButton extends StatelessWidget {
             child: TextField(
               controller: offsetController,
               decoration: InputDecoration(suffixText: "/${offsetLimit + 1}", isCollapsed: true),
+              focusNode: _focusNode,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               keyboardType: TextInputType.number,
               maxLines: 1,
