@@ -10,7 +10,6 @@ import "utils.dart";
 import "../routes.dart";
 import "../translations.dart";
 import "../utils.dart";
-import "../models/info.dart";
 
 class PersonalInfoPage extends StateAwareWidget {
   const PersonalInfoPage({super.key, required super.state});
@@ -51,10 +50,8 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
   final _generalFormKey = GlobalKey<FormState>();
   final _authFormKey = GlobalKey<FormState>();
 
-  Widget _generalNotification = const SizedBox.shrink();
   Widget _authNotification = const SizedBox.shrink();
 
-  final _generalLock = Lock();
   final _authLock = Lock();
 
   @override
@@ -82,6 +79,7 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
               style: const TextStyle(color: Colors.black),
             ),
           ),
+          enabled: false,
           validator: (value) => nameValidator(context, required: true, value: value),
         ),
       ),
@@ -96,6 +94,7 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
               style: const TextStyle(color: Colors.black),
             ),
           ),
+          enabled: false,
           validator: (value) => roomValidator(context, required: true, value: value),
         ),
       ),
@@ -109,20 +108,8 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
               style: const TextStyle(color: Colors.black),
             ),
           ),
-          onTap: () async {
-            final birthday = await showDatePicker(
-              context: context,
-              initialDate: Date.parseFriendly(_birthday.text)?.toDateTime(),
-              firstDate: DateTime.utc(1900),
-              lastDate: DateTime.now(),
-            );
-
-            if (birthday != null) {
-              _birthday.text = Date.fromDateTime(birthday).format("dd/mm/yyyy");
-            } else {
-              _birthday.clear();
-            }
-          },
+          enabled: false,
+          onTap: null,
           readOnly: true, // no need for validator
         ),
       ),
@@ -137,6 +124,7 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
               style: const TextStyle(color: Colors.black),
             ),
           ),
+          enabled: false,
           validator: (value) => phoneValidator(context, required: true, value: value),
         ),
       ),
@@ -150,6 +138,7 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
               style: const TextStyle(color: Colors.black),
             ),
           ),
+          enabled: false,
           validator: (value) => emailValidator(context, value: value),
         ),
       ),
@@ -184,84 +173,6 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
                 children: List<Widget>.from(row.map((i) => items[i])),
               ),
             ),
-          ),
-          _generalNotification,
-          const SizedBox.square(dimension: 5),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(
-                    Icons.edit_outlined,
-                    color: Colors.yellow,
-                  ),
-                  label: Text(
-                    AppLocale.SaveGeneralInformation.getString(context),
-                    style: const TextStyle(color: Colors.yellow),
-                  ),
-                  onPressed: _generalLock.locked
-                      ? null
-                      : () async {
-                          await _generalLock.run(
-                            () async {
-                              _generalNotification = Builder(
-                                builder: (context) => Text(
-                                  AppLocale.Loading.getString(context),
-                                  style: const TextStyle(color: Colors.blue),
-                                ),
-                              );
-                              refresh();
-
-                              try {
-                                final result = await state.resident?.update(
-                                  state: state,
-                                  info: PersonalInfo(
-                                    name: _name.text,
-                                    room: int.parse(_room.text),
-                                    birthday: Date.parseFriendly(_birthday.text),
-                                    phone: _phone.text,
-                                    email: _email.text,
-                                  ),
-                                );
-
-                                if (result == null || result.code != 0) {
-                                  _generalNotification = Builder(
-                                    builder: (context) => Text(
-                                      AppLocale.errorMessage(result?.code ?? -1).getString(context),
-                                      style: const TextStyle(color: Colors.red),
-                                    ),
-                                  );
-                                } else {
-                                  state.resident = result.data;
-                                  _generalNotification = Builder(
-                                    builder: (context) => Text(
-                                      AppLocale.Successful.getString(context),
-                                      style: const TextStyle(color: Colors.blue),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-                                _generalNotification = Builder(
-                                  builder: (context) => Text(
-                                    AppLocale.ConnectionError.getString(context),
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                );
-
-                                if (!(e is SocketException || e is TimeoutException)) {
-                                  rethrow;
-                                }
-                              } finally {
-                                refresh();
-                              }
-                            },
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-                ),
-              ),
-            ],
           ),
         ],
       ),
