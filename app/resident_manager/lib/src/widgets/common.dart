@@ -246,6 +246,12 @@ class _CommonScaffoldState<T extends StateAwareWidget> extends State<CommonScaff
               route: ApplicationRoute.payment,
               popAll: false,
             ),
+            routeTile(
+              leading: const Icon(Icons.qr_code_outlined),
+              title: AppLocale.QRCode.getString(context),
+              route: ApplicationRoute.qr,
+              popAll: false,
+            ),
           ],
         );
       }

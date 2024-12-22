@@ -10,6 +10,7 @@ import "src/widgets/home.dart";
 import "src/widgets/login.dart";
 import "src/widgets/payment.dart";
 import "src/widgets/personal_info.dart";
+import "src/widgets/qr.dart";
 import "src/widgets/register.dart";
 import "src/widgets/admin/change_password.dart";
 import "src/widgets/admin/fees.dart";
@@ -47,6 +48,7 @@ class _MainApplicationState extends AbstractCommonState<MainApplication> {
         ApplicationRoute.home: (context) => HomePage(state: state),
         ApplicationRoute.personalInfo: (context) => PersonalInfoPage(state: state),
         ApplicationRoute.payment: (context) => PaymentPage(state: state),
+        ApplicationRoute.qr: (context) => QRPage(state: state),
         ApplicationRoute.adminRegisterQueue: (context) => RegisterQueuePage(state: state),
         ApplicationRoute.adminResidentsPage: (context) => ResidentsPage(state: state),
         ApplicationRoute.adminRoomsPage: (context) => RoomsPage(state: state),

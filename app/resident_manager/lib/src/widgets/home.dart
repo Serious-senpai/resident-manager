@@ -51,13 +51,18 @@ class _HomePageState extends AbstractCommonState<HomePage> with CommonScaffoldSt
                     children: [
                       Text(
                         "${AppLocale.Welcome.getString(context)}, ${state.resident?.name ?? "---"}!",
+                        maxLines: 2,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: mediaQuery.size.width < ScreenWidth.LARGE ? 24 : 36,
+                          fontSize: mediaQuery.size.width < ScreenWidth.SMALL
+                              ? 20
+                              : mediaQuery.size.width < ScreenWidth.LARGE
+                                  ? 24
+                                  : 36,
                           fontWeight: FontWeight.bold,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.left,
                       ),
                     ],
                   ),
@@ -84,9 +89,9 @@ class _HomePageState extends AbstractCommonState<HomePage> with CommonScaffoldSt
                   ),
                   Expanded(
                     child: TextButton.icon(
-                      icon: const Icon(Icons.construction_outlined),
-                      label: Text(AppLocale.ComingSoon.getString(context)),
-                      onPressed: null,
+                      icon: const Icon(Icons.qr_code_outlined),
+                      label: Text(AppLocale.QRCode.getString(context)),
+                      onPressed: () => Navigator.pushReplacementNamed(context, ApplicationRoute.qr),
                     ),
                   ),
                   Expanded(
