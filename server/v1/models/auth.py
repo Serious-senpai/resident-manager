@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import traceback
 import secrets
+import sys
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, ClassVar, Literal
 
@@ -77,7 +79,9 @@ class AdminPermission(pydantic.BaseModel):
     def from_token(cls, token: Annotated[str, Depends(Token.oauth2_admin)]) -> AdminPermission:
         try:
             payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM], options={"require": ["exp"]})
-            return cls(admin=payload.get("admin", False))
+            return cls(admin=payload["admin"])
 
         except Exception:
+            print("Unauthorized administrator access:", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             return cls(admin=False)

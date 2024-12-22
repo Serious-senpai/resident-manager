@@ -374,6 +374,9 @@ class _AccountsPieChartState extends AbstractCommonState<AccountsPieChart> {
 }
 
 class AdminMonitorWidget extends StatelessWidget {
+  static final _stopWatch = Stopwatch()..start();
+  static int? _lastReload;
+
   final ApplicationState state;
   final void Function(BuildContext context, String routeName) pushNamed;
 
@@ -386,9 +389,13 @@ class AdminMonitorWidget extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    _RegistrationRequestCount.instance?.reload();
-    _ResidentCount.instance?.reload();
-    _RoomCount.instance?.reload();
+    if (_stopWatch.elapsedMilliseconds - (_lastReload ?? -1000) > 1000) {
+      _RegistrationRequestCount.instance?.reload();
+      _ResidentCount.instance?.reload();
+      _RoomCount.instance?.reload();
+
+      _lastReload = _stopWatch.elapsedMilliseconds;
+    }
 
     const cardPadding = EdgeInsets.all(20);
     const numberStyle = TextStyle(
