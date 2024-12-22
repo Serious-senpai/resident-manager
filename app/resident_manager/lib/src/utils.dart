@@ -230,12 +230,18 @@ String? roomValidator(BuildContext context, {required bool required, required St
   return null;
 }
 
-String? phoneValidator(BuildContext context, {required String? value}) {
-  if (value != null && value.isNotEmpty) {
-    final pattern = RegExp(r"^\+?[\d\s]+$");
-    if (value.length > 15 || !pattern.hasMatch(value)) {
-      return AppLocale.InvalidPhoneNumber.getString(context);
+String? phoneValidator(BuildContext context, {required bool required, required String? value}) {
+  if (value == null || value.isEmpty) {
+    if (required) {
+      return AppLocale.MissingRequiredValue.getString(context);
     }
+
+    return null;
+  }
+
+  final pattern = RegExp(r"^\+?[\d\s]+$");
+  if (value.length < 9 || value.length > 11 || !pattern.hasMatch(value)) {
+    return AppLocale.InvalidPhoneNumber.getString(context);
   }
 
   return null;

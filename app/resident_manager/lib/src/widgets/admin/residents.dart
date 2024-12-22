@@ -208,10 +208,11 @@ class _EditButton extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(8.0),
                         label: FieldLabel(
                           AppLocale.Phone.getString(context),
+                          required: true,
                           style: const TextStyle(color: Colors.black),
                         ),
                       ),
-                      validator: (value) => phoneValidator(context, value: value),
+                      validator: (value) => phoneValidator(context, required: true, value: value),
                     ),
                     TextFormField(
                       controller: emailController,
@@ -512,7 +513,7 @@ class _ResidentsPageState extends AbstractCommonState<ResidentsPage> with Common
                               DataCell(Text(r.name)),
                               DataCell(Text(r.room.toString())),
                               DataCell(Text(r.birthday?.format("dd/mm/yyyy") ?? "---")),
-                              DataCell(Text(r.phone ?? "---")),
+                              DataCell(Text(r.phone)),
                               DataCell(Text(r.email ?? "---")),
                               DataCell(Text(formatDateTime(r.createdAt.toLocal()))),
                               DataCell(Text(r.username ?? "---")),

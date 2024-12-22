@@ -14,7 +14,7 @@ class PersonalInfo {
   final Date? birthday;
 
   /// The target's phone number.
-  final String? phone;
+  final String phone;
 
   /// The target's email address.
   final String? email;
@@ -24,7 +24,7 @@ class PersonalInfo {
     required this.name,
     required this.room,
     this.birthday,
-    this.phone,
+    required this.phone,
     this.email,
   });
 
@@ -52,7 +52,7 @@ class PersonalInfo {
       "name": name,
       "room": room.toString(),
       if (birthday != null) "birthday": birthday!.format("yyyy-mm-dd"),
-      if (phone != null) "phone": phone!,
+      "phone": phone,
       if (email != null) "email": email!,
     };
   }
@@ -75,7 +75,7 @@ class PublicInfo extends PersonalInfo with Snowflake {
     required super.name,
     required super.room,
     super.birthday,
-    super.phone,
+    required super.phone,
     super.email,
     this.username,
     this.hashedPassword,
@@ -88,7 +88,7 @@ class PublicInfo extends PersonalInfo with Snowflake {
           name: data["name"] as String,
           room: data["room"] as int,
           birthday: data["birthday"] == null ? null : Date.parse(data["birthday"] as String),
-          phone: data["phone"] as String?,
+          phone: data["phone"] as String,
           email: data["email"] as String?,
           username: data["username"] as String?,
           hashedPassword: data["hashed_password"] as String?,

@@ -349,7 +349,7 @@ class _RegisterQueuePageState extends AbstractCommonState<RegisterQueuePage> wit
                               DataCell(Text(r.name)),
                               DataCell(Text(r.room.toString())),
                               DataCell(Text(r.birthday?.format("dd/mm/yyyy") ?? "---")),
-                              DataCell(Text(r.phone ?? "---")),
+                              DataCell(Text(r.phone)),
                               DataCell(Text(r.email ?? "---")),
                               DataCell(Text(formatDateTime(r.createdAt.toLocal()))),
                               DataCell(Text(r.username ?? "---")),

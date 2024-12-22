@@ -47,7 +47,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'accounts' AND type = 'U')
         name NVARCHAR(255) COLLATE Vietnamese_100_CS_AS_KS_WS NOT NULL,
         room SMALLINT NOT NULL,
         birthday DATE,
-        phone NVARCHAR(15),
+        phone NVARCHAR(15) NOT NULL,
         email NVARCHAR(255),
         username NVARCHAR(255) UNIQUE NOT NULL,
         hashed_password NVARCHAR(255) NOT NULL,

@@ -83,7 +83,7 @@ def validate_room(room: int) -> bool:
 
 
 def validate_phone(phone: str) -> bool:
-    return phone.isdigit() and len(phone) < 16
+    return phone.isdigit() and len(phone) in (9, 10, 11)
 
 
 def validate_email(email: str) -> bool:

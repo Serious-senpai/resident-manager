@@ -16,7 +16,7 @@ class RegisterRequest extends PublicInfo {
     required super.name,
     required super.room,
     super.birthday,
-    super.phone,
+    required super.phone,
     super.email,
     super.username,
     super.hashedPassword,

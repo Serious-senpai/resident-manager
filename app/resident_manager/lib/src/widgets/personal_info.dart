@@ -133,10 +133,11 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
             contentPadding: const EdgeInsets.all(8.0),
             label: FieldLabel(
               AppLocale.Phone.getString(context),
+              required: true,
               style: const TextStyle(color: Colors.black),
             ),
           ),
-          validator: (value) => phoneValidator(context, value: value),
+          validator: (value) => phoneValidator(context, required: true, value: value),
         ),
       ),
       _InfoCard(

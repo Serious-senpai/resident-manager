@@ -195,11 +195,12 @@ class _RegisterPageState extends AbstractCommonState<RegisterPage> with CommonSc
                       iconColor: Colors.white,
                       label: FieldLabel(
                         AppLocale.Phone.getString(context),
+                        required: true,
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
                     style: const TextStyle(color: Colors.white),
-                    validator: (value) => phoneValidator(context, value: value),
+                    validator: (value) => phoneValidator(context, required: true, value: value),
                   ),
                   TextFormField(
                     controller: _email,

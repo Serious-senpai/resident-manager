@@ -24,7 +24,7 @@ class PersonalInfo(pydantic.BaseModel):
     name: Annotated[str, pydantic.Field(description="The full name of the resident")]
     room: Annotated[int, pydantic.Field(description="The room number of the resident")]
     birthday: Annotated[Optional[date], pydantic.Field(description="The resident's date of birth")] = None
-    phone: Annotated[Optional[str], pydantic.Field(description="The resident's phone number")] = None
+    phone: Annotated[str, pydantic.Field(description="The resident's phone number")]
     email: Annotated[Optional[str], pydantic.Field(description="The resident's email")] = None
 
     def to_personal_info(self) -> PersonalInfo:
@@ -37,9 +37,6 @@ class PersonalInfo(pydantic.BaseModel):
         )
 
     def validate_info(self) -> Optional[Result[None]]:
-        if self.phone is None or len(self.phone) == 0:
-            self.phone = None
-
         if self.email is None or len(self.email) == 0:
             self.email = None
 
@@ -49,7 +46,7 @@ class PersonalInfo(pydantic.BaseModel):
         if not validate_room(self.room):
             return Result(code=102, data=None)
 
-        if self.phone is not None and not validate_phone(self.phone):
+        if not validate_phone(self.phone):
             return Result(code=103, data=None)
 
         if self.email is not None and not validate_email(self.email):
