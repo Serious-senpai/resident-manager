@@ -179,7 +179,8 @@ class ApplicationState {
     Map<String, String>? queryParameters,
     Map<String, String>? headers,
     bool authorize = true,
-    int retry = 3,
+    int retry = 5,
+    Duration retryWait = const Duration(milliseconds: 200),
   }) async {
     headers ??= {};
     if (authorize) {
@@ -192,12 +193,14 @@ class ApplicationState {
     );
 
     if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
+      await Future.delayed(retryWait);
       return await get(
         path,
         queryParameters: queryParameters,
         headers: headers,
         authorize: authorize,
         retry: retry - 1,
+        retryWait: retryWait * 2,
       );
     }
 
@@ -211,7 +214,8 @@ class ApplicationState {
     Object? body,
     Encoding? encoding,
     bool authorize = true,
-    int retry = 3,
+    int retry = 5,
+    Duration retryWait = const Duration(milliseconds: 200),
   }) async {
     headers ??= {};
     if (authorize) {
@@ -226,6 +230,7 @@ class ApplicationState {
     );
 
     if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
+      await Future.delayed(retryWait);
       return await post(
         path,
         queryParameters: queryParameters,
@@ -234,6 +239,7 @@ class ApplicationState {
         encoding: encoding,
         authorize: authorize,
         retry: retry - 1,
+        retryWait: retryWait * 2,
       );
     }
 
