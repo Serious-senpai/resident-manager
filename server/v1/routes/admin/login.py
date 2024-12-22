@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from ...app import api_v1
-from ...models import AdminPermission, Token
+from ...models import AdminPermission, Token, secret_key
 
 
 __all__ = ("login",)
@@ -30,6 +30,6 @@ __all__ = ("login",)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     verify = await AdminPermission.verify(username=form_data.username, password=form_data.password)
     if verify:
-        return AdminPermission.create_token()
+        return AdminPermission.create_token(secret_key=await secret_key())
 
     raise HTTPException(status.HTTP_400_BAD_REQUEST)

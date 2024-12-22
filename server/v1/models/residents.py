@@ -9,7 +9,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .accounts import Account
-from .auth import Token
+from .auth import Token, ALGORITHM, secret_key
 from .info import PersonalInfo
 from .results import Result
 from .snowflake import Snowflake
@@ -153,12 +153,12 @@ class Resident(Account):
         if not check_password(form_data.password, hashed=resident.hashed_password):
             return None
 
-        return Token.create(Snowflake(id=resident.id))
+        return Token.create(Snowflake(id=resident.id), secret_key=await secret_key())
 
     @classmethod
     async def from_token(cls, token: Annotated[str, Depends(Token.oauth2_resident)]) -> Result[Optional[Resident]]:
         try:
-            payload = jwt.decode(token, Token.SECRET_KEY, algorithms=[Token.ALGORITHM], options={"require": ["exp"]})
+            payload = jwt.decode(token, await secret_key(), algorithms=[ALGORITHM], options={"require": ["exp"]})
             snowflake = Snowflake.model_validate(payload)
 
             residents = await Resident.query(id=snowflake.id)

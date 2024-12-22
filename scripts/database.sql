@@ -2,6 +2,7 @@
 DECLARE
     @DefaultAdminUsername NVARCHAR(255) = ?,
     @DefaultAdminHashedPassword NVARCHAR(255) = ?,
+    @SessionSecretKey NVARCHAR(255) = ?,
     @Epoch DATETIME2 = ?
 
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'config' AND type = 'U')
@@ -12,7 +13,8 @@ BEGIN
     )
     INSERT INTO config VALUES
         ('admin_username', @DefaultAdminUsername),
-        ('admin_hashed_password', @DefaultAdminHashedPassword)
+        ('admin_hashed_password', @DefaultAdminHashedPassword),
+        ('session_secret_key', @SessionSecretKey)
 END
 
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name = 'config_bigint' AND type = 'U')

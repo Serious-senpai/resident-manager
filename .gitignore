@@ -3,6 +3,6 @@
 .venv/
 .vscode/
 
-database.lock
+*.lock
 run.bat
 .coverage*

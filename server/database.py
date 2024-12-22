@@ -3,6 +3,7 @@ from __future__ import annotations
 import atexit
 import logging
 import os
+import secrets
 from pathlib import Path
 from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
@@ -92,6 +93,7 @@ class Database:
                     scripts_dir / "database.sql",
                     DEFAULT_ADMIN_USERNAME,
                     hash_password(DEFAULT_ADMIN_PASSWORD),
+                    secrets.token_hex(32),
                     EPOCH,
                 )
 
