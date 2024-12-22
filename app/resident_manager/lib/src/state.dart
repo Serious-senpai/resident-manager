@@ -192,8 +192,12 @@ class ApplicationState {
       headers: headers,
     );
 
-    if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
+    if (retry > 0 && response.statusCode >= 400) {
       await Future.delayed(retryWait);
+      if (authorize) {
+        await _reauthorize(response);
+      }
+
       return await get(
         path,
         queryParameters: queryParameters,
@@ -229,8 +233,12 @@ class ApplicationState {
       encoding: encoding,
     );
 
-    if (retry > 0 && response.statusCode >= 400 && await _reauthorize(response)) {
+    if (retry > 0 && response.statusCode >= 400) {
       await Future.delayed(retryWait);
+      if (authorize) {
+        await _reauthorize(response);
+      }
+
       return await post(
         path,
         queryParameters: queryParameters,

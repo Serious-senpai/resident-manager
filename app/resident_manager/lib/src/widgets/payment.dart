@@ -240,27 +240,17 @@ class _PaymentPageState extends AbstractCommonState<PaymentPage> with CommonScaf
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left_outlined),
-                  onPressed: () {
-                    if (pagination.offset > 0) {
-                      pagination.offset--;
-                      reload();
-                    }
-                  },
-                ),
                 FutureBuilder(
                   future: pagination.future,
-                  builder: (context, _) {
-                    return Text("${pagination.offset + 1}/${pagination.offsetLimit + 1}");
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right_outlined),
-                  onPressed: () {
-                    pagination.offset++;
-                    reload();
-                  },
+                  initialData: pagination.lastData,
+                  builder: (context, _) => PaginationButton(
+                    offset: pagination.offset,
+                    offsetLimit: pagination.offsetLimit,
+                    setOffset: (p) {
+                      pagination.offset = p;
+                      reload();
+                    },
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh_outlined),
