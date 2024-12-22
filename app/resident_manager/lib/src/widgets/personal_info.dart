@@ -207,8 +207,8 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
             ),
           ),
           obscureText: true,
-          // No need to validate old password
-          // validator: (value) => passwordValidator(context, required: false, value: value),
+          // Must provide old password for authorization
+          validator: (value) => requiredValidator(context, value: value),
         ),
       ),
       _InfoCard(
@@ -276,53 +276,55 @@ class _PersonalInfoPageState extends AbstractCommonState<PersonalInfoPage> with 
                       : () async {
                           await _authLock.run(
                             () async {
-                              _authNotification = Builder(
-                                builder: (context) => Text(
-                                  AppLocale.Loading.getString(context),
-                                  style: const TextStyle(color: Colors.blue),
-                                ),
-                              );
-                              refresh();
-
-                              try {
-                                final result = await state.resident?.updateAuthorization(
-                                  state: state,
-                                  newUsername: _username.text,
-                                  oldPassword: _oldPassword.text,
-
-                                  // If the user doesn't fill out the new password, keep the old one
-                                  newPassword: _newPassword.text.isEmpty ? _oldPassword.text : _newPassword.text,
+                              if (_authFormKey.currentState?.validate() ?? false) {
+                                _authNotification = Builder(
+                                  builder: (context) => Text(
+                                    AppLocale.Loading.getString(context),
+                                    style: const TextStyle(color: Colors.blue),
+                                  ),
                                 );
+                                refresh();
 
-                                if (result == null || result.code != 0) {
+                                try {
+                                  final result = await state.resident?.updateAuthorization(
+                                    state: state,
+                                    newUsername: _username.text,
+                                    oldPassword: _oldPassword.text,
+
+                                    // If the user doesn't fill out the new password, keep the old one
+                                    newPassword: _newPassword.text.isEmpty ? _oldPassword.text : _newPassword.text,
+                                  );
+
+                                  if (result == null || result.code != 0) {
+                                    _authNotification = Builder(
+                                      builder: (context) => Text(
+                                        AppLocale.errorMessage(result?.code ?? -1).getString(context),
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                    );
+                                  } else {
+                                    // Authorization info updated. Logout.
+                                    await state.deauthorize();
+                                    if (context.mounted) {
+                                      Navigator.popUntil(context, (route) => route.isFirst);
+                                      await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
+                                    }
+                                  }
+                                } catch (e) {
+                                  await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
                                   _authNotification = Builder(
                                     builder: (context) => Text(
-                                      AppLocale.errorMessage(result?.code ?? -1).getString(context),
+                                      AppLocale.ConnectionError.getString(context),
                                       style: const TextStyle(color: Colors.red),
                                     ),
                                   );
-                                } else {
-                                  // Authorization info updated. Logout.
-                                  await state.deauthorize();
-                                  if (context.mounted) {
-                                    Navigator.popUntil(context, (route) => route.isFirst);
-                                    await Navigator.pushReplacementNamed(context, ApplicationRoute.login);
-                                  }
-                                }
-                              } catch (e) {
-                                await showToastSafe(msg: context.mounted ? AppLocale.ConnectionError.getString(context) : AppLocale.ConnectionError);
-                                _authNotification = Builder(
-                                  builder: (context) => Text(
-                                    AppLocale.ConnectionError.getString(context),
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                );
 
-                                if (!(e is SocketException || e is TimeoutException)) {
-                                  rethrow;
+                                  if (!(e is SocketException || e is TimeoutException)) {
+                                    rethrow;
+                                  }
+                                } finally {
+                                  refresh();
                                 }
-                              } finally {
-                                refresh();
                               }
                             },
                           );

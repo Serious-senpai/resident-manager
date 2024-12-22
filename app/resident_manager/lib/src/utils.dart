@@ -445,3 +445,11 @@ String? feePerCarValidator(BuildContext context, {required bool required, requir
 
   return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
 }
+
+String? requiredValidator(BuildContext context, {required String? value}) {
+  if (value == null || value.isEmpty) {
+    return AppLocale.MissingRequiredValue.getString(context);
+  }
+
+  return null;
+}
