@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import urllib.parse
-from datetime import datetime
 
 from fastapi import HTTPException, Request, status
 from fastapi.responses import RedirectResponse
