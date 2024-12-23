@@ -4,6 +4,8 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from yarl import URL
+
 
 __all__ = (
     "CI",
@@ -15,6 +17,8 @@ __all__ = (
     "DEFAULT_ADMIN_USERNAME",
     "DEFAULT_ADMIN_PASSWORD",
     "DB_PAGINATION_QUERY",
+    "ROOT",
+    "SERVER_BASE_URL",
 )
 
 
@@ -33,3 +37,4 @@ DB_PAGINATION_QUERY = 50
 
 
 ROOT = Path(__file__).parent.parent.resolve()
+SERVER_BASE_URL = URL("https://resident-manager-1.azurewebsites.net/")
