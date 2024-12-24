@@ -24,20 +24,15 @@ class AppLocale {
   static const String CreationTime = "CreationTime";
   static const String Retry = "Retry";
   static const String Register = "Register";
-  static const String MissingRequiredFields = "MissingRequiredFields";
   static const String SuccessfullyRegisteredWaitForAdmin = "SuccessfullyRegisteredWaitForAdmin";
   static const String CheckInputAgain = "CheckInputAgain";
   static const String UsernameAlreadyTaken = "UsernameAlreadyTaken";
-  static const String MissingName = "MissingName";
   static const String InvalidNameLength = "InvalidNameLength";
-  static const String MissingRoomNumber = "MissingRoomNumber";
   static const String InvalidRoomNumber = "InvalidRoomNumber";
   static const String InvalidDateOfBirth = "InvalidDateOfBirth";
   static const String InvalidPhoneNumber = "InvalidPhoneNumber";
   static const String InvalidEmail = "InvalidEmail";
-  static const String MissingUsername = "MissingUsername";
   static const String InvalidUsernameLength = "InvalidUsernameLength";
-  static const String MissingPassword = "MissingPassword";
   static const String InvalidPasswordLength = "InvalidPasswordLength";
   static const String RetypePasswordDoesNotMatch = "RetypePasswordDoesNotMatch";
   static const String Approve = "Approve";
@@ -67,11 +62,8 @@ class AppLocale {
   static const String RetypeNewPassword = "RetypeNewPassword";
   static const String GeneralInformation = "GeneralInformation";
   static const String AuthorizationInformation = "AuthorizationInformation";
-  static const String MissingRoomArea = "MissingRoomArea";
   static const String InvalidRoomArea = "InvalidRoomArea";
-  static const String MissingMotorbikesCount = "MissingMotorbikesCount";
   static const String InvalidMotorbikesCount = "InvalidMotorbikesCount";
-  static const String MissingCarsCount = "MissingCarsCount";
   static const String InvalidCarsCount = "InvalidCarsCount";
   static const String SaveGeneralInformation = "SaveGeneralInformation";
   static const String SaveAuthorizationInformation = "SaveAuthorizationInformation";
@@ -179,20 +171,15 @@ class AppLocale {
     CreationTime: "Creation time",
     Retry: "Retry",
     Register: "Register",
-    MissingRequiredFields: "Missing required fields",
     SuccessfullyRegisteredWaitForAdmin: "Successfully registered. Please wait for administrator's approval.",
     CheckInputAgain: "Please check your input again.",
     UsernameAlreadyTaken: "This username has already been taken.",
-    MissingName: "Missing name",
     InvalidNameLength: "Fullname must be 0-255 characters long",
-    MissingRoomNumber: "Missing room number",
     InvalidRoomNumber: "Room number must be in range 0-32767",
     InvalidDateOfBirth: "Invalid date of birth",
     InvalidPhoneNumber: "Invalid phone number",
     InvalidEmail: "Invalid email",
-    MissingUsername: "Missing username",
     InvalidUsernameLength: "Username must be 0-255 characters long",
-    MissingPassword: "Missing password",
     InvalidPasswordLength: "Password must be 8-255 characters long",
     RetypePasswordDoesNotMatch: "Retyped password does not match",
     Approve: "Approve",
@@ -222,11 +209,8 @@ class AppLocale {
     RetypeNewPassword: "Retype new password",
     GeneralInformation: "General information",
     AuthorizationInformation: "Authorization information",
-    MissingRoomArea: "Missing room area",
     InvalidRoomArea: "Room area must be in range 0-21474835",
-    MissingMotorbikesCount: "Missing motorbikes count",
     InvalidMotorbikesCount: "Motorbikes count must be in range 0-255",
-    MissingCarsCount: "Missing cars count",
     InvalidCarsCount: "Cars count must be in range 0-255",
     SaveGeneralInformation: "Save general information",
     SaveAuthorizationInformation: "Save authorization information",
@@ -335,20 +319,15 @@ class AppLocale {
     CreationTime: "Thời gian tạo",
     Retry: "Thử lại",
     Register: "Đăng ký",
-    MissingRequiredFields: "Thiếu thông tin cần thiết",
     SuccessfullyRegisteredWaitForAdmin: "Đã đăng ký thành công. Vui lòng chờ phê duyệt từ quản trị viên.",
     CheckInputAgain: "Vui lòng kiểm tra lại thông tin.",
     UsernameAlreadyTaken: "Tên đăng nhập đã tồn tại",
-    MissingName: "Thiếu họ và tên",
     InvalidNameLength: "Họ và tên phải có độ dài 0-255 ký tự",
-    MissingRoomNumber: "Thiếu số phòng",
     InvalidRoomNumber: "Số phòng trong phạm vi 0-32767",
     InvalidDateOfBirth: "Ngày sinh không hợp lệ",
     InvalidPhoneNumber: "Số điện thoại không hợp lệ",
     InvalidEmail: "Email không hợp lệ",
-    MissingUsername: "Thiếu tên đăng nhập",
     InvalidUsernameLength: "Tên đăng nhập phải có độ dài 0-255 ký tự",
-    MissingPassword: "Thiếu mật khẩu",
     InvalidPasswordLength: "Mật khẩu phải có độ dài 8-255 ký tự",
     RetypePasswordDoesNotMatch: "Mật khẩu nhập lại không khớp",
     Approve: "Phê duyệt",
@@ -378,11 +357,8 @@ class AppLocale {
     RetypeNewPassword: "Nhập lại mật khẩu mới",
     GeneralInformation: "Thông tin cơ bản",
     AuthorizationInformation: "Thông tin đăng nhập",
-    MissingRoomArea: "Thiếu diện tích phòng",
     InvalidRoomArea: "Diện tích phòng trong phạm vi 0-21474835",
-    MissingMotorbikesCount: "Thiếu số lượng xe máy",
     InvalidMotorbikesCount: "Số lượng xe máy trong phạm vi 0-255",
-    MissingCarsCount: "Thiếu số lượng ô tô",
     InvalidCarsCount: "Số lượng ô tô trong phạm vi 0-255",
     SaveGeneralInformation: "Lưu thông tin cơ bản",
     SaveAuthorizationInformation: "Lưu thông tin đăng nhập",

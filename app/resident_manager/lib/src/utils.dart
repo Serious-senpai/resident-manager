@@ -195,7 +195,7 @@ String formatVND(num? value, {String fallback = "---"}) {
 String? nameValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingName.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -211,7 +211,7 @@ String? nameValidator(BuildContext context, {required bool required, required St
 String? roomValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingRoomNumber.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -261,7 +261,7 @@ String? emailValidator(BuildContext context, {required String? value}) {
 String? usernameValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingUsername.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -277,7 +277,7 @@ String? usernameValidator(BuildContext context, {required bool required, require
 String? passwordValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingPassword.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -293,7 +293,7 @@ String? passwordValidator(BuildContext context, {required bool required, require
 String? roomAreaValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingRoomArea.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -315,7 +315,7 @@ String? roomAreaValidator(BuildContext context, {required bool required, require
 String? motorbikesCountValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingMotorbikesCount.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -337,7 +337,7 @@ String? motorbikesCountValidator(BuildContext context, {required bool required, 
 String? carsCountValidator(BuildContext context, {required bool required, required String? value}) {
   if (value == null || value.isEmpty) {
     if (required) {
-      return AppLocale.MissingCarsCount.getString(context);
+      return AppLocale.MissingRequiredValue.getString(context);
     }
 
     return null;
@@ -370,7 +370,8 @@ String? feeLowerValidator(BuildContext context, {required bool required, require
     return AppLocale.InvalidValue.getString(context);
   }
 
-  return double.tryParse(value) == null ? AppLocale.InvalidValue.getString(context) : null;
+  final doubleValue = double.tryParse(value);
+  return (doubleValue == null || doubleValue < 0) ? AppLocale.InvalidValue.getString(context) : null;
 }
 
 String? feeUpperValidator(BuildContext context, {required double? lower, required bool required, required String? value}) {
