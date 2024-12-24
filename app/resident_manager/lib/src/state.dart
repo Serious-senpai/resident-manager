@@ -71,6 +71,7 @@ class ApplicationState {
       body: "username=${Uri.encodeComponent(username)}&password=${Uri.encodeComponent(password)}",
       headers: {"Content-Type": "application/x-www-form-urlencoded"},
       authorize: false,
+      retry: 1,
     );
 
     final result = response.statusCode < 400;

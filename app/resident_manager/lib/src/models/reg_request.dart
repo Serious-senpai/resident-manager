@@ -82,6 +82,7 @@ class RegisterRequest extends PublicInfo {
       queryParameters: info.personalInfoQuery(),
       headers: headers,
       authorize: false,
+      retry: 1,
     );
 
     final data = json.decode(utf8.decode(response.bodyBytes));
